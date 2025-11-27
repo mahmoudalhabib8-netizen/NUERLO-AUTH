@@ -42,6 +42,9 @@ export function setAuthCookie(token, maxAge = COOKIE_MAX_AGE) {
     
     // Also set a simple boolean cookie for the main site to check
     // This is what nuerlo.com checks for to show "Dashboard" instead of "Sign In"
+    // Try multiple approaches to ensure cookie is set
+    
+    // Method 1: With Secure flag (for HTTPS)
     const booleanCookieString = [
         `nuerlo_authenticated=true`,
         `domain=${COOKIE_DOMAIN}`,
@@ -49,28 +52,44 @@ export function setAuthCookie(token, maxAge = COOKIE_MAX_AGE) {
         `max-age=${maxAge}`,
         `expires=${expirationDate.toUTCString()}`,
         `Secure`,
-        `SameSite=Lax`
+        `SameSite=None`
     ].join('; ');
     
     document.cookie = booleanCookieString;
     
+    // Method 2: Also try without Secure flag (in case of HTTP or browser restrictions)
+    const booleanCookieStringNoSecure = [
+        `nuerlo_authenticated=true`,
+        `domain=${COOKIE_DOMAIN}`,
+        `path=/`,
+        `max-age=${maxAge}`,
+        `expires=${expirationDate.toUTCString()}`,
+        `SameSite=Lax`
+    ].join('; ');
+    
+    document.cookie = booleanCookieStringNoSecure;
+    
+    // Method 3: Also set on current domain as fallback
+    const booleanCookieStringLocal = [
+        `nuerlo_authenticated=true`,
+        `path=/`,
+        `max-age=${maxAge}`,
+        `expires=${expirationDate.toUTCString()}`,
+        `SameSite=Lax`
+    ].join('; ');
+    
+    document.cookie = booleanCookieStringLocal;
+    
     // Verify the cookie was set by trying to read it back
-    const verifyCookie = document.cookie.split(';').find(c => c.trim().startsWith('nuerlo_authenticated='));
-    if (verifyCookie) {
-        console.log('✓ nuerlo_authenticated cookie verified:', verifyCookie);
-    } else {
-        console.warn('⚠ nuerlo_authenticated cookie not found after setting. Current cookies:', document.cookie);
-        // Try setting without Secure flag as fallback (for HTTP testing)
-        const fallbackCookie = [
-            `nuerlo_authenticated=true`,
-            `domain=${COOKIE_DOMAIN}`,
-            `path=/`,
-            `max-age=${maxAge}`,
-            `SameSite=Lax`
-        ].join('; ');
-        document.cookie = fallbackCookie;
-        console.log('Tried setting cookie without Secure flag');
-    }
+    setTimeout(() => {
+        const verifyCookie = document.cookie.split(';').find(c => c.trim().startsWith('nuerlo_authenticated='));
+        if (verifyCookie) {
+            console.log('✓ nuerlo_authenticated cookie verified:', verifyCookie);
+        } else {
+            console.warn('⚠ nuerlo_authenticated cookie not found after setting. Current cookies:', document.cookie);
+            console.warn('Current domain:', window.location.hostname);
+        }
+    }, 100);
     
     console.log('Auth cookies set successfully for domain:', COOKIE_DOMAIN);
 }
