@@ -1,11 +1,11 @@
 // Search Autocomplete Functionality
 class SearchAutocomplete {
     constructor() {
-        this.desktopInput = document.getElementById('courseSearch');
+        this.desktopInput = document.getElementById('headerSearchInput');
         this.mobileInput = document.getElementById('mobileSearchInput');
-        this.desktopSuggestions = document.getElementById('searchSuggestions');
+        this.desktopSuggestions = document.getElementById('headerSearchSuggestions');
         this.mobileSuggestions = document.getElementById('mobileSearchSuggestions');
-        this.desktopClearBtn = document.getElementById('desktopSearchClear');
+        this.desktopClearBtn = document.getElementById('headerSearchClear');
         this.mobileClearBtn = document.getElementById('mobileSearchClear');
         
         this.currentFocus = -1;
@@ -249,7 +249,8 @@ class SearchAutocomplete {
     }
     
     handleClickOutside(e) {
-        if (!e.target.closest('.search-input-wrapper') && !e.target.closest('.mobile-search-bar')) {
+        // Only handle header search, not marketplace search
+        if (!e.target.closest('.header-search-bar') && !e.target.closest('.mobile-search-bar')) {
             this.hideSuggestions('desktop');
             this.hideSuggestions('mobile');
         }

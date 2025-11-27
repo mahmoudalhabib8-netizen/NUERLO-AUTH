@@ -388,6 +388,16 @@ async function createCustomerPortalSession(userId) {
  */
 async function initializeSubscriptionUI() {
     console.log('initializeSubscriptionUI called');
+    
+    // Check if user just returned from successful payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    if (paymentStatus === 'success') {
+        // Clear the URL parameter
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+    }
+    
     try {
         const paymentSection = document.getElementById('paymentSection');
         if (!paymentSection) {
@@ -714,15 +724,65 @@ function updatePlansDisplay(subscriptionInfo) {
     
     plansContent.innerHTML = plansHtml;
     
+    // Restore any buttons that were in "redirecting" state (if user came back)
+    plansContent.querySelectorAll('.subscribe-link').forEach(link => {
+        if (link._redirectingInterval) {
+            clearInterval(link._redirectingInterval);
+            const originalText = link.dataset.originalText;
+            if (originalText) {
+                link.innerHTML = originalText;
+            }
+            link.style.pointerEvents = 'auto';
+            delete link._redirectingInterval;
+            delete link.dataset.originalText;
+        }
+    });
+    
     // Setup subscribe links
     plansContent.querySelectorAll('.subscribe-link').forEach(link => {
         link.addEventListener('click', async (e) => {
             e.preventDefault();
             const priceId = e.currentTarget.getAttribute('data-price-id');
             if (!priceId) return; // Skip if no price ID (free plan)
+            
+            const originalText = e.currentTarget.innerHTML;
+            const linkElement = e.currentTarget;
+            
+            // Store original text and set redirecting state
+            linkElement.dataset.originalText = originalText;
+            linkElement.style.pointerEvents = 'none';
+            
+            // Start animated "Redirecting..." text
+            let dotCount = 0;
+            const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
+            const redirectingInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                const dots = '.'.repeat(dotCount);
+                linkElement.innerHTML = `Redirecting${dots}${arrowSvg}`;
+            }, 300);
+            
+            // Store interval directly on element for cleanup
+            linkElement._redirectingInterval = redirectingInterval;
+            
             const user = window.currentUser || (window.firebase && window.firebase.auth && window.firebase.auth.currentUser);
             if (user) {
-                await createCheckoutSession(priceId, user.uid, user.email);
+                try {
+                    await createCheckoutSession(priceId, user.uid, user.email);
+                    // If successful, the redirect will happen, so we don't clear the interval here
+                } catch (error) {
+                    // If error, restore original text
+                    clearInterval(redirectingInterval);
+                    linkElement.innerHTML = originalText;
+                    linkElement.style.pointerEvents = 'auto';
+                    delete linkElement._redirectingInterval;
+                    console.error('Checkout session creation failed:', error);
+                }
+            } else {
+                // No user, restore
+                clearInterval(redirectingInterval);
+                linkElement.innerHTML = originalText;
+                linkElement.style.pointerEvents = 'auto';
+                delete linkElement._redirectingInterval;
             }
         });
     });

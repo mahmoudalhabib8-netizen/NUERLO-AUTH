@@ -6,15 +6,18 @@ import {
     setDoc, 
     updateDoc, 
     arrayUnion,
+    arrayRemove,
     query,
     where 
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 // Helper function to normalize image paths (convert relative to absolute)
 function normalizeImagePath(path) {
-    if (!path) return '';
+    if (!path || path.trim() === '') {
+        return '/assets/images/COURSE-AI-WEBSITE.png'; // Default fallback
+    }
     // If already absolute (starts with / or http), return as is
-    if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://')) {
+    if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
         return path;
     }
     // Convert relative path to absolute
@@ -516,14 +519,32 @@ class Marketplace {
         }
     }
 
-    renderCourses() {
-        const container = document.getElementById('marketplaceGrid') || document.querySelector('.programs-grid') || document.querySelector('.courses-grid-marketplace') || document.getElementById('libraryCoursesGrid');
+    renderCourses(targetContainerId = null) {
+        // If targetContainerId is specified, use that container
+        let container = null;
+        
+        if (targetContainerId) {
+            container = document.getElementById(targetContainerId);
+        } else {
+            // Check for recommendedGrid first if it exists and is visible
+            const recommendedGrid = document.getElementById('recommendedGrid');
+            if (recommendedGrid && recommendedGrid.offsetParent !== null) {
+                container = recommendedGrid;
+            } else {
+                container = document.getElementById('marketplaceGrid') || 
+                           document.querySelector('.programs-grid') || 
+                           document.querySelector('.courses-grid-marketplace') || 
+                           document.getElementById('libraryCoursesGrid');
+            }
+        }
+        
         if (!container) {
             console.warn('Marketplace container not found');
             return;
         }
 
-        console.log('Rendering courses, container found:', container.id || container.className);
+        const isRecommendedGrid = container.id === 'recommendedGrid';
+        console.log('Rendering courses, container found:', container.id || container.className, 'isRecommendedGrid:', isRecommendedGrid);
 
         // Clear any loading placeholders
         const placeholder = container.querySelector('.courses-placeholder');
@@ -541,9 +562,12 @@ class Marketplace {
             course => !this.enrolledCourseIds.includes(course.id)
         );
 
-        console.log('Unenrolled courses:', unenrolledCourses.length, 'Total courses:', this.filteredCourses.length);
+        // Limit to 3 courses for recommended section
+        const coursesToRender = (container.id === 'recommendedGrid') ? unenrolledCourses.slice(0, 3) : unenrolledCourses;
 
-        if (unenrolledCourses.length === 0) {
+        console.log('Unenrolled courses:', unenrolledCourses.length, 'Courses to render:', coursesToRender.length, 'Total courses:', this.filteredCourses.length);
+
+        if (coursesToRender.length === 0) {
             container.innerHTML = `
                 <div class="no-courses-library" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
                     <h3 style="color: var(--color-text-secondary); margin-bottom: 0.5rem;">No courses available</h3>
@@ -557,11 +581,37 @@ class Marketplace {
         const starSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
         const emptyStarSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
 
-        container.innerHTML = unenrolledCourses.map(course => {
+        console.log('Courses to render:', coursesToRender.map(c => ({ id: c.id, title: c.title, image: c.image, hasImage: !!c.image })));
+        
+        // Ensure we're using marketplace-course-card, not program-card
+        const existingOldCards = container.querySelectorAll('.program-card');
+        if (existingOldCards.length > 0) {
+            console.warn('Found old program-card elements, removing them');
+            existingOldCards.forEach(card => card.remove());
+        }
+        
+        container.innerHTML = coursesToRender.map(course => {
             const isEnrolled = this.enrolledCourseIds.includes(course.id);
             const buttonText = this.currentUser ? 'Enroll' : 'Sign in to Enroll';
-            const courseImage = normalizeImagePath(course.image || '/assets/images/COURSE-AI-WEBSITE.png');
-            const rating = Math.floor(course.rating);
+            
+            // Get image - check multiple possible field names
+            const rawImage = course.image || 
+                             course.imageURL || 
+                             course.thumbnail || 
+                             course.coverImage || 
+                             course.photo;
+            
+            // Normalize the image path (function handles fallback)
+            const courseImage = normalizeImagePath(rawImage);
+            
+            console.log(`Course ${course.id} image:`, courseImage, 'Original fields:', { 
+                image: course.image, 
+                imageURL: course.imageURL,
+                thumbnail: course.thumbnail,
+                coverImage: course.coverImage 
+            });
+            
+            const rating = Math.floor(course.rating || 0);
             const isFavorited = this.favoriteCourseIds.includes(course.id);
             const favoriteClass = isFavorited ? ' favorited' : '';
             
@@ -575,8 +625,11 @@ class Marketplace {
                 }
             }
             
+            // Ensure CSS variable is set correctly with proper URL formatting
+            const imageStyle = `--course-image: url('${courseImage}');`;
+            
             return `
-                <div class="marketplace-course-card" data-course-id="${course.id}" data-category="${course.category}" style="--course-image: url('${courseImage}');">
+                <div class="marketplace-course-card" data-course-id="${course.id}" data-category="${course.category || ''}" style="${imageStyle}">
                     <div class="marketplace-course-image" style="display: none;">
                         <img src="${courseImage}" alt="${course.title}" loading="lazy" style="display: none;">
                     </div>
@@ -707,6 +760,161 @@ class Marketplace {
             }
         }
     }
+
+    async unenrollFromCourse(courseId) {
+        // Get current user from Firebase auth directly
+        let currentUser = this.currentUser;
+        if (!currentUser && window.firebase && window.firebase.auth) {
+            currentUser = window.firebase.auth.currentUser;
+        }
+        
+        if (!currentUser) {
+            alert('Please sign in to unenroll from courses');
+            return;
+        }
+
+        // Check enrollment status from Firestore if not in local cache
+        let isEnrolled = this.enrolledCourseIds.includes(courseId);
+        if (!isEnrolled) {
+            try {
+                const userRef = doc(window.firebase.db, 'users', currentUser.uid);
+                const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    const enrolledCourses = userDoc.data().enrolledCourses || [];
+                    isEnrolled = enrolledCourses.includes(courseId) || enrolledCourses.some(id => String(id) === String(courseId));
+                }
+            } catch (error) {
+                console.error('Error checking enrollment:', error);
+            }
+        }
+
+        if (!isEnrolled) {
+            alert('You are not enrolled in this course!');
+            return;
+        }
+
+        try {
+            const userRef = doc(window.firebase.db, 'users', currentUser.uid);
+            const course = this.courses.find(c => c.id === courseId);
+            let courseDoc = null;
+            
+            if (!course) {
+                // Try to get course from Firestore if not in local cache
+                const courseRef = doc(window.firebase.db, 'courses', courseId);
+                courseDoc = await getDoc(courseRef);
+                if (!courseDoc.exists()) {
+                    alert('Course not found');
+                    return;
+                }
+            }
+
+            console.log('Unenrolling user:', currentUser.uid, 'from course:', courseId);
+
+            // Remove course from user's enrolledCourses array
+            const userDoc = await getDoc(userRef);
+            if (userDoc.exists()) {
+                await updateDoc(userRef, {
+                    enrolledCourses: arrayRemove(courseId)
+                });
+                console.log('Removed course from user document');
+            }
+
+            // Update course document - remove user from enrolled array and decrement student count
+            const courseRef = doc(window.firebase.db, 'courses', courseId);
+            if (!courseDoc) {
+                courseDoc = await getDoc(courseRef);
+            }
+            
+            if (courseDoc.exists()) {
+                const currentStudents = courseDoc.data().students || 0;
+                await updateDoc(courseRef, {
+                    enrolled: arrayRemove(currentUser.uid),
+                    students: Math.max(0, currentStudents - 1) // Don't go below 0
+                });
+                console.log('Removed user from course document and decremented student count');
+            }
+
+            // Update local state
+            this.enrolledCourseIds = this.enrolledCourseIds.filter(id => id !== courseId);
+            if (this.currentUser) {
+                this.currentUser = currentUser;
+            }
+
+            // Show success notification
+            const courseTitle = course?.title || courseDoc?.data()?.title || 'this course';
+            if (typeof window.showCustomNotification === 'function') {
+                window.showCustomNotification('success', 'Unenrolled', `You've left ${courseTitle}`);
+            } else {
+                alert(`Successfully left ${courseTitle}!`);
+            }
+
+            // Redirect to dashboard
+            window.location.href = '/dashboard.html';
+
+        } catch (error) {
+            console.error('Error unenrolling from course:', error);
+            if (typeof window.showCustomNotification === 'function') {
+                window.showCustomNotification('error', 'Unenrollment Failed', 'Please try again');
+            } else {
+                alert('Failed to unenroll. Please try again.');
+            }
+        }
+    }
+}
+
+// Load recommended courses for overview section
+async function loadRecommendedCourses() {
+    const recommendedGrid = document.getElementById('recommendedGrid');
+    if (!recommendedGrid) {
+        console.log('Recommended grid not found');
+        return;
+    }
+
+    console.log('Loading recommended courses...');
+
+    // Clear any existing content FIRST to prevent old design from showing
+    recommendedGrid.innerHTML = '';
+    
+    // Force remove any program-card elements that might be there
+    const oldCards = recommendedGrid.querySelectorAll('.program-card');
+    oldCards.forEach(card => card.remove());
+
+    // Ensure marketplace is initialized
+    if (!window.marketplace || !window.marketplace.initialized) {
+        if (typeof Marketplace !== 'undefined') {
+            console.log('Initializing marketplace for recommended courses');
+            window.marketplace = new Marketplace();
+            await window.marketplace.init();
+        } else {
+            console.warn('Marketplace class not available for recommended courses');
+            return;
+        }
+    }
+
+    // Wait a bit to ensure DOM is ready
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Render courses to recommended grid - explicitly pass recommendedGrid ID
+    if (window.marketplace && typeof window.marketplace.renderCourses === 'function') {
+        console.log('Rendering courses to recommended grid');
+        window.marketplace.renderCourses('recommendedGrid');
+        
+        // Verify the cards were rendered correctly
+        setTimeout(() => {
+            const cards = recommendedGrid.querySelectorAll('.marketplace-course-card');
+            const oldCards = recommendedGrid.querySelectorAll('.program-card');
+            console.log('Marketplace cards rendered:', cards.length, 'Old program cards found:', oldCards.length);
+            
+            // If old cards are found, remove them and re-render
+            if (oldCards.length > 0) {
+                console.warn('Old program cards detected, removing and re-rendering...');
+                oldCards.forEach(card => card.remove());
+                window.marketplace.renderCourses('recommendedGrid');
+            }
+        }, 300);
+    } else {
+        console.warn('Marketplace renderCourses function not available');
+    }
 }
 
 // Initialize marketplace when DOM is loaded
@@ -716,6 +924,7 @@ async function initializeMarketplace() {
                                document.querySelector('.marketplace-section') || 
                                document.querySelector('.ai-marketplace-section') || 
                                document.getElementById('marketplaceGrid') ||
+                               document.getElementById('recommendedGrid') ||
                                document.getElementById('libraryCoursesGrid');
     
     if (!marketplaceSection) {
@@ -746,6 +955,9 @@ async function initializeMarketplace() {
         window.marketplace = new Marketplace();
         await window.marketplace.init();
     }
+    
+    // Also load recommended courses if on overview section
+    loadRecommendedCourses();
 }
 
 document.addEventListener('DOMContentLoaded', initializeMarketplace);

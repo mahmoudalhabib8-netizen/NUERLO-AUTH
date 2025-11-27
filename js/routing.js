@@ -329,6 +329,26 @@ class DashboardRouter {
 
     async handleAuthStateChange(user) {
         if (user) {
+            // Check if email is verified
+            try {
+                await user.reload();
+                if (!user.emailVerified) {
+                    // Email not verified - redirect to verification page
+                    const pendingVerification = sessionStorage.getItem('pendingVerification');
+                    if (!pendingVerification) {
+                        sessionStorage.setItem('pendingVerification', 'true');
+                        sessionStorage.setItem('verificationEmail', user.email || '');
+                        window.location.href = `/verify-email?email=${encodeURIComponent(user.email || '')}`;
+                        return;
+                    }
+                } else {
+                    // Email is verified - clear pending verification flag
+                    sessionStorage.removeItem('pendingVerification');
+                }
+            } catch (error) {
+                console.error('Error checking email verification:', error);
+            }
+            
             this.currentAccountId = user.uid;
             
             // CRITICAL: If we're in course context, don't handle ANY routes - let CourseRouter handle them

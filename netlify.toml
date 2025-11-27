@@ -146,6 +146,16 @@
   status = 200
 
 [[redirects]]
+  from = "/verify-email"
+  to = "/verify-email.html"
+  status = 200
+
+[[redirects]]
+  from = "/__/auth/action"
+  to = "/__/auth/action.html"
+  status = 200
+
+[[redirects]]
   from = "/index.html"
   to = "/dashboard.html"
   status = 200

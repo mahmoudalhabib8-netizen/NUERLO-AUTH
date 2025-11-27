@@ -22,7 +22,7 @@ export function setAuthCookie(token, maxAge = COOKIE_MAX_AGE) {
     const expirationDate = new Date();
     expirationDate.setTime(expirationDate.getTime() + (maxAge * 1000));
 
-    // Build cookie string for token
+    // Build cookie string
     // Domain=.nuerlo.com - accessible from all subdomains
     // Secure=true - HTTPS only
     // HttpOnly=false - allow JavaScript access
@@ -37,61 +37,10 @@ export function setAuthCookie(token, maxAge = COOKIE_MAX_AGE) {
         `SameSite=Lax`
     ].join('; ');
 
-    // Set the token cookie
+    // Set the cookie
     document.cookie = cookieString;
     
-    // Also set a simple boolean cookie for the main site to check
-    // This is what nuerlo.com checks for to show "Dashboard" instead of "Sign In"
-    // Try multiple approaches to ensure cookie is set
-    
-    // Method 1: With Secure flag (for HTTPS)
-    const booleanCookieString = [
-        `nuerlo_authenticated=true`,
-        `domain=${COOKIE_DOMAIN}`,
-        `path=/`,
-        `max-age=${maxAge}`,
-        `expires=${expirationDate.toUTCString()}`,
-        `Secure`,
-        `SameSite=None`
-    ].join('; ');
-    
-    document.cookie = booleanCookieString;
-    
-    // Method 2: Also try without Secure flag (in case of HTTP or browser restrictions)
-    const booleanCookieStringNoSecure = [
-        `nuerlo_authenticated=true`,
-        `domain=${COOKIE_DOMAIN}`,
-        `path=/`,
-        `max-age=${maxAge}`,
-        `expires=${expirationDate.toUTCString()}`,
-        `SameSite=Lax`
-    ].join('; ');
-    
-    document.cookie = booleanCookieStringNoSecure;
-    
-    // Method 3: Also set on current domain as fallback
-    const booleanCookieStringLocal = [
-        `nuerlo_authenticated=true`,
-        `path=/`,
-        `max-age=${maxAge}`,
-        `expires=${expirationDate.toUTCString()}`,
-        `SameSite=Lax`
-    ].join('; ');
-    
-    document.cookie = booleanCookieStringLocal;
-    
-    // Verify the cookie was set by trying to read it back
-    setTimeout(() => {
-        const verifyCookie = document.cookie.split(';').find(c => c.trim().startsWith('nuerlo_authenticated='));
-        if (verifyCookie) {
-            console.log('✓ nuerlo_authenticated cookie verified:', verifyCookie);
-        } else {
-            console.warn('⚠ nuerlo_authenticated cookie not found after setting. Current cookies:', document.cookie);
-            console.warn('Current domain:', window.location.hostname);
-        }
-    }, 100);
-    
-    console.log('Auth cookies set successfully for domain:', COOKIE_DOMAIN);
+    console.log('Auth cookie set successfully for domain:', COOKIE_DOMAIN);
 }
 
 /**
@@ -121,7 +70,6 @@ export function clearAuthCookie() {
     const expirationDate = new Date();
     expirationDate.setTime(expirationDate.getTime() - 86400000); // 1 day ago
 
-    // Clear the token cookie
     const cookieString = [
         `${COOKIE_NAME}=`,
         `domain=${COOKIE_DOMAIN}`,
@@ -134,20 +82,7 @@ export function clearAuthCookie() {
 
     document.cookie = cookieString;
     
-    // Also clear the boolean authentication cookie
-    const booleanCookieString = [
-        `nuerlo_authenticated=`,
-        `domain=${COOKIE_DOMAIN}`,
-        `path=/`,
-        `max-age=0`,
-        `expires=${expirationDate.toUTCString()}`,
-        `Secure`,
-        `SameSite=Lax`
-    ].join('; ');
-    
-    document.cookie = booleanCookieString;
-    
-    console.log('Auth cookies cleared successfully');
+    console.log('Auth cookie cleared successfully');
 }
 
 /**
