@@ -8,6 +8,7 @@
     <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/NUERLO-LOGO.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#1a1a1a">
@@ -830,7 +831,7 @@
     </div>
     
     <script type="module">
-        import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, sendEmailVerification } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         
         const authInstance = window.firebase?.auth ?? getAuth();
@@ -926,9 +927,25 @@
                         role: 'user' // Default role for all new users
                     });
                     
-                    // Set flag to indicate this is a fresh registration (not a refresh)
-                    sessionStorage.setItem('freshLogin', 'true');
-                    window.location.href = '/dashboard';
+                    // Send email verification
+                    try {
+                        await sendEmailVerification(user, {
+                            url: window.location.origin + '/__/auth/action',
+                            handleCodeInApp: false
+                        });
+                        console.log('Verification email sent successfully to:', email);
+                        // Redirect to verification page
+                        sessionStorage.setItem('pendingVerification', 'true');
+                        sessionStorage.setItem('verificationEmail', email);
+                        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+                    } catch (verifyError) {
+                        console.error('Error sending verification email:', verifyError);
+                        // Show error but still redirect - user can resend from verification page
+                        alert('Account created, but there was an issue sending the verification email. You can resend it from the verification page.');
+                        sessionStorage.setItem('pendingVerification', 'true');
+                        sessionStorage.setItem('verificationEmail', email);
+                        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+                    }
                 } catch (err) {
                     const errorMsg = getFriendlyErrorMessage(err);
                     showError(errorMsg);

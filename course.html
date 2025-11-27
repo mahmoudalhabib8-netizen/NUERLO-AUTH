@@ -36,6 +36,7 @@
     
     <!-- Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#ffffff" id="themeColorMeta">
@@ -1699,6 +1700,7 @@
     </script>
 
     <script src="/js/dashboard.js"></script>
+    <script type="module" src="/js/marketplace.js"></script>
     <script src="/js/course.js"></script>
     
     <script>
@@ -2752,9 +2754,52 @@
             // Leave Program button
             const leaveProgramBtn = document.getElementById('leaveProgramBtn');
             if (leaveProgramBtn) {
-                leaveProgramBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to leave this program? Your progress will be saved.')) {
-                        window.location.href = '/dashboard.html';
+                leaveProgramBtn.addEventListener('click', async function() {
+                    if (confirm('Are you sure you want to leave this program? Your progress will be saved, but you will need to re-enroll to access the course.')) {
+                        try {
+                            // Get current course ID
+                            const courseId = sessionStorage.getItem('currentCourseId') || 
+                                            document.body.getAttribute('data-course-id') || 
+                                            window.currentCourseId;
+                            
+                            if (!courseId) {
+                                alert('Unable to identify course. Redirecting to dashboard.');
+                                window.location.href = '/dashboard.html';
+                                return;
+                            }
+
+                            // Wait for Firebase to be ready
+                            if (!window.firebase || !window.firebase.auth || !window.firebase.db) {
+                                alert('Firebase not initialized. Please refresh the page.');
+                                return;
+                            }
+
+                            // Check if user is authenticated
+                            const currentUser = window.firebase.auth.currentUser;
+                            if (!currentUser) {
+                                alert('Please sign in to leave a program.');
+                                return;
+                            }
+
+                            // Initialize marketplace if not already initialized
+                            if (!window.marketplace) {
+                                if (typeof Marketplace === 'undefined') {
+                                    alert('Marketplace module not loaded. Please refresh the page.');
+                                    return;
+                                }
+                                window.marketplace = new Marketplace();
+                                // Don't wait for full init, just set currentUser
+                                window.marketplace.currentUser = currentUser;
+                            } else if (!window.marketplace.currentUser) {
+                                window.marketplace.currentUser = currentUser;
+                            }
+
+                            // Call unenroll function
+                            await window.marketplace.unenrollFromCourse(courseId);
+                        } catch (error) {
+                            console.error('Error leaving program:', error);
+                            alert('Failed to leave program. Please try again.');
+                        }
                     }
                 });
             }

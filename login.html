@@ -8,6 +8,7 @@
     <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/NUERLO-LOGO.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#1a1a1a">
@@ -814,8 +815,21 @@
             }, 800);
         } else {
             // Normal flow: check auth immediately for users visiting login page
-            onAuthStateChanged(authInstance, (user) => {
+            onAuthStateChanged(authInstance, async (user) => {
                 if (user) {
+                    // Check if email is verified before redirecting
+                    try {
+                        await user.reload();
+                        if (!user.emailVerified) {
+                            // Email not verified - redirect to verification page
+                            sessionStorage.setItem('pendingVerification', 'true');
+                            sessionStorage.setItem('verificationEmail', user.email || '');
+                            window.location.href = `/verify-email?email=${encodeURIComponent(user.email || '')}`;
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error checking email verification:', error);
+                    }
                     redirectToUserDashboard(user);
                 }
             });
@@ -881,6 +895,23 @@
                     const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
                     const user = userCredential.user;
                     
+                    // Check if email is verified
+                    if (!user.emailVerified) {
+                        // Reload user to get latest verification status
+                        await user.reload();
+                        
+                        if (!user.emailVerified) {
+                            // Email not verified - redirect to verification page
+                            sessionStorage.setItem('pendingVerification', 'true');
+                            sessionStorage.setItem('verificationEmail', user.email);
+                            showError('Please verify your email address before signing in. Check your inbox for the verification email.');
+                            setTimeout(() => {
+                                window.location.href = `/verify-email?email=${encodeURIComponent(user.email)}`;
+                            }, 2000);
+                            return;
+                        }
+                    }
+                    
                     // Get Firebase ID token and set cross-domain cookie
                     try {
                         const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
@@ -907,6 +938,26 @@
                         window.location.href = '/dashboard';
                     }
                 } catch (err) {
+                    // Check if this might be a Google account
+                    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                        // Try to fetch sign-in methods for this email to see if it's a Google account
+                        try {
+                            const { fetchSignInMethodsForEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                            const signInMethods = await fetchSignInMethodsForEmail(authInstance, email);
+                            
+                            if (signInMethods.includes('google.com')) {
+                                // This email is registered with Google
+                                showError('This email is registered with Google. Please use the "Sign in with Google" button. If you\'d like to also set a password, sign in with Google first and set it in your profile settings.');
+                                btn.textContent = original;
+                                btn.disabled = false;
+                                return;
+                            }
+                        } catch (methodError) {
+                            // If we can't check methods, just show the normal error
+                            console.error('Error checking sign-in methods:', methodError);
+                        }
+                    }
+                    
                     const errorMsg = getFriendlyErrorMessage(err);
                     showError(errorMsg);
                 } finally {
