@@ -1,0 +1,23 @@
+# Nuerlo Dashboard - Serve login.html as default page
+# This ensures dashboard.nuerlo.com shows login.html directly
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Set login.html as the directory index (default page)
+DirectoryIndex login.html
+
+# If the requested file doesn't exist, redirect to login.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Don't redirect these specific files
+RewriteCond %{REQUEST_URI} !^/login\.html$ [NC]
+RewriteCond %{REQUEST_URI} !^/dashboard\.html$ [NC]
+RewriteCond %{REQUEST_URI} !^/course-view\.html$ [NC]
+RewriteCond %{REQUEST_URI} !^/404\.html$ [NC]
+# Don't redirect assets or scripts
+RewriteCond %{REQUEST_URI} !^/(assets|js|css|NuerloApp)/ [NC]
+RewriteCond %{REQUEST_URI} !\.(ico|png|jpg|jpeg|gif|svg|webp|css|js|json)$ [NC]
+# Redirect to login.html
+RewriteRule ^(.*)$ login.html [L,R=302]
+

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuerlo Login | Sign in to the Nuerlo Dashboard</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/images/NUERLO-LOGO.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nuerlo">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
+            color: #1f2937 !important;
+            background: #ffffff !important;
+            opacity: 0;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        /* Override any white text from global styles.css - but allow links to use their specified colors */
+        .login-container h1,
+        .login-container h2,
+        .login-container h3,
+        .login-container p,
+        .login-container span:not(.auth-forgot span):not(.auth-footer span):not(.auth-bottom-legal span),
+        .login-container div,
+        .login-container label {
+            color: #1f2937 !important;
+        }
+        
+        /* Button text stays white on dark button */
+        .auth-submit-btn {
+            color: #ffffff !important;
+        }
+        
+        /* Ensure social buttons always have dark text */
+        .social-btn {
+            color: #374151 !important;
+        }
+        
+        .social-btn:hover {
+            color: #374151 !important;
+        }
+        
+        .social-btn:focus {
+            color: #374151 !important;
+        }
+        
+        .social-btn span,
+        .social-btn {
+            color: #374151 !important;
+        }
+        
+        .social-btn:hover span,
+        .social-btn:hover {
+            color: #374151 !important;
+        }
+        
+        /* Remove ALL glows, shadows, outlines, and effects */
+        button, .auth-submit-btn, .social-btn, .form-input, a.button {
+            box-shadow: none !important;
+            outline: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+        }
+        
+        button:focus, button:focus-visible, button:hover, button:active,
+        .auth-submit-btn:focus, .auth-submit-btn:focus-visible, .auth-submit-btn:hover, .auth-submit-btn:active,
+        .social-btn:focus, .social-btn:focus-visible, .social-btn:hover, .social-btn:active,
+        .form-input:focus, .form-input:focus-visible, .form-input:hover, .form-input:active {
+            box-shadow: none !important;
+            outline: none !important;
+            text-shadow: none !important;
+            filter: none !important;
+        }
+        
+        /* Remove underlines from all links on hover */
+        a:hover {
+            text-decoration: none !important;
+        }
+        
+        /* Ensure social button text is always visible */
+        .social-btn,
+        .social-btn span {
+            color: #374151 !important;
+        }
+        
+        .social-btn:hover,
+        .social-btn:hover span {
+            color: #374151 !important;
+        }
+        
+        /* Ensure all text in auth card is dark, but allow specific link colors */
+        .auth-card h1,
+        .auth-card h2,
+        .auth-card h3,
+        .auth-card p,
+        .auth-card span:not(.auth-forgot span):not(.auth-footer span):not(.auth-bottom-legal span),
+        .auth-card div,
+        .auth-card label {
+            color: #1f2937 !important;
+        }
+
+        /* Top and bottom background layout - 50/50 split */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .login-left {
+            height: 50vh;
+            min-height: 50vh;
+            background: linear-gradient(135deg, #a476ff 0%, #8b5fff 50%, #b894ff 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(139, 95, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(184, 148, 255, 0.35) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(164, 118, 255, 0.25) 0%, transparent 60%);
+            animation: float 25s ease-in-out infinite;
+        }
+
+        .wavy-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='wave1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='rgba(255,255,255,0.12)'/%3E%3Cstop offset='50%25' stop-color='rgba(184,148,255,0.15)'/%3E%3Cstop offset='100%25' stop-color='rgba(255,255,255,0.08)'/%3E%3C/linearGradient%3E%3ClinearGradient id='wave2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='rgba(139,95,255,0.1)'/%3E%3Cstop offset='50%25' stop-color='rgba(255,255,255,0.12)'/%3E%3Cstop offset='100%25' stop-color='rgba(184,148,255,0.08)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0,200 Q100,150 200,200 T400,200 L400,400 L0,400 Z' fill='url(%23wave1)'/%3E%3Cpath d='M0,250 Q150,200 300,250 T400,250 L400,400 L0,400 Z' fill='url(%23wave2)' opacity='0.7'/%3E%3Cpath d='M0,150 Q80,100 160,150 T320,150 T400,150 L400,400 L0,400 Z' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E");
+            background-size: 800px 800px;
+            opacity: 1;
+            animation: wave 30s linear infinite;
+        }
+
+        .wavy-overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='500' height='500' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='stripes' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='rgba(255,255,255,0)'/%3E%3Cstop offset='25%25' stop-color='rgba(184,148,255,0.08)'/%3E%3Cstop offset='50%25' stop-color='rgba(255,255,255,0)'/%3E%3Cstop offset='75%25' stop-color='rgba(139,95,255,0.06)'/%3E%3Cstop offset='100%25' stop-color='rgba(255,255,255,0)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0,300 Q125,250 250,300 T500,300 L500,500 L0,500 Z' fill='url(%23stripes)'/%3E%3Cpath d='M0,350 Q100,300 200,350 T400,350 T500,350 L500,500 L0,500 Z' fill='rgba(255,255,255,0.04)'/%3E%3C/svg%3E");
+            background-size: 1000px 1000px;
+            animation: wave 35s linear infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-20px, -20px) rotate(5deg); }
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-200px); }
+        }
+
+        .login-right {
+            height: 50vh;
+            min-height: 50vh;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        /* Smooth wavy border between sections - using SVG for smooth curves */
+        .login-right::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #ffffff;
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0,80 Q180,50 360,55 T720,52 T1080,58 T1440,50 L1440,80 L0,80 Z' fill='white'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0,80 Q180,50 360,55 T720,52 T1080,58 T1440,50 L1440,80 L0,80 Z' fill='white'/%3E%3C/svg%3E");
+            mask-size: 100% 100%;
+            -webkit-mask-size: 100% 100%;
+            mask-repeat: no-repeat;
+            -webkit-mask-repeat: no-repeat;
+        }
+
+        /* Centered form card - positioned at the boundary between top and bottom */
+        .form-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 48vh;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 560px;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 36px 40px;
+            border: 1px solid #e5e7eb;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            z-index: 20;
+        }
+
+        .auth-header a {
+            display: inline-block;
+        }
+
+        .auth-header a:hover {
+            opacity: 0.8;
+        }
+
+        .auth-header img {
+            width: 48px;
+            height: 50px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 0.2s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .social-btn img {
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 0.4s forwards;
+        }
+
+        .auth-heading {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937 !important;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .auth-subtitle {
+            color: #6b7280 !important;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-form {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151 !important;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            box-shadow: none;
+        }
+
+        .form-input:focus {
+            outline: none !important;
+            border-color: #e5e7eb !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+        }
+        
+        .form-input:focus-visible {
+            outline: none !important;
+            border-color: #e5e7eb !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+        }
+        
+        .form-input:active {
+            border-color: #e5e7eb !important;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+        }
+        
+        .form-input:hover {
+            border-color: #e5e7eb !important;
+            background: #ffffff !important;
+            color: #1f2937 !important;
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .auth-actions-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 0.875rem;
+        }
+
+        .auth-remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6b7280 !important;
+        }
+
+        .auth-remember input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #a476ff;
+            cursor: pointer;
+        }
+
+        .auth-forgot a,
+        .auth-forgot a:link,
+        .auth-forgot a:visited,
+        .auth-forgot a:active {
+            color: #a476ff !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+        }
+
+        .auth-forgot a:hover,
+        .auth-forgot a:focus {
+            color: #8b5fff !important;
+            text-decoration: none !important;
+        }
+
+        .auth-submit-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff !important;
+            background: #1f2937 !important;
+            border: none !important;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            box-shadow: none !important;
+        }
+
+        .auth-submit-btn:hover {
+            background: #111827 !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+        
+        .auth-submit-btn:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            background: #1f2937 !important;
+        }
+
+        .auth-submit-btn:active {
+            box-shadow: none !important;
+            background: #1f2937 !important;
+        }
+        
+        .auth-submit-btn:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+            background: #1f2937 !important;
+        }
+
+        .error-message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #991b1b !important;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 16px 0;
+            color: #6b7280 !important;
+            font-size: 0.875rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .auth-providers {
+            display: grid;
+            gap: 12px;
+        }
+
+        .social-btn {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 12px !important;
+            padding: 12px !important;
+            border: 1.5px solid #e5e7eb !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #374151 !important;
+            text-decoration: none !important;
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+        }
+        
+        .social-btn,
+        .social-btn *,
+        .social-btn::before,
+        .social-btn::after,
+        .social-btn span {
+            color: #374151 !important;
+            background: transparent !important;
+        }
+
+        .social-btn:hover {
+            border-color: #d1d5db !important;
+            background: #f9fafb !important;
+            color: #374151 !important;
+            box-shadow: none !important;
+        }
+        
+        .social-btn:hover,
+        .social-btn:hover *,
+        .social-btn:hover::before,
+        .social-btn:hover::after,
+        .social-btn:hover span {
+            color: #374151 !important;
+            background: transparent !important;
+        }
+
+        .social-btn:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            border-color: #e5e7eb !important;
+        }
+
+        .social-btn:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+        }
+
+        .social-btn:active {
+            box-shadow: none !important;
+            background: #f9fafb !important;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 16px;
+            color: #6b7280 !important;
+            font-size: 0.875rem;
+        }
+
+        .auth-footer a,
+        .auth-footer a:link,
+        .auth-footer a:visited,
+        .auth-footer a:active {
+            color: #a476ff !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+        }
+
+        .auth-footer a:hover,
+        .auth-footer a:focus {
+            color: #8b5fff !important;
+            text-decoration: none !important;
+        }
+
+        .auth-security-message {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 0;
+            width: 100%;
+            color: #000000 !important;
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .auth-security-message svg {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .auth-security-message span {
+            color: #000000 !important;
+        }
+
+        .auth-bottom-legal {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #6b7280 !important;
+            font-size: 0.875rem;
+            z-index: 20;
+        }
+
+        .auth-bottom-legal a {
+            color: #000000 !important;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+        }
+
+        .auth-bottom-legal a:hover {
+            color: #000000 !important;
+        }
+
+        .auth-bottom-legal span {
+            color: #9ca3af;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .login-container {
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            .login-left {
+                height: 35vh;
+                min-height: 250px;
+                flex-shrink: 0;
+            }
+
+            .login-right {
+                height: auto;
+                min-height: 65vh;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                position: relative;
+            }
+
+            .form-wrapper {
+                position: absolute;
+                left: 0;
+                top: 120px;
+                right: 0;
+                transform: none;
+                padding: 20px;
+                margin: 0;
+                z-index: 10;
+            }
+
+            .auth-card {
+                padding: 32px 24px;
+            }
+
+            .auth-heading {
+                font-size: 1.75rem;
+            }
+
+            .auth-bottom-legal {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 20px;
+                z-index: 5;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 28px 20px;
+                border-radius: 20px;
+            }
+
+            .auth-heading {
+                font-size: 1.5rem;
+            }
+
+            .auth-header {
+                top: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+    <script type="module" src="js/non-auth-navigation.js"></script>
+    <script type="module" src="js/mobile-menu.js"></script>
+    <script type="module" src="js/navigation.js"></script>
+    <script>
+        // Optional: simple redirect helper if arriving from logout
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const message = params.get('m');
+            if (message === 'logged_out') {
+                // Could show a toast/banner if you add one later
+            }
+        })();
+    </script>
+    
+    <!-- Firebase SDK (same config as index for auth flows if needed later) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZvKVOLry7oDekiRxZlY_7-u-Nfe15Zts",
+            authDomain: "nuerlo-course-platform.firebaseapp.com",
+            projectId: "nuerlo-course-platform",
+            storageBucket: "nuerlo-course-platform.firebasestorage.app",
+            messagingSenderId: "1089335169355",
+            appId: "1:1089335169355:web:a327f39b892f5e752398ce",
+            measurementId: "G-D6BX96Z7KN"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        window.firebase = { auth, db, analytics };
+    </script>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left side: Purple wavy abstract background -->
+        <div class="login-left">
+            <div class="wavy-overlay"></div>
+        </div>
+
+        <!-- Right side: Clean white background -->
+        <div class="login-right"></div>
+
+        <!-- Centered form card -->
+        <div class="form-wrapper">
+            <div class="auth-card">
+                <h1 class="auth-heading">Sign in</h1>
+
+                <form class="auth-form" id="standaloneLoginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" class="form-input" required>
+                    </div>
+                    <div class="auth-actions-row">
+                        <label class="auth-remember"><input type="checkbox" id="rememberMe"> Remember me on this device</label>
+                        <span class="auth-forgot"><a href="#">Forgot your password?</a></span>
+                    </div>
+                    <button type="submit" class="auth-submit-btn">Sign in</button>
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+                </form>
+
+                <div class="auth-divider">OR</div>
+
+                <div class="auth-providers">
+                    <a href="#" class="social-btn" id="googleLoginBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                    </a>
+                </div>
+
+                <div class="auth-footer">New to Nuerlo? <a href="/register">Create Account</a></div>
+            </div>
+            
+            <div class="auth-security-message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 11H6C4.89543 11 4 11.8954 4 13V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V13C20 11.8954 19.1046 11 18 11Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 11V7C7 5.67392 7.52678 4.40215 8.46447 3.46447C9.40215 2.52678 10.6739 2 12 2C13.3261 2 14.5979 2.52678 15.5355 3.46447C16.4732 4.40215 17 5.67392 17 7V11" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Never share your Nuerlo credentials. If multiple people need access to your account, invite them as team members in settings.</span>
+            </div>
+        </div>
+
+        <!-- Logo header -->
+        <header class="auth-header">
+            <a href="https://nuerlo.com" aria-label="Nuerlo Home">
+                <img src="assets/images/LOGOWHITE.png" alt="Nuerlo Logo" loading="lazy">
+            </a>
+        </header>
+    </div>
+
+    <div class="auth-bottom-legal">
+        <a href="https://nuerlo.com/privacy">Privacy Policy</a>
+        <span>•</span>
+        <a href="https://nuerlo.com/terms">Terms of Service</a>
+    </div>
+    
+    <script type="module">
+        import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        
+        const authInstance = window.firebase?.auth ?? getAuth();
+        const googleProvider = new GoogleAuthProvider();
+        
+        // Check if user just logged out
+        const urlParams = new URLSearchParams(window.location.search);
+        const justLoggedOut = urlParams.get('m') === 'logged_out';
+        
+        // Helper function to get shortened user ID for URLs
+        function getShortUserId(fullUid) {
+            if (!fullUid || typeof fullUid !== 'string') return null;
+            return fullUid.substring(0, 6).toUpperCase();
+        }
+        
+        // Helper function to redirect to user's dashboard (using shortened ID in URL)
+        function redirectToUserDashboard(user) {
+            // Set flag to indicate this is a fresh login (not a refresh)
+            sessionStorage.setItem('freshLogin', 'true');
+            
+            if (user && user.uid) {
+                // Use shortened ID in URL (first 6 chars)
+                const shortId = getShortUserId(user.uid);
+                window.location.href = `/acct_${shortId}/dashboard`;
+            } else {
+                // Fallback to generic dashboard if UID not available
+                window.location.href = '/dashboard';
+            }
+        }
+        
+        // Redirect if already logged in (but not if they just logged out)
+        if (justLoggedOut) {
+            // User just logged out - wait for auth state to fully update
+            // Check once after delay to ensure they're truly logged out
+            setTimeout(() => {
+                // Check current auth state once (not a persistent listener)
+                const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+                    unsubscribe(); // Unsubscribe immediately after first check
+                    if (user) {
+                        // If somehow still authenticated after logout, redirect to dashboard
+                        console.log('Still authenticated after logout, redirecting to dashboard');
+                        redirectToUserDashboard(user);
+                    } else {
+                        // Successfully logged out, stay on login page
+                        console.log('Successfully logged out, staying on login page');
+                    }
+                });
+            }, 800);
+        } else {
+            // Normal flow: check auth immediately for users visiting login page
+            onAuthStateChanged(authInstance, (user) => {
+                if (user) {
+                    redirectToUserDashboard(user);
+                }
+            });
+        }
+        
+        const form = document.getElementById('standaloneLoginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        function getFriendlyErrorMessage(error) {
+            // Never show Firebase technical errors to users
+            if (!error || !error.code) {
+                return 'Something went wrong. Please try again.';
+            }
+            
+            const errorCode = error.code;
+            
+            // Map Firebase error codes to user-friendly messages
+            const errorMessages = {
+                'auth/user-not-found': 'No account found with this email address.',
+                'auth/wrong-password': 'Incorrect password. Please try again.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/user-disabled': 'This account has been disabled. Please contact support.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+                'auth/network-request-failed': 'Network error. Please check your connection and try again.',
+                'auth/invalid-credential': 'Invalid email or password. Please check your credentials.',
+                'auth/email-already-in-use': 'This email is already registered.',
+                'auth/weak-password': 'Password is too weak.',
+                'auth/operation-not-allowed': 'This sign-in method is not enabled.',
+                'auth/popup-closed-by-user': 'Sign-in was cancelled.',
+                'auth/cancelled-popup-request': 'Only one sign-in request can be active at a time.',
+                'auth/popup-blocked': 'Popup was blocked. Please allow popups and try again.',
+                'auth/account-exists-with-different-credential': 'An account already exists with this email.',
+                'auth/requires-recent-login': 'Please sign out and sign in again to complete this action.'
+            };
+            
+            return errorMessages[errorCode] || 'Something went wrong. Please try again.';
+        }
+        
+        function showError(message) {
+            if (errorMessage) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const btn = form.querySelector('.auth-submit-btn');
+                const original = btn.textContent;
+                
+                // Hide any previous error
+                if (errorMessage) errorMessage.style.display = 'none';
+                
+                btn.textContent = 'Signing in...';
+                btn.disabled = true;
+                try {
+                    const userCredential = await signInWithEmailAndPassword(authInstance, email, password);
+                    const user = userCredential.user;
+                    
+                    // Get Firebase ID token and set cross-domain cookie
+                    try {
+                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                        const token = await getIdToken(user);
+                        
+                        // Import and set the auth cookie
+                        const { setAuthCookie } = await import('./js/cookie-auth.js');
+                        setAuthCookie(token);
+                        
+                        console.log('Cross-domain auth cookie set successfully');
+                    } catch (cookieError) {
+                        console.error('Error setting auth cookie:', cookieError);
+                        // Continue with login even if cookie setting fails
+                    }
+                    
+                    // Set flag to indicate this is a fresh login (not a refresh)
+                    sessionStorage.setItem('freshLogin', 'true');
+                    
+                    if (user && user.uid) {
+                        // Use shortened ID in URL (first 6 chars)
+                        const shortId = getShortUserId(user.uid);
+                        window.location.href = `/acct_${shortId}/dashboard`;
+                    } else {
+                        window.location.href = '/dashboard';
+                    }
+                } catch (err) {
+                    const errorMsg = getFriendlyErrorMessage(err);
+                    showError(errorMsg);
+                } finally {
+                    btn.textContent = original;
+                    btn.disabled = false;
+                }
+            });
+        }
+        
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (errorMessage) errorMessage.style.display = 'none';
+                googleBtn.textContent = 'Signing in with Google...';
+                googleBtn.disabled = true;
+                try {
+                    const result = await signInWithPopup(authInstance, googleProvider);
+                    const user = result.user;
+                    
+                    // Get Firebase ID token and set cross-domain cookie
+                    try {
+                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                        const token = await getIdToken(user);
+                        
+                        // Import and set the auth cookie
+                        const { setAuthCookie } = await import('./js/cookie-auth.js');
+                        setAuthCookie(token);
+                        
+                        console.log('Cross-domain auth cookie set successfully');
+                    } catch (cookieError) {
+                        console.error('Error setting auth cookie:', cookieError);
+                        // Continue with login even if cookie setting fails
+                    }
+                    
+                    // Set flag to indicate this is a fresh login (not a refresh)
+                    sessionStorage.setItem('freshLogin', 'true');
+                    
+                    // Firebase's signInWithPopup should automatically close the popup
+                    // Add a small delay to ensure popup closes smoothly before redirect
+                    setTimeout(() => {
+                        if (user && user.uid) {
+                            // Use shortened ID in URL (first 6 chars)
+                            const shortId = getShortUserId(user.uid);
+                            window.location.href = `/acct_${shortId}/dashboard`;
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 150);
+                } catch (err) {
+                    // Silently handle errors - no message displayed
+                    googleBtn.textContent = 'Continue with Google';
+                } finally {
+                    googleBtn.disabled = false;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

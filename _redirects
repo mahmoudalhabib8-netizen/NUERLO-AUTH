@@ -1,0 +1,84 @@
+# IMPORTANT: Order matters! More specific rules first, then general ones
+# Static files must be served directly (Netlify does this automatically for files that exist)
+
+# CRITICAL: Order matters! More specific patterns (account-prefixed) come FIRST
+
+# Redirect account-prefixed course URLs to course.html (SPA routing)
+# NEW FORMAT: /acct_{id}/{courseId}/{section} (e.g., /acct_ABC123/advanced-ai/lessons)
+# Course sections: details, lessons, resources, discussions, analytics, assignments, notes
+/acct_*/*/lessons    /course.html   200
+/acct_*/*/resources    /course.html   200
+/acct_*/*/discussions    /course.html   200
+/acct_*/*/assignments    /course.html   200
+/acct_*/*/notes    /course.html   200
+/acct_*/*/details    /course.html   200
+/acct_*/*/analytics    /course.html   200
+
+# Legacy: /acct_{id}/{courseId}/course and /acct_{id}/{courseId}/course/{section} routes
+/acct_*/*/course/*    /course.html   200
+
+# CRITICAL: Account-prefixed dashboard routes MUST come before generic course routes
+# Redirect account-prefixed section URLs to dashboard.html (SPA routing)
+# This handles /acct_{id}/{section} routes (e.g., /acct_ABC123/marketplace, /acct_ABC123/progress)
+# NOTE: /acct_*/overview and /acct_*/progress go to dashboard, NOT course
+/acct_*/marketplace    /dashboard.html   200
+/acct_*/programs    /dashboard.html   200
+/acct_*/overview    /dashboard.html   200
+/acct_*/progress    /dashboard.html   200
+/acct_*/credentials    /dashboard.html   200
+/acct_*/tasks    /dashboard.html   200
+/acct_*/community    /dashboard.html   200
+/acct_*/profile    /dashboard.html   200
+/acct_*/settings    /dashboard.html   200
+/acct_*/subscriptions    /dashboard.html   200
+/acct_*/payment    /dashboard.html   200
+/acct_*/help    /dashboard.html   200
+
+# Redirect course URLs to course.html (SPA routing)
+# NEW FORMAT: /{courseId}/{section} (e.g., /advanced-ai/lessons, /advanced-ai/details)
+# Course sections: details, lessons, resources, discussions, analytics, assignments, notes
+# NOTE: These catch course routes that don't have account prefix
+/*/lessons    /course.html   200
+/*/resources    /course.html   200
+/*/discussions    /course.html   200
+/*/assignments    /course.html   200
+/*/notes    /course.html   200
+/*/details    /course.html   200
+/*/analytics    /course.html   200
+
+# Legacy: /{courseId}/course/{section} or /{courseId}/course (for overview)
+/*/course/*    /course.html   200
+
+# Legacy support: /course/{id} and /course/{id}/{section} (old format)
+/course/*    /course.html   200
+
+# Redirect account-prefixed dashboard URLs to dashboard.html (SPA routing)
+# This handles /acct_{id}/dashboard and /acct_{id}/dashboard/{section} routes
+/acct_*/dashboard/*    /dashboard.html   200
+
+# Redirect clean section URLs to dashboard.html (SPA routing)
+# This handles /{section} routes (e.g., /marketplace, /progress, /settings)
+/marketplace    /dashboard.html   200
+/programs    /dashboard.html   200
+/progress    /dashboard.html   200
+/credentials    /dashboard.html   200
+/tasks    /dashboard.html   200
+/community    /dashboard.html   200
+/profile    /dashboard.html   200
+/settings    /dashboard.html   200
+/subscriptions    /dashboard.html   200
+/payment    /dashboard.html   200
+/help    /dashboard.html   200
+
+# Redirect dashboard section URLs to dashboard.html (SPA routing)
+# This handles /dashboard/{section} routes (e.g., /dashboard/programs, /dashboard/settings)
+/dashboard/*    /dashboard.html   200
+
+# Redirect base dashboard route to dashboard.html
+/dashboard    /dashboard.html   200
+
+# Keep dashboard.html working
+/dashboard.html    /dashboard.html   200
+
+# Redirect index to dashboard
+/index.html    /dashboard.html   200

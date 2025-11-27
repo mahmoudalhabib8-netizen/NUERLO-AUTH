@@ -1,0 +1,168 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# IMPORTANT: Order matters! More specific rules first
+# Static files (JS, CSS, images) are automatically served by Netlify if they exist
+
+[[redirects]]
+  from = "/acct_*/*/course/*"
+  to = "/course.html"
+  status = 200
+
+[[redirects]]
+  from = "/*/course/*"
+  to = "/course.html"
+  status = 200
+
+[[redirects]]
+  from = "/course/*"
+  to = "/course.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/marketplace"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/programs"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/progress"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/credentials"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/tasks"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/community"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/profile"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/settings"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/subscriptions"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/payment"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/help"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/dashboard/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/marketplace"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/programs"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/progress"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/credentials"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/tasks"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/community"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/settings"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/subscriptions"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/payment"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/help"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/index.html"
+  to = "/dashboard.html"
+  status = 200
+
+# Ensure static files are served correctly
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Content-Type = "text/css"
+

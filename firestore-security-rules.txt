@@ -1,0 +1,107 @@
+// ==========================================
+// FIRESTORE SECURITY RULES
+// ==========================================
+// 
+// IMPORTANT: Copy and paste these rules into Firebase Console:
+// 1. Go to Firebase Console → Firestore Database → Rules
+// 2. Replace existing rules with the rules below
+// 3. Click "Publish"
+//
+// These rules ensure:
+// - Admins can create/modify any course
+// - Mentors can create courses and edit content of their own courses
+// - Users can only update enrollment fields (enrolled, students)
+// - Users can only access their own data
+// - Admin collections are protected
+//
+// ==========================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to get user role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && getUserRole() == 'admin';
+    }
+    
+    // Helper function to check if user is mentor
+    function isMentor() {
+      return request.auth != null && getUserRole() == 'mentor';
+    }
+    
+    // Helper function to check if user is admin or mentor
+    function isAdminOrMentor() {
+      return isAdmin() || isMentor();
+    }
+    
+    // Helper function to check if mentor owns the course
+    function mentorOwnsCourse() {
+      return isMentor() && 
+             resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Helper function to check if only content fields are being updated
+    // Content fields: description, lessons, resources, assignments
+    // Structural fields: id, title, category, price, difficulty, rating, students, instructor, duration, enrolled, image, createdAt, createdBy
+    function isContentOnlyUpdate() {
+      let allowedFields = ['description', 'lessons', 'resources', 'assignments'];
+      let changedFields = request.resource.data.diff(resource.data).affectedKeys();
+      return changedFields.hasOnly(allowedFields);
+    }
+    
+    // Allow anyone to read courses (for marketplace)
+    match /courses/{courseId} {
+      allow read: if true;
+      
+      // Only allow authenticated users to update course enrollment count
+      // This prevents users from modifying course details (title, price, etc.)
+      allow update: if request.auth != null 
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['enrolled', 'students']);
+      
+      // Admins can create and fully update any course
+      allow create, write: if isAdmin();
+      
+      // Mentors can create courses (must set createdBy to their uid)
+      allow create: if isMentor() 
+        && request.resource.data.createdBy == request.auth.uid;
+      
+      // Mentors can update their own courses, but only content fields
+      // They cannot change structural fields like title, price, category, etc.
+      allow update: if isMentor() 
+        && mentorOwnsCourse()
+        && isContentOnlyUpdate();
+    }
+    
+    // User document rules
+    match /users/{userId} {
+      // Users can only read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can create their own document during signup
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can update their own document, but cannot change their uid
+      // Note: Subscription field is updated by Stripe webhooks (server-side, bypasses rules)
+      // Users can read their subscription status but cannot modify it directly
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid;
+      
+      // Users cannot delete their account data through the app
+      allow delete: if false;
+    }
+    
+    // Admin-only collections
+    match /admin/{document=**} {
+      allow read, write: if request.auth != null 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}
+

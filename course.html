@@ -1,0 +1,2935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Course - Nuerlo</title>
+    
+    <!-- Set document title immediately to prevent dashboard title from showing -->
+    <script>
+        (function() {
+            // Set course title immediately (before any scripts load)
+            document.title = 'Course - Nuerlo';
+            
+            // Try to get courseId from URL and update title if possible
+            const pathname = window.location.pathname;
+            const courseRouteMatch = pathname.match(/^\/([^\/]+)\/(details|analytics|lessons|resources|discussions|assignments|notes)$/);
+            if (courseRouteMatch && courseRouteMatch[1]) {
+                const courseId = courseRouteMatch[1];
+                // Try to get from sessionStorage if available
+                try {
+                    const storedCourseId = sessionStorage.getItem('currentCourseId');
+                    if (storedCourseId) {
+                        // Title will be updated by course.js with actual course name
+                        document.title = 'Course - Nuerlo';
+                    }
+                } catch(e) {
+                    // sessionStorage not available, use default
+                }
+            }
+        })();
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/images/NUERLO-LOGO.png">
+    
+    <!-- Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Nuerlo">
+    <meta name="theme-color" content="#ffffff" id="themeColorMeta">
+    <meta name="course-id" content="" id="courseIdMeta">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Dashboard Styles Only -->
+    <link rel="stylesheet" href="/dashboard-styles.css">
+    <style>
+        /* Prevent content flash */
+        body:not(.auth-ready) > #authProtectedContent {
+            display: none !important;
+        }
+
+        /* ============================================
+           PROFESSIONAL COURSE VIEW DESIGN
+           ============================================ */
+        
+        .course-content {
+            max-width: 100%;
+        }
+
+        /* Remove all boxes, shadows, glows */
+        .course-content * {
+            box-shadow: none !important;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+        }
+        
+        /* Exception: Chat input wrapper needs border */
+        .course-content .chat-input-wrapper {
+            border: 1px solid var(--color-border-light) !important;
+            border-radius: 20px !important;
+            background: var(--color-bg-secondary) !important;
+        }
+        
+        .dark-mode .course-content .chat-input-wrapper {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .light-mode .course-content .chat-input-wrapper {
+            border-color: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Section Headers */
+        .section-title,
+        .continue-learning-title,
+        .recent-lessons-title,
+        .community-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 24px;
+            display: block;
+        }
+
+        /* Progress Bar */
+        .overview-progress {
+            margin-bottom: 48px;
+        }
+
+        .progress-line {
+            width: 100%;
+            height: 4px;
+            background: var(--color-border-light);
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-brand-purple);
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+
+        /* Continue Learning */
+        .continue-learning {
+            margin-bottom: 56px;
+        }
+
+        .continue-learning-header {
+            margin-bottom: 0;
+        }
+
+        .continue-learning-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--color-border-light);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .continue-learning-card:hover {
+            opacity: 0.8;
+        }
+
+        .continue-learning-number {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-brand-purple);
+            flex-shrink: 0;
+        }
+
+        .continue-learning-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .continue-learning-label {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .continue-learning-title-text {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .continue-learning-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+        }
+
+        .continue-learning-arrow {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-tertiary);
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        /* Recent Lessons */
+        .recent-lessons {
+            margin-bottom: 56px;
+        }
+
+        .recent-lessons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .recent-lesson-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border-light);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .recent-lesson-item:hover {
+            opacity: 0.8;
+        }
+
+        .recent-lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .recent-lesson-number {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+        }
+
+        .recent-lesson-item.completed .recent-lesson-number {
+            color: var(--color-brand-purple);
+        }
+
+        .recent-lesson-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .recent-lesson-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+
+        .recent-lesson-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+        }
+
+        .recent-lesson-status {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--color-brand-purple);
+        }
+
+        .recent-lesson-status svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Community */
+        .community-section {
+            margin-top: 56px;
+            padding-top: 40px;
+            border-top: 1px solid var(--color-border-light);
+        }
+
+        .community-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .community-toggle {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            transition: color 0.15s ease;
+            padding: 0;
+            margin: 0;
+        }
+
+        .community-toggle:hover {
+            color: var(--color-text-primary);
+        }
+
+        .community-toggle svg {
+            transition: transform 0.2s ease;
+        }
+
+        .community-toggle.expanded svg {
+            transform: rotate(180deg);
+        }
+
+        .community-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .community-content.expanded {
+            max-height: 500px;
+        }
+
+        .community-messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .community-message-item {
+            display: flex;
+            gap: 12px;
+            padding: 0;
+        }
+
+        .community-avatar {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .community-message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .community-message-text {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Lesson List */
+        .lesson-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .lesson-box {
+            border: 1px solid var(--color-border-light);
+            border-radius: 0;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .lesson-box:hover {
+            border-color: var(--color-text-tertiary);
+        }
+
+        .lesson-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .lesson-box-header:hover {
+            background-color: var(--color-bg-secondary);
+        }
+
+        .lesson-box-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .lesson-box-number {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+        }
+
+        .lesson-box.completed .lesson-box-number {
+            color: var(--color-brand-purple);
+        }
+
+        .lesson-box-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lesson-box-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .lesson-box-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+        }
+
+        .lesson-box-toggle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-tertiary);
+            transition: transform 0.2s ease, color 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .lesson-box.expanded .lesson-box-toggle {
+            transform: rotate(180deg);
+        }
+
+        .lesson-box-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .lesson-box.expanded .lesson-box-content {
+            max-height: 2000px;
+        }
+
+        .lesson-modules {
+            padding: 0 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .lesson-module {
+            border: 1px solid var(--color-border-light);
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .lesson-module-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .lesson-module-header:hover {
+            background-color: var(--color-bg-secondary);
+        }
+
+        .lesson-module-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            flex: 1;
+        }
+
+        .lesson-module-toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-tertiary);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .lesson-module.expanded .lesson-module-toggle {
+            transform: rotate(180deg);
+        }
+
+        .lesson-module-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .lesson-module.expanded .lesson-module-content {
+            max-height: 1000px;
+        }
+
+        .lesson-videos {
+            padding: 12px 16px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .lesson-video-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            border-left: 2px solid transparent;
+        }
+
+        .lesson-video-item:hover {
+            background-color: var(--color-bg-secondary);
+            border-left-color: var(--color-brand-purple);
+        }
+
+        .lesson-video-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+        }
+
+        .lesson-video-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lesson-video-title {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--color-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .lesson-video-duration {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* Progress Visual - Match Dashboard Style */
+        .progress-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+            padding: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 0;
+        }
+
+        .stat-card {
+            padding: 0;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--color-text-tertiary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: 8px;
+            opacity: 0.6;
+        }
+
+        .progress-chart-container {
+            padding: 0;
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .progress-chart {
+            width: 100%;
+            min-height: 320px;
+            display: block;
+            position: relative;
+        }
+
+        .progress-chart-svg {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            min-height: 320px;
+            display: block;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: var(--color-brand-purple);
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .chart-area {
+            fill: url(#chartGradient);
+            opacity: 1;
+        }
+
+        .chart-point {
+            fill: var(--color-brand-purple);
+            stroke: var(--color-bg-primary);
+            stroke-width: 2;
+            r: 4;
+            transition: all 0.25s ease;
+        }
+
+        .chart-point:hover {
+            r: 6;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - var(--header-height) - 80px);
+            min-height: 500px;
+            position: relative;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding-bottom: 100px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            max-width: 75%;
+        }
+
+        .chat-message.own {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-tertiary);
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        .chat-bubble {
+            padding: 0;
+        }
+
+        .chat-message-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .chat-message.own .chat-message-name {
+            text-align: right;
+        }
+
+        .chat-message-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--color-text-primary);
+        }
+
+        .chat-message-time {
+            font-size: 12px;
+            color: var(--color-text-tertiary);
+            margin-top: 4px;
+        }
+
+        .chat-message.own .chat-message-time {
+            text-align: right;
+        }
+
+        .chat-input-area {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 0;
+            padding: 16px 24px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            background: var(--color-bg-primary) !important;
+            border-top: 1px solid var(--color-border-light);
+            z-index: 100;
+        }
+
+        .dashboard-sidebar.collapsed ~ .dashboard-main .chat-input-area {
+            left: 64px;
+        }
+
+        @media (max-width: 768px) {
+            .chat-input-area {
+                left: 0;
+            }
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border: 1px solid var(--color-border-light) !important;
+            border-radius: 20px !important;
+            background: var(--color-bg-secondary) !important;
+            transition: border-color 0.15s ease;
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: var(--color-text-primary) !important;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: var(--color-text-primary);
+            font-size: 14px;
+            font-family: var(--font-family);
+            resize: none;
+            min-height: 20px;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        .chat-input:focus {
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: var(--color-text-tertiary);
+        }
+
+        .chat-send-btn {
+            padding: 8px 16px;
+            background: var(--color-brand-purple);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .chat-send-btn:hover {
+            opacity: 0.9;
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Resource Items */
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--color-border-light);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .resource-item:hover {
+            opacity: 0.8;
+        }
+
+        .resource-item:last-child {
+            border-bottom: none;
+        }
+
+        .resource-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0.5;
+            color: var(--color-text-tertiary);
+        }
+
+        .resource-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            flex: 1;
+        }
+
+        .resource-size {
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+            margin-left: auto;
+        }
+
+        /* Stats */
+        .stats-minimal {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 48px;
+        }
+
+        .stat-minimal {
+            padding: 0;
+        }
+
+        .stat-minimal-label {
+            font-size: 13px;
+            color: var(--color-text-tertiary);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .stat-minimal-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            line-height: 1.2;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            margin-top: auto;
+            padding: var(--space-4);
+            border-top: 1px solid var(--color-border-light);
+        }
+
+        .leave-program-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-4);
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-medium);
+            transition: color 0.15s ease;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-family);
+        }
+
+        .leave-program-btn:hover {
+            color: var(--color-text-primary);
+        }
+
+        .leave-program-btn svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
+
+        .dashboard-sidebar.collapsed .leave-program-btn span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .dashboard-sidebar.collapsed .leave-program-btn {
+            justify-content: center;
+            padding: var(--space-2);
+        }
+
+        .dashboard-sidebar.collapsed .leave-program-btn svg {
+            margin: 0;
+        }
+
+        /* Hide "Back To Dashboard" text when sidebar is collapsed */
+        .dashboard-sidebar.collapsed .sidebar-logo a span {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-logo a {
+            justify-content: center;
+            padding: var(--space-2);
+        }
+    </style>
+    <script>
+        // Safety fallback: Only hide loading screen if course.js hasn't done it yet
+        // This ensures loading screen stays visible until Firebase authenticates and course loads
+        setTimeout(function() {
+            try {
+                const body = document.body;
+                const content = document.getElementById('authProtectedContent');
+                const loadingScreen = document.getElementById('loadingScreen');
+                
+                // Only force show if still loading after 8 seconds (course.js should have handled it by then)
+                if (content && loadingScreen && !body.classList.contains('auth-ready') && loadingScreen.style.display !== 'none') {
+                    console.warn('Safety fallback triggered: Forcing content to show after 8s timeout');
+                    if (typeof window.hideLoadingScreen === 'function') {
+                        window.hideLoadingScreen();
+                    } else {
+                        // Fallback if function doesn't exist
+                        body.classList.add('auth-ready');
+                        content.style.display = 'block';
+                        loadingScreen.classList.add('hidden');
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }
+                }
+            } catch (e) {
+                console.error('Safety fallback error:', e);
+            }
+        }, 8000);
+    </script>
+</head>
+<body class="dashboard-body">
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-logo">
+            <img src="/assets/images/LOGO.png" alt="Nuerlo">
+        </div>
+    </div>
+
+    <!-- Auth Protected Content - Hidden until Firebase confirms authentication -->
+    <div id="authProtectedContent" class="auth-protected-content" style="display: none;">
+    <!-- Sidebar -->
+    <nav class="dashboard-sidebar" id="sidebar">
+        <button class="sidebar-collapse-btn" id="sidebarToggle" title="Collapse sidebar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <a href="/dashboard.html" style="text-decoration: none; color: var(--color-text-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); display: flex; align-items: center; gap: var(--space-2);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5"></path>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Back To Dashboard</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Course</div>
+                <ul class="sidebar-nav">
+                    <li class="nav-item active">
+                        <a href="#details" class="nav-link" data-section="details" data-tooltip="Overview">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Overview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#lessons" class="nav-link" data-section="lessons" data-tooltip="Lessons">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                            <span>Lessons</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#resources" class="nav-link" data-section="resources" data-tooltip="Resources">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <span>Resources</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#discussions" class="nav-link" data-section="discussions" data-tooltip="General Chat">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>General Chat</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Progress</div>
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link" data-section="analytics" data-tooltip="Progress">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                            </svg>
+                            <span>Progress</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#assignments" class="nav-link" data-section="assignments" data-tooltip="Assignments">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3 8-8"></path>
+                                <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path>
+                            </svg>
+                            <span>Assignments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#notes" class="nav-link" data-section="notes" data-tooltip="Notes">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <span>Notes</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <button class="nav-link leave-program-btn" id="leaveProgramBtn" data-tooltip="Leave Program">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Leave Program</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            
+            <div class="header-left">
+                <h1 class="dashboard-title">
+                    <span id="titleText">Overview</span>
+                </h1>
+            </div>
+            
+            <div class="header-center">
+                <div class="header-search-bar">
+                    <svg class="header-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" class="header-search-input" placeholder="Search course content..." id="headerSearchInput">
+                    <button class="header-search-clear" id="headerSearchClear" style="display: none;">×</button>
+                    <div class="header-search-shortcut">/</div>
+                    <div class="header-search-dropdown" id="headerSearchDropdown">
+                        <div class="header-search-suggestions" id="headerSearchSuggestions"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-icon-btn theme-toggle-btn" id="themeToggle" title="Toggle theme">
+                        <!-- Sun icon for dark mode (to switch to light) -->
+                        <svg class="theme-icon theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <!-- Moon icon for light mode (to switch to dark) -->
+                        <svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <button class="header-icon-btn notification-btn" id="notificationBtn" title="Notifications">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </button>
+                    <button class="header-icon-btn add-btn" id="addBtn" title="Quick Actions">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Notifications Dropdown -->
+                <div class="notifications-dropdown header-dropdown" id="notificationsDropdown">
+                    <div class="notifications-header">
+                        <span class="notifications-title">Notifications</span>
+                    </div>
+                    <div class="notifications-content">
+                        <div class="notification-empty">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <p>No new notifications</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Add Dropdown -->
+                <div class="add-dropdown header-dropdown" id="addDropdown">
+                    <div class="add-dropdown-content">
+                        <button class="add-dropdown-item" data-section="notes" onclick="navigateToSection('notes'); hideAddDropdown(); return false;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <span>New Note</span>
+                        </button>
+                        <button class="add-dropdown-item" data-section="discussions" onclick="navigateToSection('discussions'); hideAddDropdown(); return false;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>General Chat</span>
+                        </button>
+                        <div class="add-dropdown-divider"></div>
+                        <button class="add-dropdown-item" onclick="window.location.href='/dashboard.html'; hideAddDropdown(); return false;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Dashboard</span>
+                        </button>
+                        <button class="add-dropdown-item" onclick="window.location.href='/dashboard.html#profile'; hideAddDropdown(); return false;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Profile</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="user-profile-mini" onclick="window.location.href='/dashboard.html#profile'">
+                    <div class="user-avatar" id="userAvatar"></div>
+                    <span class="user-name-mini" id="userNameMini"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content course-content">
+            
+            <!-- Overview Section -->
+            <section id="details" class="content-section active">
+                <!-- Progress -->
+                <div class="overview-progress" id="overviewProgress">
+                    <!-- Progress will be populated here -->
+                </div>
+
+                <!-- Continue Learning -->
+                <div class="continue-learning" id="continueLearning">
+                    <!-- Continue Learning will be populated here -->
+                </div>
+
+                <!-- Recent Lessons -->
+                <div class="recent-lessons" id="recentLessons">
+                    <!-- Recent Lessons will be populated here -->
+                </div>
+
+                <!-- Community Section -->
+                <div class="community-section" id="communitySection">
+                    <!-- Community will be populated here -->
+                </div>
+            </section>
+
+            <!-- Lessons Section -->
+            <section id="lessons" class="content-section">
+                <div class="lesson-list" id="lessonsList">
+                    <!-- Sample Lesson Box 1 (Template - Will be replaced by course.js) -->
+                    <div class="lesson-box">
+                        <div class="lesson-box-header">
+                            <div class="lesson-box-main">
+                                <div class="lesson-box-number">1</div>
+                                <div class="lesson-box-info">
+                                    <div class="lesson-box-title">Lesson One</div>
+                                    <div class="lesson-box-meta">
+                                        <span class="lesson-duration">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            30m
+                                        </span>
+                                        <span>•</span>
+                                        <span>2 modules</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="lesson-box-toggle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="lesson-box-content">
+                            <div class="lesson-modules">
+                                <div class="lesson-module">
+                                    <div class="lesson-module-header">
+                                        <div class="lesson-module-title">Module One</div>
+                                        <div class="lesson-module-toggle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-module-content">
+                                        <div class="lesson-videos">
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video One</div>
+                                                    <div class="lesson-video-duration">10 min</div>
+                                                </div>
+                                            </div>
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video Two</div>
+                                                    <div class="lesson-video-duration">8 min</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lesson-module">
+                                    <div class="lesson-module-header">
+                                        <div class="lesson-module-title">Module Two</div>
+                                        <div class="lesson-module-toggle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-module-content">
+                                        <div class="lesson-videos">
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video Three</div>
+                                                    <div class="lesson-video-duration">12 min</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Lesson Box 2 (Template - Will be replaced by course.js) -->
+                    <div class="lesson-box">
+                        <div class="lesson-box-header">
+                            <div class="lesson-box-main">
+                                <div class="lesson-box-number">2</div>
+                                <div class="lesson-box-info">
+                                    <div class="lesson-box-title">Lesson Two</div>
+                                    <div class="lesson-box-meta">
+                                        <span class="lesson-duration">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            25m
+                                        </span>
+                                        <span>•</span>
+                                        <span>1 module</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="lesson-box-toggle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="lesson-box-content">
+                            <div class="lesson-modules">
+                                <div class="lesson-module">
+                                    <div class="lesson-module-header">
+                                        <div class="lesson-module-title">Module One</div>
+                                        <div class="lesson-module-toggle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-module-content">
+                                        <div class="lesson-videos">
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video One</div>
+                                                    <div class="lesson-video-duration">15 min</div>
+                                                </div>
+                                            </div>
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video Two</div>
+                                                    <div class="lesson-video-duration">10 min</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sample Lesson Box 3 (Template - Will be replaced by course.js) -->
+                    <div class="lesson-box">
+                        <div class="lesson-box-header">
+                            <div class="lesson-box-main">
+                                <div class="lesson-box-number">3</div>
+                                <div class="lesson-box-info">
+                                    <div class="lesson-box-title">Lesson Three</div>
+                                    <div class="lesson-box-meta">
+                                        <span class="lesson-duration">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            20m
+                                        </span>
+                                        <span>•</span>
+                                        <span>1 module</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="lesson-box-toggle">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="lesson-box-content">
+                            <div class="lesson-modules">
+                                <div class="lesson-module">
+                                    <div class="lesson-module-header">
+                                        <div class="lesson-module-title">Module One</div>
+                                        <div class="lesson-module-toggle">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="lesson-module-content">
+                                        <div class="lesson-videos">
+                                            <div class="lesson-video-item">
+                                                <div class="lesson-video-icon">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                                    </svg>
+                                                </div>
+                                                <div class="lesson-video-info">
+                                                    <div class="lesson-video-title">Video One</div>
+                                                    <div class="lesson-video-duration">20 min</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resources Section -->
+            <section id="resources" class="content-section">
+                <div class="lesson-list" id="resourcesList">
+                    <!-- Sample Resource Items (Template - Will be replaced by course.js) -->
+                    <div class="resource-item">
+                        <div class="resource-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="resource-name">External Tool One</div>
+                        <div class="resource-size">Link</div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="resource-name">External Tool Two</div>
+                        <div class="resource-size">Link</div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="resource-name">External Tool Three</div>
+                        <div class="resource-size">Link</div>
+                    </div>
+
+                    <div class="resource-item">
+                        <div class="resource-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="resource-name">External Tool Four</div>
+                        <div class="resource-size">Link</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- General Chat Section -->
+            <section id="discussions" class="content-section">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    <div class="chat-input-area" id="chatInputArea">
+                        <div class="chat-input-wrapper">
+                            <textarea 
+                                class="chat-input" 
+                                id="chatInput" 
+                                placeholder="Message #general"
+                                rows="1"
+                            ></textarea>
+                        </div>
+                        <button class="chat-send-btn" id="chatSendBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section id="analytics" class="content-section">
+                <div class="progress-visual" id="progressVisual">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Study time</div>
+                            <div class="stat-value" id="progressStudyTime">—</div>
+                            <div class="stat-change" id="progressStudyTimeChange"></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" id="progressCompleted">—</div>
+                            <div class="stat-change" id="progressCompletedChange"></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Streak</div>
+                            <div class="stat-value" id="progressStreak">—</div>
+                            <div class="stat-change" id="progressStreakChange"></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Average</div>
+                            <div class="stat-value" id="progressAverage">—</div>
+                            <div class="stat-change" id="progressAverageChange"></div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Chart -->
+                    <div class="progress-chart-container">
+                        <div class="progress-chart">
+                            <svg class="progress-chart-svg" id="progressChart" viewBox="0 0 720 280" preserveAspectRatio="xMinYMid meet">
+                                <!-- Background -->
+                                <rect x="0" y="0" width="720" height="280" fill="transparent"/>
+                                
+                                <!-- Y-axis -->
+                                <line x1="70" y1="30" x2="70" y2="220" stroke="var(--color-border-light)" stroke-width="1.5"/>
+                                
+                                <!-- X-axis -->
+                                <line x1="70" y1="220" x2="700" y2="220" stroke="var(--color-border-light)" stroke-width="1.5"/>
+                                
+                                <!-- Grid lines -->
+                                <line x1="70" y1="50" x2="700" y2="50" stroke="var(--color-border-light)" stroke-width="0.5" opacity="0.4"/>
+                                <line x1="70" y1="100" x2="700" y2="100" stroke="var(--color-border-light)" stroke-width="0.5" opacity="0.4"/>
+                                <line x1="70" y1="150" x2="700" y2="150" stroke="var(--color-border-light)" stroke-width="0.5" opacity="0.4"/>
+                                <line x1="70" y1="200" x2="700" y2="200" stroke="var(--color-border-light)" stroke-width="0.5" opacity="0.4"/>
+                                
+                                <!-- Gradient for area under line -->
+                                <defs>
+                                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:var(--color-brand-purple);stop-opacity:0.2" />
+                                        <stop offset="100%" style="stop-color:var(--color-brand-purple);stop-opacity:0" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <!-- Area under line (will be populated by JavaScript) -->
+                                <polygon class="chart-area" id="chartArea" points="127,220 127,220 222,220 317,220 412,220 507,220 602,220 697,220" fill="url(#chartGradient)"/>
+                                
+                                <!-- Line path (will be populated by JavaScript) -->
+                                <polyline class="chart-line" id="chartLine" points="127,220 222,220 317,220 412,220 507,220 602,220 697,220" 
+                                    fill="none" stroke="var(--color-brand-purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                
+                                <!-- Data points (will be populated by JavaScript) -->
+                                <g id="chartPoints"></g>
+                                
+                                <!-- Y-axis labels -->
+                                <text x="65" y="35" fill="var(--color-text-tertiary)" font-size="11" font-weight="500" text-anchor="end" opacity="0.7">100%</text>
+                                <text x="65" y="85" fill="var(--color-text-tertiary)" font-size="11" font-weight="500" text-anchor="end" opacity="0.7">75%</text>
+                                <text x="65" y="135" fill="var(--color-text-tertiary)" font-size="11" font-weight="500" text-anchor="end" opacity="0.7">50%</text>
+                                <text x="65" y="185" fill="var(--color-text-tertiary)" font-size="11" font-weight="500" text-anchor="end" opacity="0.7">25%</text>
+                                <text x="65" y="225" fill="var(--color-text-tertiary)" font-size="11" font-weight="500" text-anchor="end" opacity="0.7">0%</text>
+                                
+                                <!-- X-axis labels (Days) -->
+                                <text x="127" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Mon</text>
+                                <text x="222" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Tue</text>
+                                <text x="317" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Wed</text>
+                                <text x="412" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Thu</text>
+                                <text x="507" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Fri</text>
+                                <text x="602" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Sat</text>
+                                <text x="697" y="245" fill="var(--color-text-primary)" font-size="12" font-weight="500" text-anchor="middle">Sun</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assignments Section -->
+            <section id="assignments" class="content-section">
+                <div class="lesson-list" id="assignmentsList">
+                    <!-- Assignments will be populated here -->
+                </div>
+            </section>
+
+            <!-- Notes Section -->
+            <section id="notes" class="content-section">
+                <div class="lesson-list" id="notesList">
+                    <!-- Notes will be populated here -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/js/navigation.js"></script>
+    <script src="/js/routing.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZvKVOLry7oDekiRxZlY_7-u-Nfe15Zts",
+            authDomain: "nuerlo-course-platform.firebaseapp.com",
+            projectId: "nuerlo-course-platform",
+            storageBucket: "nuerlo-course-platform.firebasestorage.app",
+            messagingSenderId: "1089335169355",
+            appId: "1:1089335169355:web:a327f39b892f5e752398ce",
+            measurementId: "G-D6BX96Z7KN"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const analytics = getAnalytics(app);
+        
+        // Make Firebase available globally
+        window.firebase = { auth, db, storage, analytics };
+    </script>
+
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/course.js"></script>
+    
+    <script>
+        // Initialize theme immediately to prevent flash
+        (function() {
+            let themeMode = 'dark'; // Default to dark mode
+            
+            try {
+                // Check for TEMPORARY theme preference (from header toggle) - expires after 24 hours
+                const tempTheme = localStorage.getItem('temporaryTheme');
+                const tempThemeTimestamp = localStorage.getItem('temporaryThemeTimestamp');
+                
+                if (tempTheme && tempThemeTimestamp) {
+                    const timestamp = parseInt(tempThemeTimestamp);
+                    const now = Date.now();
+                    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+                    
+                    // If temporary theme is still valid (less than 24 hours old)
+                    if (now - timestamp < twentyFourHours) {
+                        themeMode = tempTheme;
+                        console.log('Using temporary theme preference:', tempTheme);
+                    } else {
+                        // Temporary preference expired, remove it and use permanent setting
+                        localStorage.removeItem('temporaryTheme');
+                        localStorage.removeItem('temporaryThemeTimestamp');
+                        console.log('Temporary theme preference expired, using permanent setting');
+                        
+                        // Fall through to check permanent settings below
+                        const storedSettings = localStorage.getItem('dashboardSettings');
+                        if (storedSettings) {
+                            const settings = JSON.parse(storedSettings);
+                            if (settings.alwaysLightMode) {
+                                themeMode = 'light';
+                            } else if (settings.themeMode) {
+                                themeMode = settings.themeMode;
+                            }
+                        }
+                    }
+                } else {
+                    // No temporary preference, check PERMANENT settings
+                    const storedSettings = localStorage.getItem('dashboardSettings');
+                    if (storedSettings) {
+                        const settings = JSON.parse(storedSettings);
+                        if (settings.alwaysLightMode) {
+                            themeMode = 'light';
+                        } else if (settings.themeMode) {
+                            themeMode = settings.themeMode;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading theme preferences:', e);
+            }
+            
+            const body = document.body;
+            const themeMeta = document.getElementById('themeColorMeta');
+            
+            // Remove both classes first to ensure clean state
+            body.classList.remove('light-mode', 'dark-mode');
+            
+            if (themeMode === 'light') {
+                body.classList.add('light-mode');
+                body.setAttribute('data-theme', 'light');
+                if (themeMeta) themeMeta.content = '#ffffff';
+            } else {
+                // Default to dark mode
+                body.classList.add('dark-mode');
+                body.setAttribute('data-theme', 'dark');
+                if (themeMeta) themeMeta.content = '#0a0a0a';
+            }
+        })();
+    </script>
+    
+    <script>
+        // Override dashboard.js updateHeaderTitle to prevent "Welcome" from showing
+        (function() {
+            // Wait for dashboard.js to load
+            setTimeout(function() {
+                if (typeof window.updateHeaderTitle === 'function') {
+                    const originalUpdateHeaderTitle = window.updateHeaderTitle;
+                    window.updateHeaderTitle = function(section) {
+                        if (section === 'details') {
+                            const titleText = document.getElementById('titleText');
+                            if (titleText) {
+                                titleText.textContent = 'Overview';
+                            }
+                            return;
+                        }
+                        // For other sections, use original if needed
+                        if (originalUpdateHeaderTitle) {
+                            originalUpdateHeaderTitle(section);
+                        }
+                    };
+                }
+            }, 200);
+        })();
+        
+        // Helper function to get course ID from URL or storage
+        // NEW: Uses clean routes like /lessons, /overview (courseId stored in sessionStorage)
+        function getCourseIdFromUrl() {
+            // First check sessionStorage (most reliable - set by course.js)
+            const storedCourseId = sessionStorage.getItem('currentCourseId');
+            if (storedCourseId) {
+                return storedCourseId;
+            }
+            
+            // Check body attribute (set by course.js)
+            if (document.body && document.body.hasAttribute('data-course-id')) {
+                return document.body.getAttribute('data-course-id');
+            }
+            
+            // Check window global
+            if (window.currentCourseId) {
+                return window.currentCourseId;
+            }
+            
+            // Legacy support: Check for /<courseId>/<section> pattern
+            const pathname = window.location.pathname;
+            const courseSectionMatch = pathname.match(/^\/([^\/]+)\/([^\/]+)$/);
+            if (courseSectionMatch && courseSectionMatch[1] && courseSectionMatch[2]) {
+                const potentialCourseId = courseSectionMatch[1];
+                const potentialSection = courseSectionMatch[2];
+                const courseSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+                const dashboardSections = ['programs', 'credentials', 'marketplace', 
+                                          'tasks', 'community', 'profile', 'settings', 'subscriptions', 'help',
+                                          'dashboard', 'login', 'register', 'course'];
+                
+                if (courseSections.includes(potentialSection) && !dashboardSections.includes(potentialCourseId)) {
+                    return potentialCourseId;
+                }
+            }
+            
+            // Legacy support: Check for /acct_xxx/<courseId>/course pattern
+            const accountCourseMatch = pathname.match(/\/acct_[^\/]+\/([^\/]+)\/course/);
+            if (accountCourseMatch && accountCourseMatch[1]) {
+                return accountCourseMatch[1];
+            }
+            
+            // Legacy support: Check for /<courseId>/course pattern (old overview format)
+            const courseMatch = pathname.match(/\/([^\/]+)\/course/);
+            if (courseMatch && courseMatch[1]) {
+                return courseMatch[1];
+            }
+            
+            // Check for /acct_xxx/<courseId>/<section> pattern (legacy with account prefix)
+            const accountCourseSectionMatch = pathname.match(/\/acct_[^\/]+\/([^\/]+)\/([^\/]+)$/);
+            if (accountCourseSectionMatch && accountCourseSectionMatch[1] && accountCourseSectionMatch[2]) {
+                const potentialCourseId = accountCourseSectionMatch[1];
+                const potentialSection = accountCourseSectionMatch[2];
+                const courseSections = ['lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+                if (courseSections.includes(potentialSection)) {
+                    return potentialCourseId;
+                }
+            }
+            
+            // Legacy support: /course/<courseId> (old format)
+            const legacyMatch = pathname.match(/\/course\/([^\/]+)/);
+            if (legacyMatch && legacyMatch[1]) {
+                return legacyMatch[1];
+            }
+            
+            return null;
+        }
+
+        // Helper function to get section from URL
+        // Structure: /{courseId}/{section} - includes courseId in URL
+        function getSectionFromUrl() {
+            const pathname = window.location.pathname;
+            const courseSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+            
+            // Check for /<courseId>/<section> pattern (current format)
+            const courseSectionMatch = pathname.match(/^\/([^\/]+)\/([^\/]+)$/);
+            if (courseSectionMatch && courseSectionMatch[1] && courseSectionMatch[2]) {
+                const potentialCourseId = courseSectionMatch[1];
+                const potentialSection = courseSectionMatch[2];
+                const dashboardSections = ['programs', 'credentials', 'marketplace', 
+                                          'tasks', 'community', 'profile', 'settings', 'subscriptions', 'help',
+                                          'dashboard', 'login', 'register', 'course'];
+                
+                // If the section is a course section and the first part is not a dashboard section, it's a course
+                if (courseSections.includes(potentialSection) && !dashboardSections.includes(potentialCourseId)) {
+                    return potentialSection;
+                }
+            }
+            
+            // Fallback: Check for clean route format: /lessons, /overview, etc. (will be redirected by CourseRouter)
+            const directSectionMatch = pathname.match(/^\/([^\/]+)$/);
+            if (directSectionMatch && directSectionMatch[1]) {
+                const section = directSectionMatch[1];
+                if (courseSections.includes(section)) {
+                    return section;
+                }
+            }
+            
+            // Legacy support: Check for /<courseId>/course (old overview format)
+            const courseOverviewMatch = pathname.match(/\/([^\/]+)\/course\/?$/);
+            if (courseOverviewMatch) {
+                return 'overview';
+            }
+            
+            // Check for /acct_xxx/<courseId>/<section> pattern (legacy with account prefix)
+            const accountCourseSectionMatch = pathname.match(/\/acct_[^\/]+\/([^\/]+)\/([^\/]+)$/);
+            if (accountCourseSectionMatch && accountCourseSectionMatch[1] && accountCourseSectionMatch[2]) {
+                const potentialSection = accountCourseSectionMatch[2];
+                if (courseSections.includes(potentialSection)) {
+                    return potentialSection;
+                }
+            }
+            
+            // Legacy support: /acct_xxx/<courseId>/course/<section> pattern
+            const accountCourseOldSectionMatch = pathname.match(/\/acct_[^\/]+\/[^\/]+\/course\/([^\/]+)/);
+            if (accountCourseOldSectionMatch && accountCourseOldSectionMatch[1]) {
+                return accountCourseOldSectionMatch[1];
+            }
+            
+            // Legacy support: /<courseId>/course/<section> pattern (old structure)
+            const courseOldSectionMatch = pathname.match(/\/([^\/]+)\/course\/([^\/]+)/);
+            if (courseOldSectionMatch && courseOldSectionMatch[2]) {
+                return courseOldSectionMatch[2];
+            }
+            
+            // Legacy support: /course/<courseId>/<section> (old format)
+            const legacySectionMatch = pathname.match(/\/course\/[^\/]+\/([^\/]+)/);
+            if (legacySectionMatch && legacySectionMatch[1]) {
+                return legacySectionMatch[1];
+            }
+            
+            // Legacy support: /course/<courseId> (old format overview)
+            const legacyOverviewMatch = pathname.match(/\/course\/[^\/]+\/?$/);
+            if (legacyOverviewMatch) {
+                return 'overview';
+            }
+            
+            return null;
+        }
+
+        // Helper function to build course URL with section
+        // Structure: /{courseId}/{section} - includes courseId in URL
+        function buildCourseUrlWithSection(sectionName) {
+            const courseId = getCourseIdFromUrl();
+            if (!courseId) {
+                console.error('Cannot build course URL: no courseId found');
+                return null;
+            }
+            
+            // Course URLs include courseId: /{courseId}/{section}
+            return `/${courseId}/${sectionName}`;
+        }
+
+        // Navigation functionality
+        function navigateToSection(sectionName, skipUrlUpdate) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Update nav items
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.parentElement.classList.remove('active');
+                if (link.getAttribute('data-section') === sectionName) {
+                    link.parentElement.classList.add('active');
+                }
+            });
+            
+            // Update header title
+            const titles = {
+                'details': 'Overview',
+                'lessons': 'Lessons',
+                'resources': 'Resources',
+                'discussions': 'General Chat',
+                'analytics': 'Progress',
+                'assignments': 'Assignments',
+                'notes': 'Notes'
+            };
+            
+            const titleText = document.getElementById('titleText');
+            if (titleText && titles[sectionName]) {
+                titleText.textContent = titles[sectionName];
+            }
+            
+            // Update URL with section (unless we're initializing from URL)
+            if (!skipUrlUpdate) {
+                const newUrl = buildCourseUrlWithSection(sectionName);
+                if (newUrl && newUrl !== window.location.pathname) {
+                    // Use pushState to update URL without reloading
+                    window.history.pushState({ section: sectionName }, '', newUrl);
+                }
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            const sectionFromUrl = getSectionFromUrl() || 'details';
+            // Navigate to section without updating URL (since popstate already changed it)
+            navigateToSection(sectionFromUrl, true);
+        });
+
+        // Initialize section from URL on page load
+        function initializeSectionFromUrl() {
+            const sectionFromUrl = getSectionFromUrl();
+            if (sectionFromUrl) {
+                // Validate section exists
+                const validSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+                if (validSections.includes(sectionFromUrl)) {
+                    // Small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        // Skip URL update since we're initializing from URL
+                        navigateToSection(sectionFromUrl, true);
+                    }, 100);
+                }
+            } else {
+                // No section in URL, default to details
+                // Make sure details is active
+                setTimeout(() => {
+                    const overviewSection = document.getElementById('details');
+                    if (overviewSection) {
+                        overviewSection.classList.add('active');
+                    }
+                    // Update URL to correct format for details
+                    const currentUrl = window.location.pathname;
+                    const courseId = getCourseIdFromUrl();
+                    if (courseId) {
+                        const expectedUrl = buildCourseUrlWithSection('details');
+                        if (expectedUrl && expectedUrl !== currentUrl) {
+                            // Update to correct format: /{courseId}/details
+                            window.history.replaceState({ section: 'details' }, '', expectedUrl);
+                        }
+                    }
+                }, 100);
+            }
+        }
+
+        // Sidebar toggle for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Sidebar collapse/expand toggle
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+            
+            // Update button title
+            sidebarToggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+            
+            // Save state to localStorage
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            try {
+                const storedSettings = localStorage.getItem('dashboardSettings');
+                const settings = storedSettings ? JSON.parse(storedSettings) : {};
+                settings.compactSidebar = isCollapsed;
+                localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+            } catch (error) {
+                console.error('Error saving sidebar state:', error);
+            }
+        }
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeMeta = document.getElementById('themeColorMeta');
+            const sunIcon = document.querySelector('.theme-icon-sun');
+            const moonIcon = document.querySelector('.theme-icon-moon');
+            const isDark = body.classList.contains('dark-mode') || (!body.classList.contains('light-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            let newThemeMode;
+            if (isDark) {
+                newThemeMode = 'light';
+            } else {
+                newThemeMode = 'dark';
+            }
+            
+            applyThemeMode(newThemeMode);
+            
+            localStorage.setItem('temporaryTheme', newThemeMode);
+            localStorage.setItem('temporaryThemeTimestamp', Date.now().toString());
+        }
+        
+        function applyThemeMode(themeMode) {
+            const body = document.body;
+            const themeMeta = document.getElementById('themeColorMeta');
+            const sunIcon = document.querySelector('.theme-icon-sun');
+            const moonIcon = document.querySelector('.theme-icon-moon');
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Remove both classes first to ensure clean state
+                    body.classList.remove('light-mode', 'dark-mode');
+                    
+                    if (themeMode === 'light') {
+                        body.classList.add('light-mode');
+                        body.setAttribute('data-theme', 'light');
+                        if (themeMeta) themeMeta.content = '#ffffff';
+                        // Light mode: show sun, hide moon
+                        if (sunIcon) {
+                            sunIcon.style.opacity = '1';
+                            sunIcon.style.transform = 'rotate(0deg)';
+                        }
+                        if (moonIcon) {
+                            moonIcon.style.opacity = '0';
+                            moonIcon.style.transform = 'rotate(90deg)';
+                        }
+                    } else if (themeMode === 'dark') {
+                        body.classList.add('dark-mode');
+                        body.setAttribute('data-theme', 'dark');
+                        if (themeMeta) themeMeta.content = '#0a0a0a';
+                        // Dark mode: show moon, hide sun
+                        if (sunIcon) {
+                            sunIcon.style.opacity = '0';
+                            sunIcon.style.transform = 'rotate(-90deg)';
+                        }
+                        if (moonIcon) {
+                            moonIcon.style.opacity = '1';
+                            moonIcon.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                    
+                    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { themeMode } }));
+                });
+            });
+        }
+        
+        window.toggleTheme = toggleTheme;
+        window.applyThemeMode = applyThemeMode;
+
+        // Update icon colors based on current theme
+        function updateThemeIconColors() {
+            // CSS handles the colors via !important rules, so we don't need to set stroke here
+            // The CSS in dashboard-styles.css will handle both color and visibility
+        }
+
+        // Course Search Data - Only course-related content
+        const courseSearchData = [
+            // Sections
+            { title: 'Overview', keywords: ['overview', 'course overview', 'summary', 'stats'], section: 'details', type: 'section' },
+            { title: 'Lessons', keywords: ['lessons', 'lesson', 'lectures', 'videos', 'content', 'learning'], section: 'lessons', type: 'section' },
+            { title: 'Resources', keywords: ['resources', 'files', 'downloads', 'materials', 'documents', 'pdf'], section: 'resources', type: 'section' },
+            { title: 'General Chat', keywords: ['discussions', 'chat', 'community', 'forum', 'messages', 'talk', 'general chat'], section: 'discussions', type: 'section' },
+            { title: 'Progress', keywords: ['progress', 'completion', 'stats', 'achievements', 'tracking'], section: 'analytics', type: 'section' },
+            { title: 'Assignments', keywords: ['assignments', 'homework', 'projects', 'tasks', 'submissions'], section: 'assignments', type: 'section' },
+            { title: 'Notes', keywords: ['notes', 'note', 'highlights', 'annotations', 'personal notes'], section: 'notes', type: 'section' }
+        ];
+
+        // Function to search course content
+        function searchCourseContent(query) {
+            if (!query || query.trim().length === 0) {
+                return [];
+            }
+            
+            query = query.toLowerCase().trim();
+            const results = [];
+            
+            // Search through course search data
+            courseSearchData.forEach(item => {
+                let score = 0;
+                
+                // Check if query matches title
+                if (item.title.toLowerCase().includes(query)) {
+                    score += 100;
+                }
+                
+                // Check if query matches any keywords
+                item.keywords.forEach(keyword => {
+                    if (keyword.includes(query)) {
+                        score += 50;
+                    }
+                    if (keyword.startsWith(query)) {
+                        score += 30;
+                    }
+                });
+                
+                if (score > 0) {
+                    results.push({ ...item, score });
+                }
+            });
+            
+            // Also search through actual lesson titles if available
+            const lessonItems = document.querySelectorAll('.lesson-item');
+            lessonItems.forEach((lesson, index) => {
+                const lessonTitle = lesson.querySelector('.lesson-title')?.textContent || '';
+                if (lessonTitle.toLowerCase().includes(query)) {
+                    results.push({
+                        title: lessonTitle,
+                        keywords: [],
+                        section: 'lessons',
+                        type: 'lesson',
+                        lessonIndex: index,
+                        score: 80
+                    });
+                }
+            });
+            
+            // Sort by score (highest first)
+            results.sort((a, b) => b.score - a.score);
+            
+            // Return top 6 results
+            return results.slice(0, 6);
+        }
+
+        // Function to highlight search matches
+        function highlightMatch(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        // Setup course search
+        function setupCourseSearch() {
+            const headerSearchInput = document.getElementById('headerSearchInput');
+            const headerSearchClear = document.getElementById('headerSearchClear');
+            const headerSearchDropdown = document.getElementById('headerSearchDropdown');
+            const headerSearchSuggestions = document.getElementById('headerSearchSuggestions');
+            
+            if (!headerSearchInput || !headerSearchDropdown || !headerSearchSuggestions) return;
+            
+            // Disable browser autocomplete
+            headerSearchInput.setAttribute('autocomplete', 'off');
+            headerSearchInput.setAttribute('autocapitalize', 'off');
+            headerSearchInput.setAttribute('autocorrect', 'off');
+            headerSearchInput.setAttribute('spellcheck', 'false');
+            
+            // Show/hide clear button
+            headerSearchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                if (query.length > 0) {
+                    if (headerSearchClear) headerSearchClear.style.display = 'flex';
+                    performCourseSearch(query);
+                } else {
+                    if (headerSearchClear) headerSearchClear.style.display = 'none';
+                    headerSearchDropdown.classList.remove('show');
+                }
+            });
+            
+            // Clear button
+            if (headerSearchClear) {
+                headerSearchClear.addEventListener('click', function() {
+                    headerSearchInput.value = '';
+                    this.style.display = 'none';
+                    headerSearchDropdown.classList.remove('show');
+                });
+            }
+            
+            // Show dropdown on focus if there's text
+            headerSearchInput.addEventListener('focus', function() {
+                const query = this.value.trim();
+                if (query.length > 0) {
+                    performCourseSearch(query);
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!headerSearchInput.contains(e.target) && !headerSearchDropdown.contains(e.target)) {
+                    headerSearchDropdown.classList.remove('show');
+                }
+            });
+            
+            // Keyboard navigation
+            let selectedIndex = -1;
+            headerSearchInput.addEventListener('keydown', function(e) {
+                const items = headerSearchSuggestions.querySelectorAll('.header-search-item:not(.no-results)');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelectedItem(items, selectedIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelectedItem(items, selectedIndex);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && items[selectedIndex]) {
+                        items[selectedIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    headerSearchDropdown.classList.remove('show');
+                    selectedIndex = -1;
+                }
+            });
+        }
+
+        function updateSelectedItem(items, index) {
+            items.forEach((item, i) => {
+                if (i === index) {
+                    item.style.backgroundColor = 'var(--color-bg-tertiary)';
+                    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else {
+                    item.style.backgroundColor = '';
+                }
+            });
+        }
+
+        function performCourseSearch(query) {
+            const dropdown = document.getElementById('headerSearchDropdown');
+            const suggestions = document.getElementById('headerSearchSuggestions');
+            const headerSearchInput = document.getElementById('headerSearchInput');
+            const headerSearchClear = document.getElementById('headerSearchClear');
+            
+            if (!dropdown || !suggestions || query.length < 1) {
+                if (dropdown) dropdown.classList.remove('show');
+                return;
+            }
+            
+            const searchResults = searchCourseContent(query);
+            
+            if (searchResults.length > 0) {
+                let html = '';
+                
+                searchResults.forEach((result, index) => {
+                    const highlightedTitle = highlightMatch(result.title, query);
+                    const sectionName = getCourseSectionName(result.section);
+                    const displayPath = sectionName ? `${sectionName} > ${highlightedTitle}` : highlightedTitle;
+                    
+                    html += `
+                        <div class="header-search-item" data-result-index="${index}">
+                            <div class="header-search-item-content">
+                                <div class="header-search-item-title">${displayPath}</div>
+                            </div>
+                        </div>`;
+                });
+                
+                suggestions.innerHTML = html;
+                suggestions.setAttribute('data-results', JSON.stringify(searchResults));
+                
+                // Add click listeners
+                const items = suggestions.querySelectorAll('.header-search-item:not(.no-results)');
+                items.forEach((item, index) => {
+                    item.style.cursor = 'pointer';
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const storedResults = JSON.parse(suggestions.getAttribute('data-results') || '[]');
+                        const result = storedResults[index];
+                        
+                        if (result && result.section) {
+                            navigateToSection(result.section);
+                            dropdown.classList.remove('show');
+                            if (headerSearchInput) headerSearchInput.value = '';
+                            if (headerSearchClear) headerSearchClear.style.display = 'none';
+                        }
+                    });
+                });
+                
+                dropdown.classList.add('show');
+            } else {
+                suggestions.innerHTML = '<div class="header-search-item no-results">No results found</div>';
+                dropdown.classList.add('show');
+            }
+        }
+
+        function getCourseSectionName(sectionId) {
+            const sectionNames = {
+                'overview': 'Overview',
+                'lessons': 'Lessons',
+                'resources': 'Resources',
+                'discussions': 'General Chat',
+                'progress': 'Progress',
+                'assignments': 'Assignments',
+                'notes': 'Notes'
+            };
+            return sectionNames[sectionId] || null;
+        }
+
+        // Add dropdown functionality
+        function setupAddDropdown() {
+            const addBtn = document.getElementById('addBtn');
+            const addDropdown = document.getElementById('addDropdown');
+            const notificationsDropdown = document.getElementById('notificationsDropdown');
+            
+            if (addBtn && addDropdown) {
+                let hoverTimeout;
+                let isOpen = false;
+                
+                // Toggle on click
+                addBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (isOpen) {
+                        hideAddDropdown();
+                        isOpen = false;
+                    } else {
+                        showAddDropdown();
+                        isOpen = true;
+                    }
+                });
+                
+                // Show add dropdown on hover
+                addBtn.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    // Close notifications dropdown if open
+                    if (notificationsDropdown && notificationsDropdown.classList.contains('show')) {
+                        notificationsDropdown.classList.remove('show');
+                    }
+                    hoverTimeout = setTimeout(() => {
+                        showAddDropdown();
+                        isOpen = true;
+                    }, 50);
+                });
+                
+                // Hide add dropdown when mouse leaves the button
+                addBtn.addEventListener('mouseleave', function() {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = setTimeout(() => {
+                        hideAddDropdown();
+                        isOpen = false;
+                    }, 200);
+                });
+                
+                // Keep add dropdown open when hovering over it
+                addDropdown.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    if (!isOpen) {
+                        showAddDropdown();
+                        isOpen = true;
+                    }
+                });
+                
+                // Hide add dropdown when mouse leaves the dropdown
+                addDropdown.addEventListener('mouseleave', function() {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = setTimeout(() => {
+                        hideAddDropdown();
+                        isOpen = false;
+                    }, 200);
+                });
+                
+                // Close on outside click
+                document.addEventListener('click', function(e) {
+                    if (!addBtn.contains(e.target) && !addDropdown.contains(e.target)) {
+                        clearTimeout(hoverTimeout);
+                        hideAddDropdown();
+                        isOpen = false;
+                    }
+                });
+            }
+        }
+
+        function showAddDropdown() {
+            const addDropdown = document.getElementById('addDropdown');
+            const notificationsDropdown = document.getElementById('notificationsDropdown');
+            
+            if (addDropdown) {
+                // Close notifications dropdown if open
+                if (notificationsDropdown && notificationsDropdown.classList.contains('show')) {
+                    notificationsDropdown.classList.remove('show');
+                }
+                
+                addDropdown.style.display = 'block';
+                setTimeout(() => {
+                    addDropdown.classList.add('show');
+                }, 10);
+            }
+        }
+
+        function hideAddDropdown(instant) {
+            const addDropdown = document.getElementById('addDropdown');
+            if (addDropdown) {
+                addDropdown.classList.remove('show');
+                if (instant) {
+                    addDropdown.style.display = 'none';
+                } else {
+                    setTimeout(() => {
+                        addDropdown.style.display = 'none';
+                    }, 200);
+                }
+            }
+        }
+
+        // Expose globally for onclick handlers
+        window.hideAddDropdown = hideAddDropdown;
+        window.navigateToSection = navigateToSection;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure body has correct theme class for CSS to work
+            const body = document.body;
+            if (!body.classList.contains('dark-mode') && !body.classList.contains('light-mode')) {
+                // If no theme class, check system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) {
+                    body.classList.add('dark-mode');
+                } else {
+                    body.classList.add('light-mode');
+                }
+            }
+            
+            // Force correct icon visibility based on theme
+            const sunIcon = document.querySelector('.theme-icon-sun');
+            const moonIcon = document.querySelector('.theme-icon-moon');
+            if (sunIcon && moonIcon) {
+                if (body.classList.contains('dark-mode')) {
+                    // Dark mode: show moon, hide sun
+                    sunIcon.style.opacity = '0';
+                    sunIcon.style.transform = 'rotate(-90deg)';
+                    moonIcon.style.opacity = '1';
+                    moonIcon.style.transform = 'rotate(0deg)';
+                } else {
+                    // Light mode: show sun, hide moon
+                    sunIcon.style.opacity = '1';
+                    sunIcon.style.transform = 'rotate(0deg)';
+                    moonIcon.style.opacity = '0';
+                    moonIcon.style.transform = 'rotate(90deg)';
+                }
+            }
+            
+            // Update icon colors after DOM is ready
+            updateThemeIconColors();
+            
+            // Ensure overview title is set correctly on initial load and override any dashboard.js changes
+            const activeSection = document.querySelector('.content-section.active');
+            if (activeSection && activeSection.id === 'details') {
+                const titleText = document.getElementById('titleText');
+                if (titleText) {
+                    titleText.textContent = 'Overview';
+                }
+            }
+            
+            // Initialize section from URL (after a small delay to ensure course.js has run)
+            setTimeout(() => {
+                initializeSectionFromUrl();
+            }, 500);
+            
+            // Force set title to Overview if it says Welcome (dashboard.js override)
+            const titleText = document.getElementById('titleText');
+            if (titleText) {
+                // Check immediately
+                if (titleText.textContent.includes('Welcome')) {
+                    titleText.textContent = 'Overview';
+                }
+                
+                // Check after a delay (in case dashboard.js runs later)
+                setTimeout(() => {
+                    if (titleText.textContent.includes('Welcome')) {
+                        titleText.textContent = 'Overview';
+                    }
+                }, 100);
+                
+                setTimeout(() => {
+                    if (titleText.textContent.includes('Welcome')) {
+                        titleText.textContent = 'Overview';
+                    }
+                }, 500);
+                
+                // Watch for changes and override if Welcome appears
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                            if (titleText.textContent.includes('Welcome')) {
+                                titleText.textContent = 'Overview';
+                            }
+                        }
+                    });
+                });
+                
+                observer.observe(titleText, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                });
+            }
+            
+            // Theme toggle button
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    toggleTheme();
+                    // Update icon colors after toggle
+                    setTimeout(updateThemeIconColors, 10);
+                });
+            }
+
+            // Initialize sidebar collapse state
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            let shouldCollapse = false;
+            try {
+                const legacyState = localStorage.getItem('sidebarCollapsed');
+                const storedSettings = localStorage.getItem('dashboardSettings');
+                
+                if (storedSettings) {
+                    const settings = JSON.parse(storedSettings);
+                    if (settings.compactSidebar !== undefined) {
+                        shouldCollapse = settings.compactSidebar;
+                    } else if (legacyState === 'true') {
+                        shouldCollapse = true;
+                    }
+                } else if (legacyState === 'true') {
+                    shouldCollapse = true;
+                }
+            } catch (error) {
+                console.error('Error loading sidebar state:', error);
+            }
+            
+            if (shouldCollapse && sidebar) {
+                sidebar.classList.add('collapsed');
+            }
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebarCollapse);
+            }
+
+            // Navigation click handlers
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.getAttribute('data-section');
+                    if (section) {
+                        navigateToSection(section);
+                    }
+                });
+            });
+
+            // Notifications dropdown
+            const notificationBtn = document.getElementById('notificationBtn');
+            const notificationsDropdown = document.getElementById('notificationsDropdown');
+            
+            if (notificationBtn && notificationsDropdown) {
+                notificationBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    notificationsDropdown.classList.toggle('show');
+                    // Close add dropdown if open
+                    hideAddDropdown();
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!notificationsDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+                        notificationsDropdown.classList.remove('show');
+                    }
+                });
+            }
+
+            // Add dropdown functionality
+            setupAddDropdown();
+
+            // Course Search functionality
+            setupCourseSearch();
+
+            // Lesson box dropdown functionality
+            function setupLessonBoxes() {
+                // Handle lesson box toggles
+                const lessonBoxHeaders = document.querySelectorAll('.lesson-box-header');
+                lessonBoxHeaders.forEach(header => {
+                    header.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const lessonBox = this.closest('.lesson-box');
+                        if (lessonBox) {
+                            lessonBox.classList.toggle('expanded');
+                        }
+                    });
+                });
+
+                // Handle module toggles
+                const moduleHeaders = document.querySelectorAll('.lesson-module-header');
+                moduleHeaders.forEach(header => {
+                    header.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const module = this.closest('.lesson-module');
+                        if (module) {
+                            module.classList.toggle('expanded');
+                        }
+                    });
+                });
+
+                // Handle video item clicks
+                const videoItems = document.querySelectorAll('.lesson-video-item');
+                videoItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const videoTitle = this.querySelector('.lesson-video-title')?.textContent;
+                        console.log('Navigate to video:', videoTitle);
+                        // TODO: Navigate to video player
+                    });
+                });
+            }
+
+            // Initialize lesson boxes
+            setupLessonBoxes();
+
+            // Resource items click handlers (for sample items)
+            const resourceItems = document.querySelectorAll('.resource-item');
+            resourceItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Sample items don't have URLs, but you can add them
+                    // For now, just log - will be replaced by course.js with real data
+                    const resourceName = this.querySelector('.resource-name')?.textContent;
+                    console.log('Resource clicked:', resourceName);
+                });
+            });
+
+            // Chat functionality
+            const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const chatMessages = document.getElementById('chatMessages');
+
+            // Auto-resize textarea
+            if (chatInput) {
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+            }
+
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message own';
+                messageDiv.innerHTML = `
+                    <div class="chat-avatar">ME</div>
+                    <div>
+                        <div class="chat-message-name">You</div>
+                        <div class="chat-bubble">
+                            <div class="chat-message-text">${message.replace(/\n/g, '<br>')}</div>
+                            <div class="chat-message-time">Just now</div>
+                        </div>
+                    </div>
+                `;
+
+                chatMessages.appendChild(messageDiv);
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            if (chatSendBtn && chatInput) {
+                chatSendBtn.addEventListener('click', sendMessage);
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+
+            // Leave Program button
+            const leaveProgramBtn = document.getElementById('leaveProgramBtn');
+            if (leaveProgramBtn) {
+                leaveProgramBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to leave this program? Your progress will be saved.')) {
+                        window.location.href = '/dashboard.html';
+                    }
+                });
+            }
+        });
+
+        // Load user information from Firebase
+        window.loadUserInfo = async function loadUserInfo() {
+            try {
+                if (!window.firebase || !window.firebase.auth || !window.firebase.db) {
+                    console.log('Firebase not ready yet');
+                    setTimeout(loadUserInfo, 100);
+                    return;
+                }
+
+                const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                
+                const auth = getAuth();
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    console.log('No user logged in');
+                    return;
+                }
+
+                let displayName = user.displayName || user.email?.split('@')[0] || 'User';
+                let photoURL = user.photoURL || null;
+                
+                try {
+                    const userDocRef = doc(window.firebase.db, 'users', user.uid);
+                    let userDoc = await getDoc(userDocRef);
+                    
+                    if (!userDoc.exists()) {
+                        try {
+                            await setDoc(userDocRef, {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                                photoURL: user.photoURL || null,
+                                createdAt: new Date(),
+                                enrolledCourses: [],
+                                progress: {},
+                                role: 'user' // Default role for all new users
+                            });
+                            userDoc = await getDoc(userDocRef);
+                        } catch (createError) {
+                            console.error('Error creating user document:', createError);
+                        }
+                    }
+                    
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if (userData.displayName) {
+                            displayName = userData.displayName;
+                        } else if (userData.firstName && userData.lastName) {
+                            displayName = `${userData.firstName} ${userData.lastName}`.trim();
+                        }
+                        
+                        if (userData.photoURL) {
+                            photoURL = userData.photoURL;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading user data from Firestore:', error);
+                }
+
+                const userNameMini = document.getElementById('userNameMini');
+                const firstName = displayName.split(' ')[0] || displayName;
+                
+                if (userNameMini) {
+                    userNameMini.textContent = firstName;
+                }
+
+                const userAvatar = document.getElementById('userAvatar');
+                if (userAvatar) {
+                    if (photoURL) {
+                        userAvatar.innerHTML = `<img src="${photoURL}" alt="${displayName}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                    } else {
+                        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                        userAvatar.textContent = initials;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        };
+        
+        // Load course name and update title
+        async function loadCourseName() {
+            try {
+                // Use the same getCourseIdFromUrl function that's used elsewhere in the page
+                let courseId = null;
+                if (typeof getCourseIdFromUrl === 'function') {
+                    courseId = getCourseIdFromUrl();
+                }
+                
+                // Fallback: Get course ID from URL parameters
+                if (!courseId) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    courseId = urlParams.get('courseId') || urlParams.get('id');
+                }
+                
+                // If no course ID found, use default "AI Course"
+                if (!courseId) {
+                    const pageTitle = document.getElementById('pageTitle');
+                    if (pageTitle) {
+                        pageTitle.textContent = 'AI Course';
+                    }
+                    return;
+                }
+                
+                // Fetch course name from Firebase
+                if (window.firebase && window.firebase.db) {
+                    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                    const courseDocRef = doc(window.firebase.db, 'courses', courseId);
+                    const courseDoc = await getDoc(courseDocRef);
+                    
+                    if (courseDoc.exists()) {
+                        const courseData = courseDoc.data();
+                        const courseName = courseData.title || courseData.name || 'Course';
+                        const pageTitle = document.getElementById('pageTitle');
+                        if (pageTitle) {
+                            pageTitle.textContent = courseName;
+                        }
+                    } else {
+                        // Course not found, use default
+                        const pageTitle = document.getElementById('pageTitle');
+                        if (pageTitle) {
+                            pageTitle.textContent = 'AI Course';
+                        }
+                    }
+                } else {
+                    // Firebase not ready yet, use default
+                    const pageTitle = document.getElementById('pageTitle');
+                    if (pageTitle) {
+                        pageTitle.textContent = 'AI Course';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading course name:', error);
+                // On error, use default
+                const pageTitle = document.getElementById('pageTitle');
+                if (pageTitle) {
+                    pageTitle.textContent = 'AI Course - Nuerlo';
+                }
+            }
+        }
+        
+        // Call loadUserInfo when Firebase is ready
+        if (window.firebase && window.firebase.auth && window.firebase.db) {
+            loadUserInfo();
+            loadCourseName();
+        } else {
+            const checkFirebase = setInterval(() => {
+                if (window.firebase && window.firebase.auth && window.firebase.db) {
+                    clearInterval(checkFirebase);
+                    loadUserInfo();
+                    loadCourseName();
+                }
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(checkFirebase);
+                // Try loading course name even if Firebase isn't ready (will use default)
+                loadCourseName();
+            }, 5000);
+        }
+        
+        // Also try loading course name immediately (for cases where course ID is in URL but Firebase isn't needed)
+        loadCourseName();
+    </script>
+    
+    </div>
+    <!-- End Auth Protected Content -->
+</body>
+</html>
+
+

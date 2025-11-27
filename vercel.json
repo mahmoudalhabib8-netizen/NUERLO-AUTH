@@ -1,0 +1,64 @@
+{
+  "rewrites": [
+    {
+      "source": "/acct_([^/]+)/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
+    },
+    {
+      "source": "/acct_([^/]+)/course",
+      "destination": "/course.html"
+    },
+    {
+      "source": "/course",
+      "destination": "/course.html"
+    },
+    {
+      "source": "/",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/login.html"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/dashboard.html",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/course.html",
+      "dest": "/course.html"
+    },
+    {
+      "src": "/acct_([^/]+)/dashboard",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/acct_([^/]+)/course",
+      "dest": "/course.html"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
+    },
+    {
+      "src": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|webp|css|js|json))",
+      "dest": "/$1"
+    }
+  ]
+}
+
+
