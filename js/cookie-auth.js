@@ -54,6 +54,24 @@ export function setAuthCookie(token, maxAge = COOKIE_MAX_AGE) {
     
     document.cookie = booleanCookieString;
     
+    // Verify the cookie was set by trying to read it back
+    const verifyCookie = document.cookie.split(';').find(c => c.trim().startsWith('nuerlo_authenticated='));
+    if (verifyCookie) {
+        console.log('✓ nuerlo_authenticated cookie verified:', verifyCookie);
+    } else {
+        console.warn('⚠ nuerlo_authenticated cookie not found after setting. Current cookies:', document.cookie);
+        // Try setting without Secure flag as fallback (for HTTP testing)
+        const fallbackCookie = [
+            `nuerlo_authenticated=true`,
+            `domain=${COOKIE_DOMAIN}`,
+            `path=/`,
+            `max-age=${maxAge}`,
+            `SameSite=Lax`
+        ].join('; ');
+        document.cookie = fallbackCookie;
+        console.log('Tried setting cookie without Secure flag');
+    }
+    
     console.log('Auth cookies set successfully for domain:', COOKIE_DOMAIN);
 }
 
