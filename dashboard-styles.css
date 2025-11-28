@@ -1575,6 +1575,11 @@ body.dark-mode #profile .card:hover {
     margin-bottom: var(--space-4);
 }
 
+/* Light mode thumbnail background */
+body.light-mode .program-thumbnail {
+    background: var(--color-bg-tertiary);
+}
+
 .program-thumbnail img {
     width: 100%;
     height: 100%;
@@ -2023,6 +2028,20 @@ body.dark-mode .marketplace-course-enroll-btn:hover {
     background: var(--color-bg-tertiary);
 }
 
+/* Light mode continue course button */
+body.light-mode #continueCourse .btn,
+body.light-mode #continueCourse .btn-primary {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-light);
+}
+
+body.light-mode #continueCourse .btn:hover,
+body.light-mode #continueCourse .btn-primary:hover {
+    background: var(--color-bg-tertiary);
+    border-color: var(--color-border-medium);
+}
+
 /* Program actions container */
 .program-actions {
     display: flex;
@@ -2053,6 +2072,18 @@ body.dark-mode .marketplace-course-enroll-btn:hover {
     background: #222;
 }
 
+/* Light mode button styling */
+body.light-mode .program-card .btn-primary {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-light);
+}
+
+body.light-mode .program-card .btn-primary:hover {
+    background: var(--color-bg-tertiary);
+    border-color: var(--color-border-medium);
+}
+
 .program-card .btn-secondary {
     background: none;
     color: #888;
@@ -2067,6 +2098,15 @@ body.dark-mode .marketplace-course-enroll-btn:hover {
 
 .program-card .btn-secondary:hover {
     color: #fff;
+}
+
+/* Light mode secondary button */
+body.light-mode .program-card .btn-secondary {
+    color: var(--color-text-tertiary);
+}
+
+body.light-mode .program-card .btn-secondary:hover {
+    color: var(--color-text-primary);
 }
 
 /* Icon-only button */
