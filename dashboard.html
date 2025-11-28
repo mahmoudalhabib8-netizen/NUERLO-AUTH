@@ -2986,211 +2986,204 @@
             <!-- Settings Section -->
             <section id="settings" class="content-section">
                 <!-- Notifications Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Notifications</h3>
-                                </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Email Notifications</div>
-                                <div class="settings-item-description">Receive email updates about your courses and account</div>
+                <div class="profile-info-container">
+                    <div class="profile-info-content">
+                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Notifications</h3>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Email Notifications</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Receive email updates about your courses and account</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Push Notifications</div>
-                                <div class="settings-item-description">Get browser notifications for important updates</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Push Notifications</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Get browser notifications for important updates</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Course Updates</div>
-                                <div class="settings-item-description">Notifications when new content is added to your courses</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Course Updates</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Notifications when new content is added to your courses</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Assignment Reminders</div>
-                                <div class="settings-item-description">Remind me about upcoming assignments and deadlines</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Assignment Reminders</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Remind me about upcoming assignments and deadlines</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Study Reminders</div>
-                                <div class="settings-item-description">Daily reminders to keep your learning streak going</div>
+                        
+                        <div class="profile-field" style="border-bottom: none;">
+                            <div class="profile-field-label">Study Reminders</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Daily reminders to keep your learning streak going</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="studyReminders" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="studyReminders" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Appearance Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Appearance</h3>
+                <div class="profile-info-container" style="margin-top: var(--space-6);">
+                    <div class="profile-info-content">
+                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Appearance</h3>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Always on Light Mode</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Keep the interface in light mode regardless of system preference</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Always on Light Mode</div>
-                                <div class="settings-item-description">Keep the interface in light mode regardless of system preference</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Animations</div>
-                                <div class="settings-item-description">Enable smooth transitions and animations</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Animations</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Enable smooth transitions and animations</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="animations" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="animations" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Compact Sidebar</div>
-                                <div class="settings-item-description">Use a narrower sidebar to save space</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Compact Sidebar</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Use a narrower sidebar to save space</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Auto-play Videos</div>
-                                <div class="settings-item-description">Automatically play course videos when opened</div>
+                        
+                        <div class="profile-field" style="border-bottom: none;">
+                            <div class="profile-field-label">Auto-play Videos</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Automatically play course videos when opened</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Privacy Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Privacy</h3>
+                <div class="profile-info-container" style="margin-top: var(--space-6);">
+                    <div class="profile-info-content">
+                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Privacy</h3>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Profile Visibility</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Allow others to view your profile</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Profile Visibility</div>
-                                <div class="settings-item-description">Allow others to view your profile</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Activity Status</div>
-                                <div class="settings-item-description">Show when you're online and active</div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Activity Status</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Show when you're online and active</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="activityStatus" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="activityStatus" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Data Analytics</div>
-                                <div class="settings-item-description">Help improve our service by sharing anonymous usage data</div>
+                        
+                        <div class="profile-field" style="border-bottom: none;">
+                            <div class="profile-field-label">Data Analytics</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Help improve our service by sharing anonymous usage data</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Learning Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Learning</h3>
+                <div class="profile-info-container" style="margin-top: var(--space-6);">
+                    <div class="profile-info-content">
+                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Learning</h3>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Progress Tracking</div>
+                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Track and display your learning progress</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="progressTracking" onchange="saveSettings()">
+                                    <span class="toggle-slider"></span>
+                                </label>
                             </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Progress Tracking</div>
-                                <div class="settings-item-description">Track and display your learning progress</div>
+                        </div>
+                        
+                        <div class="profile-field">
+                            <div class="profile-field-label">Language</div>
+                            <div class="profile-field-value">
+                                <select class="profile-field-input" id="language" onchange="saveLanguagePreference(this.value)" style="max-width: 300px;">
+                                    <option value="en">English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="de">German</option>
+                                    <option value="ja">Japanese</option>
+                                    <option value="zh">Chinese</option>
+                                </select>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="progressTracking" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Language</label>
-                        <select class="form-select" id="language" onchange="saveLanguagePreference(this.value)">
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="ja">Japanese</option>
-                            <option value="zh">Chinese</option>
-                        </select>
+                        
+                        <div class="profile-field" style="border-bottom: none;">
+                            <div class="profile-field-label">Timezone</div>
+                            <div class="profile-field-value">
+                                <select class="profile-field-input" id="timezone" onchange="saveTimezonePreference(this.value)" style="max-width: 300px;">
+                                    <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                    <option value="America/New_York">Eastern Time (ET)</option>
+                                    <option value="America/Chicago">Central Time (CT)</option>
+                                    <option value="America/Denver">Mountain Time (MT)</option>
+                                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                    <option value="Europe/London">London (GMT)</option>
+                                    <option value="Europe/Paris">Paris (CET)</option>
+                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                    <option value="Asia/Dubai">Dubai (GST)</option>
+                                </select>
+                            </div>
                         </div>
-                    <div class="form-group">
-                        <label class="form-label">Timezone</label>
-                        <select class="form-select" id="timezone" onchange="saveTimezonePreference(this.value)">
-                            <option value="UTC">UTC (Coordinated Universal Time)</option>
-                            <option value="America/New_York">Eastern Time (ET)</option>
-                            <option value="America/Chicago">Central Time (CT)</option>
-                            <option value="America/Denver">Mountain Time (MT)</option>
-                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                            <option value="Europe/London">London (GMT)</option>
-                            <option value="Europe/Paris">Paris (CET)</option>
-                            <option value="Asia/Tokyo">Tokyo (JST)</option>
-                            <option value="Asia/Dubai">Dubai (GST)</option>
-                        </select>
                     </div>
                 </div>
             </section>
