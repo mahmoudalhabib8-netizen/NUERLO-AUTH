@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - Nuerlo</title>
+    <title>Verify Your Email</title>
     <link rel="icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
-    <link rel="stylesheet" href="styles.css">
     <style>
         * {
             margin: 0;
@@ -16,97 +15,189 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #ffffff;
+            overflow-x: hidden;
             color: #1f2937;
+            background: #ffffff;
+            opacity: 0;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .verify-container {
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .verify-top {
+            height: 50vh;
+            min-height: 50vh;
+            background: linear-gradient(135deg, #a476ff 0%, #8b5fff 50%, #b894ff 100%);
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
-        .verification-container {
-            max-width: 500px;
+        .verify-top::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(139, 95, 255, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(184, 148, 255, 0.35) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(164, 118, 255, 0.25) 0%, transparent 60%);
+            animation: float 25s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-20px, -20px) rotate(5deg); }
+        }
+
+        .wavy-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='wave1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='rgba(255,255,255,0.12)'/%3E%3Cstop offset='50%25' stop-color='rgba(184,148,255,0.15)'/%3E%3Cstop offset='100%25' stop-color='rgba(255,255,255,0.08)'/%3E%3C/linearGradient%3E%3ClinearGradient id='wave2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='rgba(139,95,255,0.1)'/%3E%3Cstop offset='50%25' stop-color='rgba(255,255,255,0.12)'/%3E%3Cstop offset='100%25' stop-color='rgba(184,148,255,0.08)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0,200 Q100,150 200,200 T400,200 L400,400 L0,400 Z' fill='url(%23wave1)'/%3E%3Cpath d='M0,250 Q150,200 300,250 T400,250 L400,400 L0,400 Z' fill='url(%23wave2)' opacity='0.7'/%3E%3Cpath d='M0,150 Q80,100 160,150 T320,150 T400,150 L400,400 L0,400 Z' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E");
+            background-size: 800px 800px;
+            opacity: 1;
+            animation: wave 30s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-200px); }
+        }
+
+        .verify-bottom {
+            height: 50vh;
+            min-height: 50vh;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .verify-bottom::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #ffffff;
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0,80 Q180,50 360,55 T720,52 T1080,58 T1440,50 L1440,80 L0,80 Z' fill='white'/%3E%3C/svg%3E");
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0,80 Q180,50 360,55 T720,52 T1080,58 T1440,50 L1440,80 L0,80 Z' fill='white'/%3E%3C/svg%3E");
+            mask-size: 100% 100%;
+            -webkit-mask-size: 100% 100%;
+            mask-repeat: no-repeat;
+            -webkit-mask-repeat: no-repeat;
+        }
+
+        .form-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 48vh;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 560px;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .verify-card {
             background: #ffffff;
             border-radius: 24px;
-            padding: 48px 40px;
+            padding: 36px 40px;
             border: 1px solid #e5e7eb;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
             text-align: center;
         }
 
-        .verification-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 24px;
-            background: #f3f4f6;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .verification-icon svg {
-            width: 40px;
-            height: 40px;
-            color: #a476ff;
+        .verify-header {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            z-index: 20;
         }
 
-        .verification-title {
+        .verify-header a {
+            display: inline-block;
+        }
+
+        .verify-header a:hover {
+            opacity: 0.8;
+        }
+
+        .verify-header img {
+            width: 48px;
+            height: 50px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 0.2s forwards;
+            transition: transform 0.3s ease;
+        }
+        
+        .verify-header a:hover img {
+            transform: scale(1.05);
+        }
+
+        .verify-title {
             font-size: 1.75rem;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 16px;
+            letter-spacing: -0.02em;
         }
 
-        .verification-message {
+        .verify-message {
             color: #6b7280;
             font-size: 0.95rem;
             line-height: 1.6;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
-        .verification-email {
+        .verify-email {
             font-weight: 600;
             color: #1f2937;
         }
 
-        .resend-btn {
-            width: 100%;
-            padding: 14px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #ffffff;
-            background: #1f2937;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 16px;
+        .verify-info {
+            margin-bottom: 28px;
+            text-align: center;
         }
 
-        .resend-btn:hover {
-            background: #111827;
-        }
-
-        .resend-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .back-to-login {
-            color: #6b7280;
+        .verify-info p {
             font-size: 0.875rem;
-            margin-top: 24px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin: 0;
         }
 
-        .back-to-login a {
-            color: #a476ff;
-            text-decoration: none;
+        .verify-info p:first-child {
             font-weight: 500;
-        }
-
-        .back-to-login a:hover {
-            color: #8b5fff;
+            color: #374151;
+            margin-bottom: 8px;
         }
 
         .success-message {
@@ -116,7 +207,7 @@
             padding: 12px 16px;
             border-radius: 8px;
             font-size: 0.875rem;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: none;
         }
 
@@ -127,26 +218,101 @@
             padding: 12px 16px;
             border-radius: 8px;
             font-size: 0.875rem;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: none;
         }
 
-        .check-status-btn {
+        .verify-btn {
             width: 100%;
             padding: 14px;
             font-size: 0.95rem;
             font-weight: 600;
-            color: #1f2937;
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
+            color: #ffffff;
+            background: #1f2937;
+            border: none;
             border-radius: 10px;
             cursor: pointer;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            box-shadow: none;
         }
 
-        .check-status-btn:hover {
+        .verify-btn:hover {
+            background: #111827;
+        }
+
+        .verify-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .verify-btn-secondary {
+            background: #f9fafb;
+            color: #1f2937;
+            border: 1.5px solid #e5e7eb;
+        }
+
+        .verify-btn-secondary:hover {
             background: #f3f4f6;
             border-color: #d1d5db;
+        }
+
+        .back-to-login {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 20px;
+        }
+
+        .back-to-login a {
+            color: #a476ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-to-login a:hover {
+            color: #8b5fff;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .verify-top {
+                height: 35vh;
+                min-height: 250px;
+            }
+
+            .verify-bottom {
+                height: auto;
+                min-height: 65vh;
+                padding: 0;
+            }
+
+            .form-wrapper {
+                position: absolute;
+                left: 0;
+                top: 120px;
+                right: 0;
+                transform: none;
+                padding: 20px;
+            }
+
+            .verify-card {
+                padding: 32px 24px;
+            }
+
+            .verify-title {
+                font-size: 1.5rem;
+            }
+
+            .verify-header {
+                top: 20px;
+                left: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .verify-card {
+                padding: 28px 20px;
+                border-radius: 20px;
+            }
         }
     </style>
     <script type="module">
@@ -176,7 +342,7 @@
         const email = emailFromUrl || emailFromStorage || '';
         
         if (email) {
-            document.querySelector('.verification-email').textContent = email;
+            document.querySelector('.verify-email').textContent = email;
         }
         
         const resendBtn = document.getElementById('resendBtn');
@@ -322,37 +488,51 @@
     </script>
 </head>
 <body>
-    <div class="verification-container">
-        <div class="verification-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
+    <div class="verify-container">
+        <!-- Top: Purple gradient background -->
+        <div class="verify-top">
+            <div class="wavy-overlay"></div>
         </div>
-        
-        <h1 class="verification-title">Verify Your Email</h1>
-        
-        <p class="verification-message">
-            We've sent a verification email to<br>
-            <span class="verification-email">your email address</span>
-        </p>
-        
-        <p class="verification-message" style="font-size: 0.875rem; margin-top: -16px;">
-            Please check your inbox and click the verification link to activate your account.
-        </p>
-        
-        <p class="verification-message" style="font-size: 0.875rem; margin-top: 8px; color: #9ca3af;">
-            <strong>Note:</strong> If you don't see the email, check your spam/junk folder. It may take a few minutes to arrive.
-        </p>
-        
-        <div id="successMessage" class="success-message"></div>
-        <div id="errorMessage" class="error-message"></div>
-        
-        <button id="checkStatusBtn" class="check-status-btn">Check Verification Status</button>
-        <button id="resendBtn" class="resend-btn">Resend Verification Email</button>
-        
-        <div class="back-to-login">
-            <a href="/login">Back to Sign In</a>
+
+        <!-- Bottom: White background -->
+        <div class="verify-bottom"></div>
+
+        <!-- Centered verification card -->
+        <div class="form-wrapper">
+            <div class="verify-card">
+                <h1 class="verify-title">Verify Your Email</h1>
+                
+                <p class="verify-message">
+                    We sent a verification link to<br>
+                    <span class="verify-email">your email address</span>
+                </p>
+                
+                <p class="verify-message" style="font-size: 0.875rem; margin-top: -12px; margin-bottom: 24px;">
+                    Click the link in the email to activate your account
+                </p>
+                
+                <div class="verify-info">
+                    <p>Didn't receive the email? Check your spam folder or try resending below.</p>
+                </div>
+                
+                <div id="successMessage" class="success-message"></div>
+                <div id="errorMessage" class="error-message"></div>
+                
+                <button id="checkStatusBtn" class="verify-btn verify-btn-secondary">I've Verified My Email</button>
+                <button id="resendBtn" class="verify-btn">Resend Verification Email</button>
+                
+                <div class="back-to-login">
+                    <a href="/login">Back to Sign In</a>
+                </div>
+            </div>
         </div>
+
+        <!-- Logo header -->
+        <header class="verify-header">
+            <a href="https://nuerlo.com" aria-label="Nuerlo Home">
+                <img src="assets/images/LOGOWHITE.png" alt="Nuerlo Logo" loading="lazy">
+            </a>
+        </header>
     </div>
 </body>
 </html>

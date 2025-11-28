@@ -3224,7 +3224,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, collection, query, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, query, getDocs, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
         import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
         
@@ -5320,7 +5320,7 @@
     
     <script type="module">
         // Load and display social links in profile section
-        import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
                 // Helper function to detect social platform from URL and return icon info
         function getSocialIconFromUrl(url) {
@@ -5349,7 +5349,7 @@
             // GitHub
             if (urlLower.includes('github.com')) {
                 return {
-                    icon: null, // No icon, will show as text
+                    icon: null,
                     alt: 'GitHub',
                     platform: 'github',
                     text: 'GitHub'
@@ -5380,6 +5380,42 @@
                     icon: '/assets/images/youtube.png',
                     alt: 'YouTube',
                     platform: 'youtube'
+                };
+            }
+            
+            // Pinterest
+            if (urlLower.includes('pinterest.com')) {
+                return {
+                    icon: '/assets/images/pinterest.png',
+                    alt: 'Pinterest',
+                    platform: 'pinterest'
+                };
+            }
+            
+            // Telegram
+            if (urlLower.includes('telegram.org') || urlLower.includes('t.me')) {
+                return {
+                    icon: '/assets/images/telegram.png',
+                    alt: 'Telegram',
+                    platform: 'telegram'
+                };
+            }
+            
+            // TikTok
+            if (urlLower.includes('tiktok.com')) {
+                return {
+                    icon: '/assets/images/tik-tok.png',
+                    alt: 'TikTok',
+                    platform: 'tiktok'
+                };
+            }
+            
+            // WhatsApp
+            if (urlLower.includes('whatsapp.com') || urlLower.includes('wa.me')) {
+                return {
+                    icon: '/assets/images/whatsapp.png',
+                    alt: 'WhatsApp',
+                    platform: 'whatsapp'
                 };
             }
             
@@ -5457,9 +5493,19 @@
                     }
                     
                     // Dynamic social links (keys starting with 'dynamic_')
-                    Object.keys(social).forEach(key => {
-                        if (key.startsWith('dynamic_') && social[key] && social[key].trim()) {
-                            allSocialLinks.push({ url: social[key].trim(), type: 'dynamic' });
+                    // Sort them numerically to maintain order
+                    const dynamicKeys = Object.keys(social)
+                        .filter(key => key.startsWith('dynamic_'))
+                        .sort((a, b) => {
+                            const numA = parseInt(a.replace('dynamic_', ''));
+                            const numB = parseInt(b.replace('dynamic_', ''));
+                            return numA - numB;
+                        });
+                    
+                    dynamicKeys.forEach(key => {
+                        const url = social[key];
+                        if (url && url.trim()) {
+                            allSocialLinks.push({ url: url.trim(), type: 'dynamic' });
                         }
                     });
 
@@ -5676,13 +5722,15 @@
                     github: (document.getElementById('socialGitHub')?.value || '').trim()
                 };
                 
-                // Get dynamic social links
+                // Get dynamic social links - preserve order and only save non-empty values
                 const dynamicInputs = document.querySelectorAll('#dynamicSocialLinks .profile-field-input');
-                dynamicInputs.forEach((input, index) => {
+                let dynamicIndex = 0;
+                dynamicInputs.forEach((input) => {
                     const value = input.value.trim();
                     if (value) {
-                        // Store as dynamic_0, dynamic_1, etc.
-                        social[`dynamic_${index}`] = value;
+                        // Store as dynamic_0, dynamic_1, etc. in order
+                        social[`dynamic_${dynamicIndex}`] = value;
+                        dynamicIndex++;
                     }
                 });
                 
@@ -5701,9 +5749,16 @@
                 dynamicSocialLinkCount = 0;
                 
                 // Find dynamic social links (keys that start with 'dynamic_')
-                const dynamicKeys = Object.keys(socialData).filter(key => key.startsWith('dynamic_'));
+                // Sort them numerically to maintain order
+                const dynamicKeys = Object.keys(socialData)
+                    .filter(key => key.startsWith('dynamic_'))
+                    .sort((a, b) => {
+                        const numA = parseInt(a.replace('dynamic_', ''));
+                        const numB = parseInt(b.replace('dynamic_', ''));
+                        return numA - numB;
+                    });
                 
-                dynamicKeys.forEach((key, index) => {
+                dynamicKeys.forEach((key) => {
                     const value = socialData[key];
                     if (value && value.trim()) {
                         dynamicSocialLinkCount++;
@@ -5739,12 +5794,48 @@
                 updateAddSocialButton();
             };
             
-            // Hook into save button to collect all social links
+            // Hook into save button to collect all social links and save to Firebase
             const profileSaveBtn = document.getElementById('profileSaveBtn');
             if (profileSaveBtn) {
-                profileSaveBtn.addEventListener('click', function() {
-                    // This will be called before the save function
-                    // The save function in dashboard.js should use window.getAllSocialLinks()
+                profileSaveBtn.addEventListener('click', async function(e) {
+                    // Wait a bit to let other save handlers run first, then save social links
+                    setTimeout(async () => {
+                        // Get all social links including dynamic ones
+                        const allSocialLinks = window.getAllSocialLinks ? window.getAllSocialLinks() : {};
+                        
+                        console.log('Saving social links:', allSocialLinks);
+                        
+                        // Save to Firebase
+                        try {
+                            if (window.firebase && window.firebase.auth && window.firebase.db) {
+                                const user = window.firebase.auth.currentUser;
+                                if (user) {
+                                    const userRef = doc(window.firebase.db, 'users', user.uid);
+                                    
+                                    // Update social links in Firebase (merge with existing data)
+                                    await updateDoc(userRef, {
+                                        social: allSocialLinks
+                                    });
+                                    
+                                    console.log('Social links saved successfully:', allSocialLinks);
+                                    
+                                    // Reload social links after save
+                                    setTimeout(() => {
+                                        if (typeof loadSocialLinks === 'function') {
+                                            loadSocialLinks();
+                                        }
+                                    }, 500);
+                                } else {
+                                    console.error('No user logged in');
+                                }
+                            } else {
+                                console.error('Firebase not initialized');
+                            }
+                        } catch (error) {
+                            console.error('Error saving social links:', error);
+                        }
+                    }, 100);
+                    
                     setTimeout(updateAddSocialButton, 100);
                 });
             }

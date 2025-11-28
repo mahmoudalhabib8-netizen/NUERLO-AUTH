@@ -11,6 +11,7 @@
     "stripe": "^14.0.0"
   },
   "devDependencies": {
-    "javascript-obfuscator": "^4.1.1"
+    "javascript-obfuscator": "^4.1.1",
+    "netlify-cli": "^23.12.1"
   }
 }
