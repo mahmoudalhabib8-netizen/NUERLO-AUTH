@@ -4403,7 +4403,15 @@
                     'payment': 'subscription'
                 };
                 
-                if (defaultSubsections[sectionName]) {
+                // First, try to get the last visited subsection for this section from localStorage
+                const lastSubsection = localStorage.getItem('lastDashboardSubsection_' + sectionName);
+                
+                if (lastSubsection) {
+                    // Use the last visited subsection
+                    subsectionName = lastSubsection;
+                    console.log('[Navigation] Restoring last subsection for', sectionName, ':', lastSubsection);
+                } else if (defaultSubsections[sectionName]) {
+                    // Fall back to default if no saved subsection
                     subsectionName = defaultSubsections[sectionName];
                 }
             }
@@ -4647,6 +4655,11 @@
                 window.history.pushState({ section: sectionName, subsection: subsectionName }, '', newUrl);
                 console.log('URL updated to:', newUrl);
             }
+            
+            // Save the current subsection to localStorage for this section
+            // So when user returns to this section, we can restore their last position
+            localStorage.setItem('lastDashboardSubsection_' + sectionName, subsectionName);
+            console.log('[Memory] Saved last subsection for', sectionName, ':', subsectionName);
         }
         
         // Helper function to parse URL and extract section and subsection
