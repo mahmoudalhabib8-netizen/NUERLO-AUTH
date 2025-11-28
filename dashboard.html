@@ -576,18 +576,45 @@
                             return;
                         }
                         
+                        // Check URL for subsection first
+                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
+                        let activeSectionId = null;
+                        
+                        // If URL has programs subsection, set that as active
+                        if (urlInfo && urlInfo.section === 'programs' && urlInfo.subsection) {
+                            const subsectionMap = {
+                                'all': 'allProgramsSection',
+                                'not-started': 'notStartedSection',
+                                'in-progress': 'inProgressSection',
+                                'completed': 'completedSection'
+                            };
+                            activeSectionId = subsectionMap[urlInfo.subsection];
+                            console.log('[setupProgramsNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
+                        }
+                        
                         // Check which tab is active and sync content with it
                         let activeBtn = programsSection.querySelector('.payment-nav-btn.payment-nav-active');
+                        
+                        // If we have a URL-based section, find and activate that button
+                        if (activeSectionId) {
+                            navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
+                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-programs-section') === activeSectionId);
+                            if (targetBtn) {
+                                targetBtn.classList.add('payment-nav-active');
+                                activeBtn = targetBtn;
+                            }
+                        }
                         
                         // If no active button, default to all programs
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                             navButtons[0].classList.add('payment-nav-active');
                             activeBtn = navButtons[0];
+                            activeSectionId = navButtons[0].getAttribute('data-programs-section');
+                        } else if (!activeSectionId) {
+                            // Get the section ID from the active button
+                            activeSectionId = activeBtn.getAttribute('data-programs-section');
                         }
-                        
-                        // Get the section ID from the active button
-                        const activeSectionId = activeBtn.getAttribute('data-programs-section');
                         
                         // Hide all subsections first
                         programsSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -849,15 +876,42 @@
                             return;
                         }
                         
+                        // Check URL for subsection first
+                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
+                        let activeSectionId = null;
+                        
+                        // If URL has progress subsection, set that as active
+                        if (urlInfo && urlInfo.section === 'progress' && urlInfo.subsection) {
+                            const subsectionMap = {
+                                'progress': 'chartSection',
+                                'chart': 'chartSection',
+                                'stats': 'statsSection',
+                                'activity': 'activitySection'
+                            };
+                            activeSectionId = subsectionMap[urlInfo.subsection];
+                            console.log('[setupProgressNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
+                        }
+                        
                         let activeBtn = progressSection.querySelector('.progress-nav-btn.progress-nav-active');
+                        
+                        // If we have a URL-based section, find and activate that button
+                        if (activeSectionId) {
+                            navButtons.forEach(function(b) { b.classList.remove('progress-nav-active'); });
+                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-progress-section') === activeSectionId);
+                            if (targetBtn) {
+                                targetBtn.classList.add('progress-nav-active');
+                                activeBtn = targetBtn;
+                            }
+                        }
                         
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('progress-nav-active'); });
                             navButtons[0].classList.add('progress-nav-active');
                             activeBtn = navButtons[0];
+                            activeSectionId = navButtons[0].getAttribute('data-progress-section');
+                        } else if (!activeSectionId) {
+                            activeSectionId = activeBtn.getAttribute('data-progress-section');
                         }
-                        
-                        const activeSectionId = activeBtn.getAttribute('data-progress-section');
                         
                         progressSection.querySelectorAll('.profile-subsection').forEach(function(s) {
                             s.style.display = 'none';
@@ -1161,18 +1215,45 @@
                             return;
                         }
                         
+                        // Check URL for subsection first
+                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
+                        let activeSectionId = null;
+                        
+                        // If URL has payment subsection, set that as active
+                        if (urlInfo && urlInfo.section === 'payment' && urlInfo.subsection) {
+                            const subsectionMap = {
+                                'subscription': 'subscriptionInfoSection',
+                                'plans': 'plansSection',
+                                'payment-method': 'paymentMethodSection',
+                                'billing': 'billingHistorySection'
+                            };
+                            activeSectionId = subsectionMap[urlInfo.subsection];
+                            console.log('[setupPaymentNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
+                        }
+                        
                         // Check which tab is active and sync content with it
                         let activeBtn = paymentSection.querySelector('.payment-nav-btn.payment-nav-active');
+                        
+                        // If we have a URL-based section, find and activate that button
+                        if (activeSectionId) {
+                            navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
+                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-payment-section') === activeSectionId);
+                            if (targetBtn) {
+                                targetBtn.classList.add('payment-nav-active');
+                                activeBtn = targetBtn;
+                            }
+                        }
                         
                         // If no active button, default to subscription
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                             navButtons[0].classList.add('payment-nav-active');
                             activeBtn = navButtons[0];
+                            activeSectionId = navButtons[0].getAttribute('data-payment-section');
+                        } else if (!activeSectionId) {
+                            // Get the section ID from the active button
+                            activeSectionId = activeBtn.getAttribute('data-payment-section');
                         }
-                        
-                        // Get the section ID from the active button
-                        const activeSectionId = activeBtn.getAttribute('data-payment-section');
                         
                         // Hide all subsections first
                         paymentSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -2632,6 +2713,49 @@
                         if (!profileTabs.length) {
                             console.log('Profile tabs not ready');
                             return;
+                        }
+                        
+                        // Check URL for subsection first
+                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
+                        let targetSectionId = null;
+                        
+                        // If URL has profile subsection, set that as active
+                        if (urlInfo && urlInfo.section === 'profile' && urlInfo.subsection) {
+                            const subsectionMap = {
+                                'personal': 'personalInfoSection',
+                                'account': 'googleAccountSection',
+                                'preferences': 'preferencesSection',
+                                'advanced': 'advancedSection'
+                            };
+                            targetSectionId = subsectionMap[urlInfo.subsection];
+                            console.log('[setupProfileNav] Setting from URL:', urlInfo.subsection, '->', targetSectionId);
+                            
+                            // Activate the correct tab
+                            if (targetSectionId) {
+                                profileTabs.forEach(tab => tab.classList.remove('active'));
+                                const targetTab = Array.from(profileTabs).find(tab => tab.getAttribute('data-section') === targetSectionId);
+                                if (targetTab) {
+                                    targetTab.classList.add('active');
+                                }
+                                
+                                // Activate the correct nav item
+                                profileNavItems.forEach(nav => nav.classList.remove('active'));
+                                const targetNav = Array.from(profileNavItems).find(nav => nav.getAttribute('data-section') === targetSectionId);
+                                if (targetNav) {
+                                    targetNav.classList.add('active');
+                                }
+                                
+                                // Show the correct subsection
+                                profileSection.querySelectorAll('.profile-subsection').forEach(s => {
+                                    s.style.display = 'none';
+                                    s.classList.remove('active');
+                                });
+                                const targetSubsection = document.getElementById(targetSectionId);
+                                if (targetSubsection) {
+                                    targetSubsection.style.display = 'block';
+                                    targetSubsection.classList.add('active');
+                                }
+                            }
                         }
                         
                         // Update indicator position
@@ -4732,19 +4856,29 @@
             });
             
             // Parse URL and navigate to section/subsection on page load
-            // Wait a bit for Firebase and routing.js to be ready
+            // Wait for Firebase, routing.js, and all navigation systems to be ready
             setTimeout(() => {
                 const urlInfo = parseSectionFromUrl();
-                console.log('Parsed URL on load:', urlInfo);
+                console.log('[Dashboard Init] Parsed URL on load:', urlInfo);
                 
                 if (urlInfo.section && urlInfo.section !== 'overview') {
-                    // Navigate to the section
+                    // Navigate to the section first
+                    console.log('[Dashboard Init] Navigating to section:', urlInfo.section, 'subsection:', urlInfo.subsection);
                     navigateToSection(urlInfo.section, urlInfo.subsection);
+                    
+                    // If there's a subsection, ensure it gets activated after section is loaded
+                    if (urlInfo.subsection) {
+                        // Add extra delay to ensure section navigation is complete
+                        setTimeout(() => {
+                            console.log('[Dashboard Init] Ensuring subsection is active:', urlInfo.subsection);
+                            navigateToSubsection(urlInfo.section, urlInfo.subsection);
+                        }, 500);
+                    }
                 } else if (urlInfo.subsection) {
                     // If we have a subsection but section is overview, treat first segment as section
                     navigateToSection(urlInfo.subsection, null);
                 }
-            }, 300);
+            }, 500);
 
             // Loading screen is handled by dashboard.js during authentication
         });
