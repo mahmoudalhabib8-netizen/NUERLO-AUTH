@@ -691,7 +691,6 @@
                             btn.onclick = function() {
                                 navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                                 this.classList.add('payment-nav-active');
-                                updateUnderline(this);
                                 
                                 const sectionId = this.getAttribute('data-programs-section');
                                 programsSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -709,18 +708,25 @@
                                     if (window.updateProgramsFilter) {
                                         window.updateProgramsFilter(filterType);
                                     }
-                                    
-                                    // Update URL with subsection
-                                    const subsectionMap = {
-                                        'allProgramsSection': 'all',
-                                        'notStartedSection': 'not-started',
-                                        'inProgressSection': 'in-progress',
-                                        'completedSection': 'completed'
-                                    };
-                                    const subsectionName = subsectionMap[sectionId];
-                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                        updateUrlForSubsection('programs', subsectionName);
-                                    }
+                                }
+                                
+                                // Update underline AFTER DOM updates complete
+                                requestAnimationFrame(() => {
+                                    updateUnderline(this);
+                                    // Double-check after layout recalculation
+                                    setTimeout(() => updateUnderline(this), 10);
+                                });
+                                
+                                // Update URL with subsection IMMEDIATELY (no delay)
+                                const subsectionMap = {
+                                    'allProgramsSection': 'all',
+                                    'notStartedSection': 'not-started',
+                                    'inProgressSection': 'in-progress',
+                                    'completedSection': 'completed'
+                                };
+                                const subsectionName = subsectionMap[sectionId];
+                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                    updateUrlForSubsection('programs', subsectionName);
                                 }
                             };
                         });
@@ -977,33 +983,35 @@
                                 const targetSection = document.getElementById(targetSectionId);
                                 if (targetSection) {
                                     targetSection.style.display = 'block';
-                                    setTimeout(function() {
-                                        targetSection.classList.add('active');
-                                        
-                                        // Redraw chart if switching to chart section
-                                        if (targetSectionId === 'chartSection' && window.chartProgressData) {
-                                            setTimeout(function() {
-                                                if (window.drawLineChartGlobal) {
-                                                    window.drawLineChartGlobal(window.chartProgressData);
-                                                }
-                                            }, 100);
-                                        }
-                                    }, 10);
+                                    targetSection.classList.add('active');
                                     
-                                    // Update URL with subsection
-                                    const subsectionMap = {
-                                        'chartSection': 'progress',
-                                        'statsSection': 'stats',
-                                        'activitySection': 'activity'
-                                    };
-                                    const subsectionName = subsectionMap[targetSectionId];
-                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                        updateUrlForSubsection('progress', subsectionName);
+                                    // Redraw chart if switching to chart section
+                                    if (targetSectionId === 'chartSection' && window.chartProgressData) {
+                                        setTimeout(function() {
+                                            if (window.drawLineChartGlobal) {
+                                                window.drawLineChartGlobal(window.chartProgressData);
+                                            }
+                                        }, 100);
                                     }
                                 }
                                 
-                                updateUnderline(btn);
-                                setTimeout(function() { updateUnderline(btn); }, 50);
+                                // Update underline AFTER DOM updates complete
+                                requestAnimationFrame(() => {
+                                    updateUnderline(btn);
+                                    // Double-check after layout recalculation
+                                    setTimeout(() => updateUnderline(btn), 10);
+                                });
+                                
+                                // Update URL with subsection IMMEDIATELY (no delay)
+                                const subsectionMap = {
+                                    'chartSection': 'progress',
+                                    'statsSection': 'stats',
+                                    'activitySection': 'activity'
+                                };
+                                const subsectionName = subsectionMap[targetSectionId];
+                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                    updateUrlForSubsection('progress', subsectionName);
+                                }
                             });
                         });
                     }
@@ -1324,7 +1332,6 @@
                             btn.onclick = function() {
                                 navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                                 this.classList.add('payment-nav-active');
-                                updateUnderline(this);
                                 
                                 const sectionId = this.getAttribute('data-payment-section');
                                 paymentSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -1336,18 +1343,25 @@
                                 if (target) {
                                     target.style.display = 'block';
                                     target.classList.add('active');
-                                    
-                                    // Update URL with subsection
-                                    const subsectionMap = {
-                                        'subscriptionInfoSection': 'subscription',
-                                        'plansSection': 'plans',
-                                        'paymentMethodSection': 'payment-method',
-                                        'billingHistorySection': 'billing'
-                                    };
-                                    const subsectionName = subsectionMap[sectionId];
-                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                        updateUrlForSubsection('payment', subsectionName);
-                                    }
+                                }
+                                
+                                // Update underline AFTER DOM updates complete
+                                requestAnimationFrame(() => {
+                                    updateUnderline(this);
+                                    // Double-check after layout recalculation
+                                    setTimeout(() => updateUnderline(this), 10);
+                                });
+                                
+                                // Update URL with subsection IMMEDIATELY (no delay)
+                                const subsectionMap = {
+                                    'subscriptionInfoSection': 'subscription',
+                                    'plansSection': 'plans',
+                                    'paymentMethodSection': 'payment-method',
+                                    'billingHistorySection': 'billing'
+                                };
+                                const subsectionName = subsectionMap[sectionId];
+                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                    updateUrlForSubsection('payment', subsectionName);
                                 }
                             };
                         });
@@ -2791,10 +2805,9 @@
                                 const sectionId = this.getAttribute('data-section');
                                 if (!sectionId) return;
                                 
-                                // Update tabs
+                                // Update tabs FIRST
                                 profileTabs.forEach(t => t.classList.remove('active'));
                                 this.classList.add('active');
-                                updateIndicator(this);
                                 
                                 // Update nav items
                                 profileNavItems.forEach(nav => nav.classList.remove('active'));
@@ -2818,7 +2831,14 @@
                                     targetSection.classList.add('active');
                                 }
                                 
-                                // Update URL with subsection
+                                // Update indicator AFTER all DOM updates complete
+                                requestAnimationFrame(() => {
+                                    updateIndicator(this);
+                                    // Double-check after layout recalculation
+                                    setTimeout(() => updateIndicator(this), 10);
+                                });
+                                
+                                // Update URL with subsection IMMEDIATELY (no delay)
                                 const subsectionMap = {
                                     'personalInfoSection': 'personal',
                                     'googleAccountSection': 'account',
@@ -4612,6 +4632,17 @@
                                     underline.style.left = left + 'px';
                                     underline.style.width = width + 'px';
                                 }
+                                // Double-check after layout recalculation
+                                setTimeout(() => {
+                                    const btnRect2 = btn.getBoundingClientRect();
+                                    const containerRect2 = btn.parentElement.getBoundingClientRect();
+                                    if (btnRect2.width > 0 && containerRect2.width > 0) {
+                                        const left2 = btnRect2.left - containerRect2.left;
+                                        const width2 = btnRect2.width;
+                                        underline.style.left = left2 + 'px';
+                                        underline.style.width = width2 + 'px';
+                                    }
+                                }, 10);
                             });
                         }
                         
@@ -4650,6 +4681,17 @@
                                     underline.style.left = left + 'px';
                                     underline.style.width = width + 'px';
                                 }
+                                // Double-check after layout recalculation
+                                setTimeout(() => {
+                                    const btnRect2 = btn.getBoundingClientRect();
+                                    const containerRect2 = btn.parentElement.getBoundingClientRect();
+                                    if (btnRect2.width > 0 && containerRect2.width > 0) {
+                                        const left2 = btnRect2.left - containerRect2.left;
+                                        const width2 = btnRect2.width;
+                                        underline.style.left = left2 + 'px';
+                                        underline.style.width = width2 + 'px';
+                                    }
+                                }, 10);
                             });
                         }
                         
@@ -4702,6 +4744,17 @@
                             tabIndicator.style.left = left + 'px';
                             tabIndicator.style.width = width + 'px';
                         }
+                        // Double-check after layout recalculation
+                        setTimeout(() => {
+                            const tabRect2 = activeTab.getBoundingClientRect();
+                            const containerRect2 = tabsContainer.getBoundingClientRect();
+                            if (tabRect2.width > 0 && containerRect2.width > 0) {
+                                const left2 = tabRect2.left - containerRect2.left;
+                                const width2 = tabRect2.width;
+                                tabIndicator.style.left = left2 + 'px';
+                                tabIndicator.style.width = width2 + 'px';
+                            }
+                        }, 10);
                     });
                 }
                 
@@ -4746,6 +4799,17 @@
                                     underline.style.left = left + 'px';
                                     underline.style.width = width + 'px';
                                 }
+                                // Double-check after layout recalculation
+                                setTimeout(() => {
+                                    const btnRect2 = btn.getBoundingClientRect();
+                                    const containerRect2 = btn.parentElement.getBoundingClientRect();
+                                    if (btnRect2.width > 0 && containerRect2.width > 0) {
+                                        const left2 = btnRect2.left - containerRect2.left;
+                                        const width2 = btnRect2.width;
+                                        underline.style.left = left2 + 'px';
+                                        underline.style.width = width2 + 'px';
+                                    }
+                                }, 10);
                             });
                         }
                         
@@ -4764,12 +4828,10 @@
                 });
             }
             
-            // Update URL after all UI updates are complete
-            setTimeout(() => {
-                if (typeof updateUrlForSubsection === 'function') {
-                    updateUrlForSubsection(sectionName, subsectionName);
-                }
-            }, 100);
+            // Update URL IMMEDIATELY (no delay) to keep in sync with UI
+            if (typeof updateUrlForSubsection === 'function') {
+                updateUrlForSubsection(sectionName, subsectionName);
+            }
         }
         
         // Helper function to update URL for subsection without triggering navigation
