@@ -21,6 +21,26 @@
   status = 200
 
 [[redirects]]
+  from = "/acct_*/programs/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/progress/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/profile/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/payment/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
   from = "/acct_*/marketplace"
   to = "/dashboard.html"
   status = 200
@@ -81,6 +101,26 @@
   status = 200
 
 [[redirects]]
+  from = "/programs/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/progress/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/profile/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/payment/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
   from = "/marketplace"
   to = "/dashboard.html"
   status = 200
@@ -132,6 +172,26 @@
 
 [[redirects]]
   from = "/help"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/overview/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/overview"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/overview/*"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/acct_*/overview"
   to = "/dashboard.html"
   status = 200
 
