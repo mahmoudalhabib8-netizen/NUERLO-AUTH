@@ -3803,7 +3803,6 @@ body.light-mode .chart-period-btn.active {
     padding: 10px 0;
     background: none;
     border: none;
-    border-bottom: 1px solid transparent;
     color: #888;
     font-size: 13px;
     font-weight: 500;
@@ -3814,7 +3813,6 @@ body.light-mode .chart-period-btn.active {
 
 .filter-toggle-btn:hover {
     color: #fff;
-    border-bottom-color: #666;
 }
 
 .filter-toggle-btn svg {
@@ -4720,25 +4718,21 @@ body.dark-mode .logout-btn-cancel:hover {
 
 
 /* ==========================================
-   MARKETPLACE FILTER POPUP
+   MARKETPLACE FILTER DRAWER
+   Modern slide-out panel from right
    ========================================== */
-.marketplace-filter-popup {
+.marketplace-filter-drawer {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 10000;
-    display: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
 }
 
-.marketplace-filter-popup.active {
-    display: flex;
-    opacity: 1;
-    visibility: visible;
+.marketplace-filter-drawer.active {
+    pointer-events: all;
 }
 
 .marketplace-filter-overlay {
@@ -4747,76 +4741,78 @@ body.dark-mode .logout-btn-cancel:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.marketplace-filter-drawer.active .marketplace-filter-overlay {
+    opacity: 1;
+    pointer-events: all;
 }
 
 body.dark-mode .marketplace-filter-overlay {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.6);
 }
 
-.marketplace-filter-content {
-    position: relative;
-    background: #0a0a0a;
-    border-radius: 0;
-    box-shadow: none;
+.marketplace-filter-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
-    margin: auto;
-    border: 1px solid #222;
-    transform: translateY(20px);
-    transition: transform 0.2s ease;
-    overflow: hidden;
+    max-width: 360px;
+    height: 100%;
+    background: var(--color-bg-primary);
+    border-left: 1px solid var(--color-border-light);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
-body.dark-mode .marketplace-filter-content {
-    box-shadow: none;
-}
-
-.marketplace-filter-popup.active .marketplace-filter-content {
-    transform: translateY(0);
+.marketplace-filter-drawer.active .marketplace-filter-panel {
+    transform: translateX(0);
 }
 
 .marketplace-filter-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 28px;
-    border-bottom: 1px solid #222;
+    padding: 24px;
+    border-bottom: 1px solid var(--color-border-light);
+    background: var(--color-bg-primary);
 }
 
 .marketplace-filter-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
-    color: #fff;
+    color: var(--color-text-primary);
     margin: 0;
 }
 
 .marketplace-filter-close {
     background: none;
     border: none;
-    color: #666;
+    color: var(--color-text-tertiary);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0;
-    transition: color 0.2s ease;
+    border-radius: 4px;
+    transition: all 0.15s ease;
 }
 
 .marketplace-filter-close:hover {
-    background: none;
-    color: #fff;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-primary);
 }
 
 .marketplace-filter-body {
-    padding: 28px;
+    padding: 24px;
     overflow-y: auto;
     flex: 1;
 }
@@ -4832,42 +4828,77 @@ body.dark-mode .marketplace-filter-content {
 .marketplace-filter-section-title {
     font-size: 12px;
     font-weight: 500;
-    color: #888;
-    margin-bottom: 16px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .marketplace-filter-options {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .marketplace-filter-option {
-    padding: 8px 16px;
+    padding: 10px 14px;
     background: transparent;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #888;
-    font-size: 13px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
     font-weight: 400;
     cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     font-family: var(--font-family);
+    text-align: left;
 }
 
 .marketplace-filter-option:hover {
-    background: #1a1a1a;
-    color: #fff;
-    border-color: #444;
+    background: var(--color-bg-secondary);
+    border-color: var(--color-border-medium);
+    color: var(--color-text-primary);
 }
 
 .marketplace-filter-option.active {
-    background: #fff;
-    color: #000;
-    border-color: #fff;
+    background: var(--color-text-primary);
+    color: var(--color-bg-primary);
+    border-color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+.marketplace-filter-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--color-border-light);
+    background: var(--color-bg-primary);
+}
+
+.marketplace-filter-clear {
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: var(--font-family);
+}
+
+.marketplace-filter-clear:hover {
+    background: var(--color-bg-secondary);
+    border-color: var(--color-border-medium);
+    color: var(--color-text-primary);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .marketplace-filter-panel {
+        max-width: 100%;
+        width: 100%;
+    }
 }
 
 /* ==========================================
@@ -6163,6 +6194,20 @@ body.light-mode .help-support-option.active {
 
 .plan-action-link:hover svg {
     transform: translateX(2px);
+}
+
+/* Redirecting pulse animation */
+.redirecting-pulse {
+    animation: smooth-pulse 2s ease-in-out infinite;
+}
+
+@keyframes smooth-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
 }
 
 .plan-features-list {

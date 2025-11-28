@@ -682,6 +682,18 @@
                                     if (window.updateProgramsFilter) {
                                         window.updateProgramsFilter(filterType);
                                     }
+                                    
+                                    // Update URL with subsection
+                                    const subsectionMap = {
+                                        'allProgramsSection': 'all',
+                                        'notStartedSection': 'not-started',
+                                        'inProgressSection': 'in-progress',
+                                        'completedSection': 'completed'
+                                    };
+                                    const subsectionName = subsectionMap[sectionId];
+                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                        updateUrlForSubsection('programs', subsectionName);
+                                    }
                                 }
                             };
                         });
@@ -923,6 +935,17 @@
                                             }, 100);
                                         }
                                     }, 10);
+                                    
+                                    // Update URL with subsection
+                                    const subsectionMap = {
+                                        'chartSection': 'progress',
+                                        'statsSection': 'stats',
+                                        'activitySection': 'activity'
+                                    };
+                                    const subsectionName = subsectionMap[targetSectionId];
+                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                        updateUrlForSubsection('progress', subsectionName);
+                                    }
                                 }
                                 
                                 updateUnderline(btn);
@@ -1232,6 +1255,18 @@
                                 if (target) {
                                     target.style.display = 'block';
                                     target.classList.add('active');
+                                    
+                                    // Update URL with subsection
+                                    const subsectionMap = {
+                                        'subscriptionInfoSection': 'subscription',
+                                        'plansSection': 'plans',
+                                        'paymentMethodSection': 'payment-method',
+                                        'billingHistorySection': 'billing'
+                                    };
+                                    const subsectionName = subsectionMap[sectionId];
+                                    if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                        updateUrlForSubsection('payment', subsectionName);
+                                    }
                                 }
                             };
                         });
@@ -2582,6 +2617,138 @@
                         </div>
                     </div>
                 </div>
+                
+                <script>
+                // PROFILE NAVIGATION
+                (function() {
+                    function setupProfileNav() {
+                        const profileSection = document.getElementById('profile');
+                        if (!profileSection) return;
+                        
+                        const profileTabs = profileSection.querySelectorAll('.profile-tab');
+                        const profileNavItems = document.querySelectorAll('.profile-nav-item');
+                        const tabIndicator = profileSection.querySelector('.profile-tab-indicator');
+                        
+                        if (!profileTabs.length) {
+                            console.log('Profile tabs not ready');
+                            return;
+                        }
+                        
+                        // Update indicator position
+                        function updateIndicator(tab) {
+                            if (!tab || !tabIndicator) return;
+                            
+                            requestAnimationFrame(function() {
+                                const tabsContainer = tab.parentElement;
+                                const tabRect = tab.getBoundingClientRect();
+                                const containerRect = tabsContainer.getBoundingClientRect();
+                                
+                                if (tabRect.width > 0 && containerRect.width > 0) {
+                                    const left = tabRect.left - containerRect.left;
+                                    const width = tabRect.width;
+                                    
+                                    tabIndicator.style.left = left + 'px';
+                                    tabIndicator.style.width = width + 'px';
+                                }
+                            });
+                        }
+                        
+                        // Initialize indicator position
+                        const activeTab = profileSection.querySelector('.profile-tab.active') || profileTabs[0];
+                        if (activeTab) {
+                            updateIndicator(activeTab);
+                            setTimeout(() => updateIndicator(activeTab), 50);
+                            setTimeout(() => updateIndicator(activeTab), 150);
+                        }
+                        
+                        // Profile tab click handlers
+                        profileTabs.forEach(function(tab) {
+                            tab.addEventListener('click', function() {
+                                const sectionId = this.getAttribute('data-section');
+                                if (!sectionId) return;
+                                
+                                // Update tabs
+                                profileTabs.forEach(t => t.classList.remove('active'));
+                                this.classList.add('active');
+                                updateIndicator(this);
+                                
+                                // Update nav items
+                                profileNavItems.forEach(nav => nav.classList.remove('active'));
+                                const matchingNav = Array.from(profileNavItems).find(nav => 
+                                    nav.getAttribute('data-section') === sectionId
+                                );
+                                if (matchingNav) {
+                                    matchingNav.classList.add('active');
+                                }
+                                
+                                // Update subsections
+                                const subsections = profileSection.querySelectorAll('.profile-subsection');
+                                subsections.forEach(s => {
+                                    s.style.display = 'none';
+                                    s.classList.remove('active');
+                                });
+                                
+                                const targetSection = document.getElementById(sectionId);
+                                if (targetSection) {
+                                    targetSection.style.display = 'block';
+                                    targetSection.classList.add('active');
+                                }
+                                
+                                // Update URL with subsection
+                                const subsectionMap = {
+                                    'personalInfoSection': 'personal',
+                                    'googleAccountSection': 'account',
+                                    'preferencesSection': 'preferences',
+                                    'advancedSection': 'advanced'
+                                };
+                                const subsectionName = subsectionMap[sectionId];
+                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                                    updateUrlForSubsection('profile', subsectionName);
+                                }
+                            });
+                        });
+                        
+                        // Profile nav item click handlers
+                        profileNavItems.forEach(function(navItem) {
+                            navItem.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const sectionId = this.getAttribute('data-section');
+                                if (!sectionId) return;
+                                
+                                // Find corresponding tab and trigger its click
+                                const correspondingTab = Array.from(profileTabs).find(tab => 
+                                    tab.getAttribute('data-section') === sectionId
+                                );
+                                if (correspondingTab) {
+                                    correspondingTab.click();
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Initialize on load
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', setupProfileNav);
+                    } else {
+                        setupProfileNav();
+                    }
+                    
+                    // Retry setup multiple times to ensure it works
+                    setTimeout(setupProfileNav, 100);
+                    setTimeout(setupProfileNav, 300);
+                    
+                    // Watch for profile section activation
+                    const profileSection = document.getElementById('profile');
+                    if (profileSection) {
+                        const observer = new MutationObserver(function() {
+                            if (profileSection.classList.contains('active')) {
+                                setTimeout(setupProfileNav, 50);
+                            }
+                        });
+                        observer.observe(profileSection, { attributes: true, attributeFilter: ['class'] });
+                    }
+                })();
+                </script>
             </section>
             
             <!-- Right Side Navigation Panel -->
@@ -2979,12 +3146,12 @@
         </div>
     </div>
 
-    <!-- Marketplace Filter Popup -->
-    <div id="marketplaceFilterPopup" class="marketplace-filter-popup">
+    <!-- Marketplace Filter Drawer -->
+    <div id="marketplaceFilterPopup" class="marketplace-filter-drawer">
         <div class="marketplace-filter-overlay"></div>
-        <div class="marketplace-filter-content">
+        <div class="marketplace-filter-panel">
             <div class="marketplace-filter-header">
-                <h3 class="marketplace-filter-title">Filter Programs</h3>
+                <h3 class="marketplace-filter-title">Filters</h3>
                 <button class="marketplace-filter-close" id="marketplaceFilterClose">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -3061,7 +3228,6 @@
             </div>
             <div class="marketplace-filter-footer">
                 <button class="marketplace-filter-clear" id="marketplaceFilterClear">Clear All</button>
-                <button class="marketplace-filter-apply" id="marketplaceFilterApply">Apply Filters</button>
             </div>
         </div>
     </div>
@@ -4024,7 +4190,8 @@
         
         // Navigation functionality
         // This function handles section navigation AND URL updates
-        function navigateToSection(sectionName) {
+        // Updated to support subsections in URL: e.g., /programs/notstarted
+        function navigateToSection(sectionName, subsectionName = null) {
             // If leaving profile section and there are unsaved changes, discard them
             const currentSection = document.querySelector('.content-section.active');
             if (currentSection && currentSection.id === 'profile') {
@@ -4048,6 +4215,13 @@
             const targetSection = document.getElementById(sectionName);
             if (targetSection) {
                 targetSection.classList.add('active');
+                
+                // Handle subsection navigation if provided
+                if (subsectionName) {
+                    setTimeout(() => {
+                        navigateToSubsection(sectionName, subsectionName);
+                    }, 50);
+                }
             }
             
             // Load recommended courses when overview section is shown
@@ -4164,7 +4338,7 @@
                 }
             }
             
-            // Update URL with section (use helper functions from dashboard.js if available)
+            // Update URL with section and subsection (use helper functions from dashboard.js if available)
             if (window.history && window.history.pushState) {
                 let newUrl = null;
                 
@@ -4185,31 +4359,176 @@
                         const accountMatch = pathname.match(/^(\/acct_[^\/]+)/);
                         const accountPrefix = accountMatch ? accountMatch[1] : '';
                         if (sectionName === 'overview') {
-                            newUrl = `${accountPrefix}/dashboard`;
+                            newUrl = `${accountPrefix}/overview`;
                         } else {
-                            newUrl = `${accountPrefix}/dashboard/${sectionName}`;
+                            newUrl = `${accountPrefix}/${sectionName}`;
+                            // Add subsection to URL if provided
+                            if (subsectionName) {
+                                newUrl += '/' + subsectionName;
+                            }
                         }
                     } else {
                         if (sectionName === 'overview') {
-                            newUrl = '/dashboard';
+                            newUrl = '/overview';
                         } else {
-                            newUrl = `/dashboard/${sectionName}`;
+                            newUrl = '/' + sectionName;
+                            // Add subsection to URL if provided
+                            if (subsectionName) {
+                                newUrl += '/' + subsectionName;
+                            }
                         }
                     }
                 }
                 
                 if (newUrl && newUrl !== window.location.pathname) {
-                    window.history.pushState({ section: sectionName }, '', newUrl);
+                    window.history.pushState({ section: sectionName, subsection: subsectionName }, '', newUrl);
                     console.log('URL updated to:', newUrl);
                 }
                 
                 // Save to localStorage
                 if (typeof localStorage !== 'undefined') {
                     localStorage.setItem('lastDashboardSection', sectionName);
+                    if (subsectionName) {
+                        localStorage.setItem('lastDashboardSubsection_' + sectionName, subsectionName);
+                    }
                 }
             }
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Helper function to navigate to a specific subsection within a section
+        function navigateToSubsection(sectionName, subsectionName) {
+            console.log('Navigating to subsection:', sectionName, subsectionName);
+            
+            // Map subsection URL names to actual element IDs
+            const subsectionMap = {
+                'programs': {
+                    'all': 'allProgramsSection',
+                    'not-started': 'notStartedSection',
+                    'in-progress': 'inProgressSection',
+                    'completed': 'completedSection'
+                },
+                'progress': {
+                    'chart': 'chartSection',
+                    'progress': 'chartSection',
+                    'stats': 'statsSection',
+                    'activity': 'activitySection'
+                },
+                'profile': {
+                    'personal': 'profileInfo',
+                    'account': 'profileSecurity',
+                    'preferences': 'profileNotifications',
+                    'advanced': 'profilePrivacy'
+                },
+                'settings': {
+                    'general': 'generalSettings',
+                    'appearance': 'appearanceSettings',
+                    'notifications': 'notificationSettings',
+                    'privacy': 'privacySettings'
+                },
+                'payment': {
+                    'subscription': 'subscriptionInfoSection',
+                    'plans': 'plansSection',
+                    'payment-method': 'paymentMethodSection',
+                    'billing': 'billingHistorySection'
+                }
+            };
+            
+            const subsectionId = subsectionMap[sectionName]?.[subsectionName.toLowerCase()];
+            
+            if (!subsectionId) {
+                console.warn('Unknown subsection:', subsectionName, 'for section:', sectionName);
+                return;
+            }
+            
+            // Handle different section types with their specific navigation systems
+            if (sectionName === 'programs') {
+                // Programs section uses payment-nav-btn buttons
+                const navButtons = document.querySelectorAll('.payment-nav-btn');
+                navButtons.forEach(btn => {
+                    btn.classList.remove('payment-nav-active');
+                    if (btn.getAttribute('data-programs-section') === subsectionId) {
+                        btn.classList.add('payment-nav-active');
+                        btn.click(); // Trigger the click to handle all the UI updates
+                    }
+                });
+            } else if (sectionName === 'progress') {
+                // Progress section uses progress-nav-btn buttons
+                const navButtons = document.querySelectorAll('.progress-nav-btn');
+                navButtons.forEach(btn => {
+                    btn.classList.remove('progress-nav-active');
+                    if (btn.getAttribute('data-progress-section') === subsectionId) {
+                        btn.classList.add('progress-nav-active');
+                        btn.click(); // Trigger the click to handle all the UI updates
+                    }
+                });
+            } else if (sectionName === 'profile') {
+                // Profile section uses profile-nav-item elements
+                if (typeof navigateToProfileSubsection === 'function') {
+                    navigateToProfileSubsection(subsectionId);
+                }
+            } else if (sectionName === 'payment') {
+                // Payment section uses payment-nav-btn buttons
+                const navButtons = document.querySelectorAll('#payment .payment-nav-btn');
+                navButtons.forEach(btn => {
+                    btn.classList.remove('payment-nav-active');
+                    if (btn.getAttribute('data-payment-section') === subsectionId) {
+                        btn.classList.add('payment-nav-active');
+                        btn.click(); // Trigger the click to handle all the UI updates
+                    }
+                });
+            }
+            
+            // Update URL without triggering navigation
+            updateUrlForSubsection(sectionName, subsectionName);
+        }
+        
+        // Helper function to update URL for subsection without triggering navigation
+        function updateUrlForSubsection(sectionName, subsectionName) {
+            if (!window.history || !window.history.pushState) return;
+            
+            const pathname = window.location.pathname;
+            const isLocalDev = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1' ||
+                             window.location.hostname === '0.0.0.0' ||
+                             window.location.hostname === '';
+            
+            const hasAccountPrefix = pathname.match(/^\/acct_/);
+            let newUrl = null;
+            
+            if (hasAccountPrefix && !isLocalDev) {
+                const accountMatch = pathname.match(/^(\/acct_[^\/]+)/);
+                const accountPrefix = accountMatch ? accountMatch[1] : '';
+                newUrl = `${accountPrefix}/${sectionName}/${subsectionName}`;
+            } else {
+                newUrl = `/${sectionName}/${subsectionName}`;
+            }
+            
+            if (newUrl && newUrl !== window.location.pathname) {
+                window.history.pushState({ section: sectionName, subsection: subsectionName }, '', newUrl);
+                console.log('URL updated to:', newUrl);
+            }
+        }
+        
+        // Helper function to parse URL and extract section and subsection
+        function parseSectionFromUrl() {
+            const pathname = window.location.pathname;
+            
+            // Remove account prefix if present: /acct_xxx/section/subsection -> /section/subsection
+            const cleanPath = pathname.replace(/^\/acct_[^\/]+/, '');
+            
+            // Split path into segments
+            const segments = cleanPath.split('/').filter(s => s);
+            
+            if (segments.length === 0) {
+                return { section: 'overview', subsection: null };
+            }
+            
+            const section = segments[0];
+            const subsection = segments[1] || null;
+            
+            return { section, subsection };
         }
 
         // Sidebar toggle for mobile
@@ -4316,6 +4635,10 @@
         // Expose functions globally
         window.toggleTheme = toggleTheme;
         window.applyThemeMode = applyThemeMode;
+        window.navigateToSection = navigateToSection;
+        window.navigateToSubsection = navigateToSubsection;
+        window.updateUrlForSubsection = updateUrlForSubsection;
+        window.parseSectionFromUrl = parseSectionFromUrl;
 
         // Update icon colors based on current theme
         function updateThemeIconColors() {
@@ -4407,6 +4730,21 @@
                     this.classList.add('active');
                 });
             });
+            
+            // Parse URL and navigate to section/subsection on page load
+            // Wait a bit for Firebase and routing.js to be ready
+            setTimeout(() => {
+                const urlInfo = parseSectionFromUrl();
+                console.log('Parsed URL on load:', urlInfo);
+                
+                if (urlInfo.section && urlInfo.section !== 'overview') {
+                    // Navigate to the section
+                    navigateToSection(urlInfo.section, urlInfo.subsection);
+                } else if (urlInfo.subsection) {
+                    // If we have a subsection but section is overview, treat first segment as section
+                    navigateToSection(urlInfo.subsection, null);
+                }
+            }, 300);
 
             // Loading screen is handled by dashboard.js during authentication
         });
@@ -4428,14 +4766,14 @@
             }
         }
 
-        // Toggle filters popup
+        // Toggle filters drawer
         function toggleFilters() {
-            const popup = document.getElementById('marketplaceFilterPopup');
-            if (popup) {
-                const isOpening = !popup.classList.contains('active');
-                popup.classList.toggle('active');
+            const drawer = document.getElementById('marketplaceFilterPopup');
+            if (drawer) {
+                const isOpening = !drawer.classList.contains('active');
+                drawer.classList.toggle('active');
                 
-                if (popup.classList.contains('active')) {
+                if (drawer.classList.contains('active')) {
                     document.body.style.overflow = 'hidden';
                     
                     // Sync filter states when opening
@@ -4446,7 +4784,7 @@
                             difficulty: 'all'
                         };
                         
-                        const filterOptions = popup.querySelectorAll('.marketplace-filter-option');
+                        const filterOptions = drawer.querySelectorAll('.marketplace-filter-option');
                         filterOptions.forEach(option => {
                             const filterType = option.getAttribute('data-filter-type');
                             const value = option.getAttribute('data-value');
@@ -4464,41 +4802,40 @@
             }
         }
 
-        // Initialize marketplace filter popup
+        // Initialize marketplace filter drawer
         function initMarketplaceFilterPopup() {
-            const popup = document.getElementById('marketplaceFilterPopup');
+            const drawer = document.getElementById('marketplaceFilterPopup');
             const closeBtn = document.getElementById('marketplaceFilterClose');
-            const overlay = popup?.querySelector('.marketplace-filter-overlay');
+            const overlay = drawer?.querySelector('.marketplace-filter-overlay');
             const clearBtn = document.getElementById('marketplaceFilterClear');
-            const applyBtn = document.getElementById('marketplaceFilterApply');
-            const filterOptions = popup?.querySelectorAll('.marketplace-filter-option');
+            const filterOptions = drawer?.querySelectorAll('.marketplace-filter-option');
 
-            if (!popup) return;
+            if (!drawer) return;
 
-            // Close popup
-            function closePopup() {
-                popup.classList.remove('active');
+            // Close drawer
+            function closeDrawer() {
+                drawer.classList.remove('active');
                 document.body.style.overflow = '';
             }
 
             // Close button
             if (closeBtn) {
-                closeBtn.addEventListener('click', closePopup);
+                closeBtn.addEventListener('click', closeDrawer);
             }
 
             // Overlay click
             if (overlay) {
-                overlay.addEventListener('click', closePopup);
+                overlay.addEventListener('click', closeDrawer);
             }
 
             // Escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && popup.classList.contains('active')) {
-                    closePopup();
+                if (e.key === 'Escape' && drawer.classList.contains('active')) {
+                    closeDrawer();
                 }
             });
 
-            // Filter option clicks
+            // Filter option clicks - Apply filters in real-time
             if (filterOptions) {
                 filterOptions.forEach(option => {
                     option.addEventListener('click', function() {
@@ -4506,11 +4843,31 @@
                         const value = this.getAttribute('data-value');
                         
                         // Remove active from siblings of same type
-                        const siblings = popup.querySelectorAll(`[data-filter-type="${filterType}"]`);
+                        const siblings = drawer.querySelectorAll(`[data-filter-type="${filterType}"]`);
                         siblings.forEach(sibling => sibling.classList.remove('active'));
                         
                         // Add active to clicked option
                         this.classList.add('active');
+
+                        // Apply filters immediately
+                        if (window.marketplace) {
+                            const selectedFilters = {
+                                category: 'all',
+                                price: 'all',
+                                difficulty: 'all'
+                            };
+
+                            filterOptions.forEach(opt => {
+                                if (opt.classList.contains('active')) {
+                                    const type = opt.getAttribute('data-filter-type');
+                                    const val = opt.getAttribute('data-value');
+                                    selectedFilters[type] = val;
+                                }
+                            });
+
+                            window.marketplace.currentFilters = selectedFilters;
+                            window.marketplace.applyFilters();
+                        }
                     });
                 });
             }
@@ -4527,38 +4884,17 @@
                                 option.classList.remove('active');
                             }
                         });
+
+                        // Apply cleared filters
+                        if (window.marketplace) {
+                            window.marketplace.currentFilters = {
+                                category: 'all',
+                                price: 'all',
+                                difficulty: 'all'
+                            };
+                            window.marketplace.applyFilters();
+                        }
                     }
-                });
-            }
-
-            // Apply filters
-            if (applyBtn) {
-                applyBtn.addEventListener('click', function() {
-                    if (!window.marketplace) return;
-
-                    // Get selected filters
-                    const selectedFilters = {
-                        category: 'all',
-                        price: 'all',
-                        difficulty: 'all'
-                    };
-
-                    if (filterOptions) {
-                        filterOptions.forEach(option => {
-                            if (option.classList.contains('active')) {
-                                const filterType = option.getAttribute('data-filter-type');
-                                const value = option.getAttribute('data-value');
-                                selectedFilters[filterType] = value;
-                            }
-                        });
-                    }
-
-                    // Apply filters to marketplace
-                    window.marketplace.currentFilters = selectedFilters;
-                    window.marketplace.applyFilters();
-                    
-                    // Close popup
-                    closePopup();
                 });
             }
         }
@@ -5173,6 +5509,18 @@
                 if (targetSection) {
                     targetSection.style.display = 'block';
                     targetSection.classList.add('active');
+                }
+                
+                // Update URL with subsection
+                const subsectionMap = {
+                    'personalInfoSection': 'personal',
+                    'googleAccountSection': 'account',
+                    'preferencesSection': 'preferences',
+                    'advancedSection': 'advanced'
+                };
+                const subsectionName = subsectionMap[subsectionId];
+                if (subsectionName && typeof updateUrlForSubsection === 'function') {
+                    updateUrlForSubsection('profile', subsectionName);
                 }
             }
             

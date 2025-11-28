@@ -156,10 +156,8 @@ class Marketplace {
         // Update current filter
         this.currentFilters[filterType] = value;
         
-        // Apply filters immediately on desktop
-        if (window.innerWidth > 768) {
-            this.applyFilters();
-        }
+        // Apply filters immediately (real-time filtering)
+        this.applyFilters();
     }
 
     clearFilters() {

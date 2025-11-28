@@ -726,14 +726,13 @@ function updatePlansDisplay(subscriptionInfo) {
     
     // Restore any buttons that were in "redirecting" state (if user came back)
     plansContent.querySelectorAll('.subscribe-link').forEach(link => {
-        if (link._redirectingInterval) {
-            clearInterval(link._redirectingInterval);
+        if (link._redirecting) {
             const originalText = link.dataset.originalText;
             if (originalText) {
                 link.innerHTML = originalText;
             }
             link.style.pointerEvents = 'auto';
-            delete link._redirectingInterval;
+            delete link._redirecting;
             delete link.dataset.originalText;
         }
     });
@@ -752,37 +751,30 @@ function updatePlansDisplay(subscriptionInfo) {
             linkElement.dataset.originalText = originalText;
             linkElement.style.pointerEvents = 'none';
             
-            // Start animated "Redirecting..." text
-            let dotCount = 0;
+            // Set pulsing "Redirecting" text
             const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
-            const redirectingInterval = setInterval(() => {
-                dotCount = (dotCount + 1) % 4;
-                const dots = '.'.repeat(dotCount);
-                linkElement.innerHTML = `Redirecting${dots}${arrowSvg}`;
-            }, 300);
+            linkElement.innerHTML = `<span class="redirecting-pulse">Redirecting</span>${arrowSvg}`;
             
-            // Store interval directly on element for cleanup
-            linkElement._redirectingInterval = redirectingInterval;
+            // No interval needed - CSS animation handles the pulse
+            linkElement._redirecting = true;
             
             const user = window.currentUser || (window.firebase && window.firebase.auth && window.firebase.auth.currentUser);
             if (user) {
                 try {
                     await createCheckoutSession(priceId, user.uid, user.email);
-                    // If successful, the redirect will happen, so we don't clear the interval here
+                    // If successful, the redirect will happen
                 } catch (error) {
                     // If error, restore original text
-                    clearInterval(redirectingInterval);
                     linkElement.innerHTML = originalText;
                     linkElement.style.pointerEvents = 'auto';
-                    delete linkElement._redirectingInterval;
+                    delete linkElement._redirecting;
                     console.error('Checkout session creation failed:', error);
                 }
             } else {
                 // No user, restore
-                clearInterval(redirectingInterval);
                 linkElement.innerHTML = originalText;
                 linkElement.style.pointerEvents = 'auto';
-                delete linkElement._redirectingInterval;
+                delete linkElement._redirecting;
             }
         });
     });
