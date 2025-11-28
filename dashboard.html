@@ -4331,6 +4331,29 @@
                 }
             }
             
+            // Determine subsection BEFORE showing section - check localStorage or use default
+            if (!subsectionName) {
+                const defaultSubsections = {
+                    'profile': 'personal',
+                    'programs': 'all',
+                    'progress': 'progress',
+                    'payment': 'subscription'
+                };
+                
+                // First, try to get the last visited subsection for this section from localStorage
+                const lastSubsection = localStorage.getItem('lastDashboardSubsection_' + sectionName);
+                
+                if (lastSubsection) {
+                    // Use the last visited subsection
+                    subsectionName = lastSubsection;
+                    console.log('[Navigation] Restoring last subsection for', sectionName, ':', lastSubsection);
+                } else if (defaultSubsections[sectionName]) {
+                    // Fall back to default if no saved subsection
+                    subsectionName = defaultSubsections[sectionName];
+                    console.log('[Navigation] Using default subsection for', sectionName, ':', subsectionName);
+                }
+            }
+            
             const sections = document.querySelectorAll('.content-section');
             sections.forEach(section => {
                 section.classList.remove('active');
@@ -4340,7 +4363,7 @@
             if (targetSection) {
                 targetSection.classList.add('active');
                 
-                // Handle subsection navigation if provided
+                // Handle subsection navigation if provided (determined above)
                 if (subsectionName) {
                     setTimeout(() => {
                         navigateToSubsection(sectionName, subsectionName);
@@ -4392,28 +4415,6 @@
             // Load social links when navigating to profile section
             if (sectionName === 'profile' && typeof loadSocialLinks === 'function') {
                 loadSocialLinks();
-            }
-            
-            // Set default subsection for sections with subsections if not specified
-            if (!subsectionName) {
-                const defaultSubsections = {
-                    'profile': 'personal',
-                    'programs': 'all',
-                    'progress': 'progress',
-                    'payment': 'subscription'
-                };
-                
-                // First, try to get the last visited subsection for this section from localStorage
-                const lastSubsection = localStorage.getItem('lastDashboardSubsection_' + sectionName);
-                
-                if (lastSubsection) {
-                    // Use the last visited subsection
-                    subsectionName = lastSubsection;
-                    console.log('[Navigation] Restoring last subsection for', sectionName, ':', lastSubsection);
-                } else if (defaultSubsections[sectionName]) {
-                    // Fall back to default if no saved subsection
-                    subsectionName = defaultSubsections[sectionName];
-                }
             }
             
             // Update nav items
