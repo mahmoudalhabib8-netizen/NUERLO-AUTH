@@ -370,9 +370,55 @@ class DashboardRouter {
                                       'tasks', 'notes', 'profile', 'settings', 'payment', 'help',
                                       'dashboard', 'login', 'register', 'course'];
             
+            // Define valid subsections for each dashboard section
+            const validSubsections = {
+                'programs': ['all', 'not-started', 'in-progress', 'completed'],
+                'progress': ['progress', 'chart', 'stats', 'activity'],
+                'profile': ['personal', 'account', 'preferences', 'advanced'],
+                'payment': ['subscription', 'plans', 'payment-method', 'billing']
+            };
+            
+            // CRITICAL: Check for subsection URLs first (e.g., /programs/not-started or /acct_XXX/payment/billing)
+            // Check for account-prefixed subsection URLs: /acct_xxx/{section}/{subsection}
+            const accountSubsectionMatch = path.match(/^\/acct_([^\/]+)\/([^\/]+)\/([^\/]+)$/);
+            if (accountSubsectionMatch && accountSubsectionMatch[2] && accountSubsectionMatch[3]) {
+                const section = accountSubsectionMatch[2];
+                const subsection = accountSubsectionMatch[3];
+                
+                // If it's a valid subsection URL, preserve it (verify account ID matches)
+                if (validSubsections[section] && validSubsections[section].includes(subsection)) {
+                    const routeShortId = accountSubsectionMatch[1];
+                    if (!matchesShortUserId(user.uid, routeShortId)) {
+                        // Wrong account - fix it but keep the subsection
+                        const shortId = getShortUserId(user.uid);
+                        window.history.replaceState(null, '', `/acct_${shortId}/${section}/${subsection}`);
+                    }
+                    console.log('[DashboardRouter] Valid account-prefixed subsection URL detected, preserving:', path);
+                    return; // EXIT EARLY - preserve the subsection URL
+                }
+            }
+            
+            // Check for direct subsection URLs: /{section}/{subsection}
+            const subsectionMatch = path.match(/^\/([^\/]+)\/([^\/]+)$/);
+            if (subsectionMatch && subsectionMatch[1] && subsectionMatch[2]) {
+                const section = subsectionMatch[1];
+                const subsection = subsectionMatch[2];
+                
+                // If it's a valid subsection URL, don't redirect - let dashboard.js handle it
+                if (validSubsections[section] && validSubsections[section].includes(subsection)) {
+                    console.log('[DashboardRouter] Valid subsection URL detected, preserving:', path);
+                    // In production, add account prefix
+                    if (!isLocalDev) {
+                        const shortId = getShortUserId(user.uid);
+                        window.history.replaceState(null, '', `/acct_${shortId}/${section}/${subsection}`);
+                    }
+                    return; // EXIT EARLY - preserve the subsection URL
+                }
+            }
+            
             // CRITICAL: Single-segment routes like /progress or /overview are ALWAYS dashboard routes
             // Two-segment routes like /{courseId}/progress are course routes
-            // Check if this is a two-segment course route first
+            // Check if this is a two-segment course route
             const courseRouteMatch = path.match(/^\/([^\/]+)\/([^\/]+)$/);
             if (courseRouteMatch && courseRouteMatch[1] && courseRouteMatch[2]) {
                 const potentialCourseId = courseRouteMatch[1];
@@ -726,11 +772,46 @@ class DashboardRouter {
                                   'tasks', 'notes', 'profile', 'settings', 'payment', 'help',
                                   'dashboard', 'login', 'register', 'course'];
         
+        // Define valid subsections for each dashboard section
+        const validSubsections = {
+            'programs': ['all', 'not-started', 'in-progress', 'completed'],
+            'progress': ['progress', 'chart', 'stats', 'activity'],
+            'profile': ['personal', 'account', 'preferences', 'advanced'],
+            'payment': ['subscription', 'plans', 'payment-method', 'billing']
+        };
+        
         console.log('[routing.js] checkCurrentRoute - path:', path);
+        
+        // CRITICAL: Check for subsection URLs first (e.g., /programs/not-started or /acct_XXX/payment/billing)
+        // Check for account-prefixed subsection URLs: /acct_xxx/{section}/{subsection}
+        const accountSubsectionMatch = path.match(/^\/acct_([^\/]+)\/([^\/]+)\/([^\/]+)$/);
+        if (accountSubsectionMatch && accountSubsectionMatch[2] && accountSubsectionMatch[3]) {
+            const section = accountSubsectionMatch[2];
+            const subsection = accountSubsectionMatch[3];
+            
+            // If it's a valid subsection URL, preserve it
+            if (validSubsections[section] && validSubsections[section].includes(subsection)) {
+                console.log('[DashboardRouter] checkCurrentRoute - Valid account-prefixed subsection URL detected, preserving:', path);
+                return; // EXIT EARLY - preserve the subsection URL
+            }
+        }
+        
+        // Check for direct subsection URLs: /{section}/{subsection}
+        const directSubsectionMatch = path.match(/^\/([^\/]+)\/([^\/]+)$/);
+        if (directSubsectionMatch && directSubsectionMatch[1] && directSubsectionMatch[2]) {
+            const section = directSubsectionMatch[1];
+            const subsection = directSubsectionMatch[2];
+            
+            // If it's a valid subsection URL, preserve it
+            if (validSubsections[section] && validSubsections[section].includes(subsection)) {
+                console.log('[DashboardRouter] checkCurrentRoute - Valid subsection URL detected, preserving:', path);
+                return; // EXIT EARLY - preserve the subsection URL
+            }
+        }
         
         // CRITICAL: Single-segment routes like /progress or /overview are ALWAYS dashboard routes
         // Two-segment routes like /{courseId}/progress are course routes
-        // Check if this is a two-segment course route first
+        // Check if this is a two-segment course route
         const courseRouteMatch = path.match(/^\/([^\/]+)\/([^\/]+)$/);
         if (courseRouteMatch && courseRouteMatch[1] && courseRouteMatch[2]) {
             const potentialCourseId = courseRouteMatch[1];
