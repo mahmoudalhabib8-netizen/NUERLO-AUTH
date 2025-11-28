@@ -4394,6 +4394,20 @@
                 loadSocialLinks();
             }
             
+            // Set default subsection for sections with subsections if not specified
+            if (!subsectionName) {
+                const defaultSubsections = {
+                    'profile': 'personal',
+                    'programs': 'all',
+                    'progress': 'progress',
+                    'payment': 'subscription'
+                };
+                
+                if (defaultSubsections[sectionName]) {
+                    subsectionName = defaultSubsections[sectionName];
+                }
+            }
+            
             // Update nav items
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
