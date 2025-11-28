@@ -2986,204 +2986,211 @@
             <!-- Settings Section -->
             <section id="settings" class="content-section">
                 <!-- Notifications Section -->
-                <div class="profile-info-container">
-                    <div class="profile-info-content">
-                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Notifications</h3>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Email Notifications</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Receive email updates about your courses and account</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Notifications</h3>
+                                </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Email Notifications</div>
+                                <div class="settings-item-description">Receive email updates about your courses and account</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Push Notifications</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Get browser notifications for important updates</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Push Notifications</div>
+                                <div class="settings-item-description">Get browser notifications for important updates</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Course Updates</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Notifications when new content is added to your courses</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Course Updates</div>
+                                <div class="settings-item-description">Notifications when new content is added to your courses</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Assignment Reminders</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Remind me about upcoming assignments and deadlines</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Assignment Reminders</div>
+                                <div class="settings-item-description">Remind me about upcoming assignments and deadlines</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field" style="border-bottom: none;">
-                            <div class="profile-field-label">Study Reminders</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Daily reminders to keep your learning streak going</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="studyReminders" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Study Reminders</div>
+                                <div class="settings-item-description">Daily reminders to keep your learning streak going</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="studyReminders" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Appearance Section -->
-                <div class="profile-info-container" style="margin-top: var(--space-6);">
-                    <div class="profile-info-content">
-                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Appearance</h3>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Always on Light Mode</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Keep the interface in light mode regardless of system preference</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Appearance</h3>
                             </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Always on Light Mode</div>
+                                <div class="settings-item-description">Keep the interface in light mode regardless of system preference</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Animations</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Enable smooth transitions and animations</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="animations" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Animations</div>
+                                <div class="settings-item-description">Enable smooth transitions and animations</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="animations" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Compact Sidebar</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Use a narrower sidebar to save space</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Compact Sidebar</div>
+                                <div class="settings-item-description">Use a narrower sidebar to save space</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field" style="border-bottom: none;">
-                            <div class="profile-field-label">Auto-play Videos</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Automatically play course videos when opened</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Auto-play Videos</div>
+                                <div class="settings-item-description">Automatically play course videos when opened</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Privacy Section -->
-                <div class="profile-info-container" style="margin-top: var(--space-6);">
-                    <div class="profile-info-content">
-                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Privacy</h3>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Profile Visibility</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Allow others to view your profile</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Privacy</h3>
                             </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Profile Visibility</div>
+                                <div class="settings-item-description">Allow others to view your profile</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Activity Status</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Show when you're online and active</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="activityStatus" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Activity Status</div>
+                                <div class="settings-item-description">Show when you're online and active</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="activityStatus" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field" style="border-bottom: none;">
-                            <div class="profile-field-label">Data Analytics</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Help improve our service by sharing anonymous usage data</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Data Analytics</div>
+                                <div class="settings-item-description">Help improve our service by sharing anonymous usage data</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Learning Section -->
-                <div class="profile-info-container" style="margin-top: var(--space-6);">
-                    <div class="profile-info-content">
-                        <h3 class="profile-section-title" style="margin-bottom: var(--space-6); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); color: var(--color-text-primary);">Learning</h3>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Progress Tracking</div>
-                            <div class="profile-field-value" style="display: flex; align-items: center; justify-content: space-between;">
-                                <span style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Track and display your learning progress</span>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="progressTracking" onchange="saveSettings()">
-                                    <span class="toggle-slider"></span>
-                                </label>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Learning</h3>
                             </div>
-                        </div>
-                        
-                        <div class="profile-field">
-                            <div class="profile-field-label">Language</div>
-                            <div class="profile-field-value">
-                                <select class="profile-field-input" id="language" onchange="saveLanguagePreference(this.value)" style="max-width: 300px;">
-                                    <option value="en">English</option>
-                                    <option value="es">Spanish</option>
-                                    <option value="fr">French</option>
-                                    <option value="de">German</option>
-                                    <option value="ja">Japanese</option>
-                                    <option value="zh">Chinese</option>
-                                </select>
+                    <div class="settings-item">
+                        <div class="settings-item-content">
+                            <div class="settings-item-label">
+                                <div class="settings-item-title">Progress Tracking</div>
+                                <div class="settings-item-description">Track and display your learning progress</div>
                             </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="progressTracking" onchange="saveSettings()">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="profile-field" style="border-bottom: none;">
-                            <div class="profile-field-label">Timezone</div>
-                            <div class="profile-field-value">
-                                <select class="profile-field-input" id="timezone" onchange="saveTimezonePreference(this.value)" style="max-width: 300px;">
-                                    <option value="UTC">UTC (Coordinated Universal Time)</option>
-                                    <option value="America/New_York">Eastern Time (ET)</option>
-                                    <option value="America/Chicago">Central Time (CT)</option>
-                                    <option value="America/Denver">Mountain Time (MT)</option>
-                                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                                    <option value="Europe/London">London (GMT)</option>
-                                    <option value="Europe/Paris">Paris (CET)</option>
-                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                                    <option value="Asia/Dubai">Dubai (GST)</option>
-                                </select>
-                            </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Language</label>
+                        <select class="form-select" id="language" onchange="saveLanguagePreference(this.value)">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="ja">Japanese</option>
+                            <option value="zh">Chinese</option>
+                        </select>
                         </div>
+                    <div class="form-group">
+                        <label class="form-label">Timezone</label>
+                        <select class="form-select" id="timezone" onchange="saveTimezonePreference(this.value)">
+                            <option value="UTC">UTC (Coordinated Universal Time)</option>
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                            <option value="Europe/London">London (GMT)</option>
+                            <option value="Europe/Paris">Paris (CET)</option>
+                            <option value="Asia/Tokyo">Tokyo (JST)</option>
+                            <option value="Asia/Dubai">Dubai (GST)</option>
+                        </select>
                     </div>
                 </div>
             </section>
@@ -4556,10 +4563,10 @@
                     'activity': 'activitySection'
                 },
                 'profile': {
-                    'personal': 'profileInfo',
-                    'account': 'profileSecurity',
-                    'preferences': 'profileNotifications',
-                    'advanced': 'profilePrivacy'
+                    'personal': 'personalInfoSection',
+                    'account': 'googleAccountSection',
+                    'preferences': 'preferencesSection',
+                    'advanced': 'advancedSection'
                 },
                 'settings': {
                     'general': 'generalSettings',
@@ -4585,43 +4592,184 @@
             // Handle different section types with their specific navigation systems
             if (sectionName === 'programs') {
                 // Programs section uses payment-nav-btn buttons
-                const navButtons = document.querySelectorAll('.payment-nav-btn');
+                const programsSection = document.getElementById('programs');
+                const navButtons = programsSection ? programsSection.querySelectorAll('.payment-nav-btn') : [];
+                const underline = programsSection ? programsSection.querySelector('.payment-nav-underline') : null;
+                
                 navButtons.forEach(btn => {
                     btn.classList.remove('payment-nav-active');
                     if (btn.getAttribute('data-programs-section') === subsectionId) {
                         btn.classList.add('payment-nav-active');
-                        btn.click(); // Trigger the click to handle all the UI updates
+                        
+                        // Update underline position
+                        if (underline) {
+                            requestAnimationFrame(() => {
+                                const btnRect = btn.getBoundingClientRect();
+                                const containerRect = btn.parentElement.getBoundingClientRect();
+                                if (btnRect.width > 0 && containerRect.width > 0) {
+                                    const left = btnRect.left - containerRect.left;
+                                    const width = btnRect.width;
+                                    underline.style.left = left + 'px';
+                                    underline.style.width = width + 'px';
+                                }
+                            });
+                        }
+                        
+                        // Update subsections
+                        programsSection.querySelectorAll('.profile-subsection').forEach(s => {
+                            s.style.display = 'none';
+                            s.classList.remove('active');
+                        });
+                        
+                        const targetSubsection = document.getElementById(subsectionId);
+                        if (targetSubsection) {
+                            targetSubsection.style.display = 'block';
+                            targetSubsection.classList.add('active');
+                        }
                     }
                 });
             } else if (sectionName === 'progress') {
                 // Progress section uses progress-nav-btn buttons
-                const navButtons = document.querySelectorAll('.progress-nav-btn');
+                const progressSection = document.getElementById('progress');
+                const navButtons = progressSection ? progressSection.querySelectorAll('.progress-nav-btn') : [];
+                const underline = progressSection ? progressSection.querySelector('.progress-nav-underline') : null;
+                
                 navButtons.forEach(btn => {
                     btn.classList.remove('progress-nav-active');
                     if (btn.getAttribute('data-progress-section') === subsectionId) {
                         btn.classList.add('progress-nav-active');
-                        btn.click(); // Trigger the click to handle all the UI updates
+                        
+                        // Update underline position
+                        if (underline) {
+                            requestAnimationFrame(() => {
+                                const btnRect = btn.getBoundingClientRect();
+                                const containerRect = btn.parentElement.getBoundingClientRect();
+                                if (btnRect.width > 0 && containerRect.width > 0) {
+                                    const left = btnRect.left - containerRect.left;
+                                    const width = btnRect.width;
+                                    underline.style.left = left + 'px';
+                                    underline.style.width = width + 'px';
+                                }
+                            });
+                        }
+                        
+                        // Update subsections
+                        progressSection.querySelectorAll('.profile-subsection').forEach(s => {
+                            s.style.display = 'none';
+                            s.classList.remove('active');
+                        });
+                        
+                        const targetSubsection = document.getElementById(subsectionId);
+                        if (targetSubsection) {
+                            targetSubsection.style.display = 'block';
+                            targetSubsection.classList.add('active');
+                        }
                     }
                 });
             } else if (sectionName === 'profile') {
-                // Profile section uses profile-nav-item elements
+                // Profile section uses profile-tab buttons and profile-nav-item elements
+                const profileTabs = document.querySelectorAll('.profile-tab');
+                const profileNavItems = document.querySelectorAll('.profile-nav-item');
+                const tabIndicator = document.querySelector('.profile-tab-indicator');
+                
+                // Update tabs
+                profileTabs.forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.getAttribute('data-section') === subsectionId) {
+                        tab.classList.add('active');
+                    }
+                });
+                
+                // Update nav items
+                profileNavItems.forEach(nav => {
+                    nav.classList.remove('active');
+                    if (nav.getAttribute('data-section') === subsectionId) {
+                        nav.classList.add('active');
+                    }
+                });
+                
+                // Update tab indicator position
+                const activeTab = document.querySelector('.profile-tab.active');
+                if (activeTab && tabIndicator) {
+                    requestAnimationFrame(() => {
+                        const tabsContainer = activeTab.parentElement;
+                        const tabRect = activeTab.getBoundingClientRect();
+                        const containerRect = tabsContainer.getBoundingClientRect();
+                        
+                        if (tabRect.width > 0 && containerRect.width > 0) {
+                            const left = tabRect.left - containerRect.left;
+                            const width = tabRect.width;
+                            tabIndicator.style.left = left + 'px';
+                            tabIndicator.style.width = width + 'px';
+                        }
+                    });
+                }
+                
+                // Update subsections
+                const profileSection = document.getElementById('profile');
+                if (profileSection) {
+                    profileSection.querySelectorAll('.profile-subsection').forEach(s => {
+                        s.style.display = 'none';
+                        s.classList.remove('active');
+                    });
+                    
+                    const targetSection = document.getElementById(subsectionId);
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        targetSection.classList.add('active');
+                    }
+                }
+                
+                // Also call the profile-specific function if available for any additional logic
                 if (typeof navigateToProfileSubsection === 'function') {
                     navigateToProfileSubsection(subsectionId);
                 }
             } else if (sectionName === 'payment') {
                 // Payment section uses payment-nav-btn buttons
-                const navButtons = document.querySelectorAll('#payment .payment-nav-btn');
+                const paymentSection = document.getElementById('payment');
+                const navButtons = paymentSection ? paymentSection.querySelectorAll('.payment-nav-btn') : [];
+                const underline = paymentSection ? paymentSection.querySelector('.payment-nav-underline') : null;
+                
                 navButtons.forEach(btn => {
                     btn.classList.remove('payment-nav-active');
                     if (btn.getAttribute('data-payment-section') === subsectionId) {
                         btn.classList.add('payment-nav-active');
-                        btn.click(); // Trigger the click to handle all the UI updates
+                        
+                        // Update underline position
+                        if (underline) {
+                            requestAnimationFrame(() => {
+                                const btnRect = btn.getBoundingClientRect();
+                                const containerRect = btn.parentElement.getBoundingClientRect();
+                                if (btnRect.width > 0 && containerRect.width > 0) {
+                                    const left = btnRect.left - containerRect.left;
+                                    const width = btnRect.width;
+                                    underline.style.left = left + 'px';
+                                    underline.style.width = width + 'px';
+                                }
+                            });
+                        }
+                        
+                        // Update subsections
+                        paymentSection.querySelectorAll('.profile-subsection').forEach(s => {
+                            s.style.display = 'none';
+                            s.classList.remove('active');
+                        });
+                        
+                        const targetSubsection = document.getElementById(subsectionId);
+                        if (targetSubsection) {
+                            targetSubsection.style.display = 'block';
+                            targetSubsection.classList.add('active');
+                        }
                     }
                 });
             }
             
-            // Update URL without triggering navigation
-            updateUrlForSubsection(sectionName, subsectionName);
+            // Update URL after all UI updates are complete
+            setTimeout(() => {
+                if (typeof updateUrlForSubsection === 'function') {
+                    updateUrlForSubsection(sectionName, subsectionName);
+                }
+            }, 100);
         }
         
         // Helper function to update URL for subsection without triggering navigation
@@ -5522,23 +5670,31 @@
                 const subsection = element.getAttribute('data-subsection');
                 const fieldLabel = element.getAttribute('data-field-label');
                 
-                // Navigate to section
+                // Navigate to section WITH subsection - this will update URL and activate correct tabs
                 if (typeof navigateToSection === 'function') {
-                    navigateToSection(section);
+                    navigateToSection(section, subsection);
                 }
                 
-                // If there's a subsection, navigate to it
+                // If there's a subsection, ensure it's properly activated (for tab indicators)
                 if (subsection) {
                     setTimeout(() => {
-                        navigateToProfileSubsection(subsection);
+                        // Use the generic navigateToSubsection function instead of profile-specific one
+                        if (typeof navigateToSubsection === 'function') {
+                            navigateToSubsection(section, subsection);
+                        } else if (section === 'profile' && typeof navigateToProfileSubsection === 'function') {
+                            // Fallback for profile section
+                            navigateToProfileSubsection(subsection);
+                        }
                         
                         // If there's a field label, scroll to it and highlight
                         if (fieldLabel) {
                             setTimeout(() => {
-                                scrollToAndHighlightField(fieldLabel);
-                            }, 200);
+                                if (typeof scrollToAndHighlightField === 'function') {
+                                    scrollToAndHighlightField(fieldLabel);
+                                }
+                            }, 300);
                         }
-                    }, 150);
+                    }, 200);
                 }
                 
                 // Clear search
