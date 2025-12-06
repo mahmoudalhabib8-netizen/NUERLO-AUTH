@@ -1,50 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Suppress Firebase init.json 404 errors - MUST be absolute first, before any other scripts -->
-    <script>
-        // Intercept both fetch and XMLHttpRequest BEFORE Firebase loads to prevent init.json 404
-        (function() {
-            if (window._firebaseFetchSuppressed) return;
-            
-            // Intercept fetch
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-                const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
-                if (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase')) {
-                    return Promise.reject(new Error('Suppressed'));
-                }
-                return originalFetch.apply(this, args);
-            };
-            
-            // Intercept XMLHttpRequest (Firebase might use this)
-            const originalXHROpen = XMLHttpRequest.prototype.open;
-            const originalXHRSend = XMLHttpRequest.prototype.send;
-            
-            XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-                this._url = url;
-                if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
-                    this._suppressed = true;
-                    return;
-                }
-                return originalXHROpen.apply(this, [method, url, ...rest]);
-            };
-            
-            XMLHttpRequest.prototype.send = function(...args) {
-                if (this._suppressed) {
-                    // Silently fail
-                    setTimeout(() => {
-                        this.onerror && this.onerror(new Error('Suppressed'));
-                    }, 0);
-                    return;
-                }
-                return originalXHRSend.apply(this, args);
-            };
-            
-            window._firebaseFetchSuppressed = true;
-        })();
-    </script>
-    <!-- Suppress Firebase COOP warnings and internal errors -->
+    <!-- Suppress Firebase COOP warnings and internal errors - MUST be first -->
     <script>
         (function() {
             const originalWarn = console.warn;
@@ -58,8 +15,7 @@
                         if (stackStr.includes('popup.ts') || 
                             stackStr.includes('assert.ts') || 
                             stackStr.includes('log.ts') ||
-                            stackStr.includes('abstract_popup_redirect_operation') ||
-                            stackStr.includes('init.json')) {
+                            stackStr.includes('abstract_popup_redirect_operation')) {
                             return true;
                         }
                     }
@@ -77,12 +33,7 @@
                        fullMsg.includes('assert.ts') ||
                        fullMsg.includes('log.ts') ||
                        fullMsg.includes('debugFail') ||
-                       fullMsg.includes('debugAssert') ||
-                       fullMsg.includes('init.json') ||
-                       fullMsg.includes('firebase/init.json') ||
-                       (fullMsg.includes('404') && fullMsg.includes('firebaseapp.com')) ||
-                       (fullMsg.includes('400') && fullMsg.includes('identitytoolkit')) ||
-                       fullMsg.includes('createAuthUri');
+                       fullMsg.includes('debugAssert');
             };
             
             console.warn = function(...args) {
@@ -118,42 +69,10 @@
                 }
             };
             
-            // Suppress network errors for Firebase init.json (harmless 404)
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-                const url = args[0];
-                if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
-                    // Return a rejected promise that we'll catch silently
-                    return Promise.reject(new Error('Suppressed Firebase init.json request'));
-                }
-                return originalFetch.apply(this, args);
-            };
-            
             window.addEventListener('error', function(event) {
                 const message = event.message || '';
                 const filename = event.filename || '';
                 const stack = event.error?.stack || '';
-                const target = event.target;
-                
-                // Filter network errors for init.json and Google Identity Toolkit
-                if (target && (target.src || target.href)) {
-                    const url = target.src || target.href || '';
-                    if (url.includes('init.json') || 
-                        url.includes('firebaseapp.com/__/firebase') ||
-                        (url.includes('identitytoolkit') && url.includes('400'))) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return false;
-                    }
-                }
-                
-                // Also filter errors from fetch
-                if (message.includes('init.json') || message.includes('firebaseapp.com/__/firebase')) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    return false;
-                }
-                
                 if (shouldFilter(message, stack) || shouldFilter(filename, stack)) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -165,13 +84,6 @@
                 const reason = event.reason;
                 const message = reason?.message || String(reason || '');
                 const stack = reason?.stack || '';
-                
-                // Filter 400 errors from Google Identity Toolkit
-                if (message.includes('400') && message.includes('identitytoolkit')) {
-                    event.preventDefault();
-                    return false;
-                }
-                
                 if (shouldFilter(message, stack)) {
                     event.preventDefault();
                     return false;
@@ -966,10 +878,11 @@
     </div>
     
     <script type="module">
-        import { signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         
         const authInstance = window.firebase?.auth ?? getAuth();
+        const googleProvider = new GoogleAuthProvider();
         
         // Check if user just logged out
         const urlParams = new URLSearchParams(window.location.search);
@@ -1038,14 +951,7 @@
             }, 800);
         } else {
             // Normal flow: check auth immediately for users visiting login page
-            // BUT: Skip if we just completed a login (to avoid redirect loops)
             onAuthStateChanged(authInstance, async (user) => {
-                // Skip auth check if we just completed a login
-                if (sessionStorage.getItem('skipAuthCheck') === 'true') {
-                    sessionStorage.removeItem('skipAuthCheck');
-                    return; // Let the manual redirect handle it
-                }
-                
                 if (user) {
                     // Check if email is verified before redirecting
                     try {
@@ -1216,7 +1122,72 @@
             });
         }
         
-        // Google sign-in is handled by non-auth-navigation.js to avoid duplicate handlers
+        const googleBtn = document.getElementById('googleLoginBtn');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (errorMessage) errorMessage.style.display = 'none';
+                
+                // Check "Remember me" checkbox for Google sign-in too
+                const rememberMe = document.getElementById('rememberMe').checked;
+                
+                // Set persistence based on "Remember me" checkbox
+                try {
+                    if (rememberMe) {
+                        await setPersistence(authInstance, browserLocalPersistence);
+                        localStorage.setItem('nuerlo_remember_me', 'true');
+                    } else {
+                        await setPersistence(authInstance, browserSessionPersistence);
+                        localStorage.removeItem('nuerlo_remember_me');
+                    }
+                } catch (persistenceError) {
+                    console.error('Error setting persistence:', persistenceError);
+                    // Continue with login even if persistence setting fails
+                }
+                
+                googleBtn.textContent = 'Signing in with Google...';
+                googleBtn.disabled = true;
+                try {
+                    const result = await signInWithPopup(authInstance, googleProvider);
+                    const user = result.user;
+                    
+                    // Get Firebase ID token and set cross-domain cookie
+                    try {
+                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                        const token = await getIdToken(user);
+                        
+                        // Import and set the auth cookie
+                        const { setAuthCookie } = await import('./js/cookie-auth.js');
+                        setAuthCookie(token);
+                        
+                        console.log('Cross-domain auth cookie set successfully');
+                    } catch (cookieError) {
+                        console.error('Error setting auth cookie:', cookieError);
+                        // Continue with login even if cookie setting fails
+                    }
+                    
+                    // Set flag to indicate this is a fresh login (not a refresh)
+                    sessionStorage.setItem('freshLogin', 'true');
+                    
+                    // Firebase's signInWithPopup should automatically close the popup
+                    // Add a small delay to ensure popup closes smoothly before redirect
+                    setTimeout(() => {
+                        if (user && user.uid) {
+                            // Use shortened ID in URL (first 6 chars)
+                            const shortId = getShortUserId(user.uid);
+                            window.location.href = `/acct_${shortId}/dashboard`;
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 150);
+                } catch (err) {
+                    // Silently handle errors - no message displayed
+                    googleBtn.textContent = 'Continue with Google';
+                } finally {
+                    googleBtn.disabled = false;
+                }
+            });
+        }
     </script>
 </body>
 </html>

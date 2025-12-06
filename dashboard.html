@@ -593,45 +593,18 @@
                             return;
                         }
                         
-                        // Check URL for subsection first
-                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
-                        let activeSectionId = null;
-                        
-                        // If URL has programs subsection, set that as active
-                        if (urlInfo && urlInfo.section === 'programs' && urlInfo.subsection) {
-                            const subsectionMap = {
-                                'all': 'allProgramsSection',
-                                'not-started': 'notStartedSection',
-                                'in-progress': 'inProgressSection',
-                                'completed': 'completedSection'
-                            };
-                            activeSectionId = subsectionMap[urlInfo.subsection];
-                            console.log('[setupProgramsNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
-                        }
-                        
                         // Check which tab is active and sync content with it
                         let activeBtn = programsSection.querySelector('.payment-nav-btn.payment-nav-active');
-                        
-                        // If we have a URL-based section, find and activate that button
-                        if (activeSectionId) {
-                            navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
-                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-programs-section') === activeSectionId);
-                            if (targetBtn) {
-                                targetBtn.classList.add('payment-nav-active');
-                                activeBtn = targetBtn;
-                            }
-                        }
                         
                         // If no active button, default to all programs
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                             navButtons[0].classList.add('payment-nav-active');
                             activeBtn = navButtons[0];
-                            activeSectionId = navButtons[0].getAttribute('data-programs-section');
-                        } else if (!activeSectionId) {
-                            // Get the section ID from the active button
-                            activeSectionId = activeBtn.getAttribute('data-programs-section');
                         }
+                        
+                        // Get the section ID from the active button
+                        const activeSectionId = activeBtn.getAttribute('data-programs-section');
                         
                         // Hide all subsections first
                         programsSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -708,6 +681,7 @@
                             btn.onclick = function() {
                                 navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                                 this.classList.add('payment-nav-active');
+                                updateUnderline(this);
                                 
                                 const sectionId = this.getAttribute('data-programs-section');
                                 programsSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -731,25 +705,6 @@
                                     if (window.updateProgramsFilter) {
                                         setTimeout(() => window.updateProgramsFilter(filterType), 100);
                                     }
-                                }
-                                
-                                // Update underline AFTER DOM updates complete
-                                requestAnimationFrame(() => {
-                                    updateUnderline(this);
-                                    // Double-check after layout recalculation
-                                    setTimeout(() => updateUnderline(this), 10);
-                                });
-                                
-                                // Update URL with subsection IMMEDIATELY (no delay)
-                                const subsectionMap = {
-                                    'allProgramsSection': 'all',
-                                    'notStartedSection': 'not-started',
-                                    'inProgressSection': 'in-progress',
-                                    'completedSection': 'completed'
-                                };
-                                const subsectionName = subsectionMap[sectionId];
-                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                    updateUrlForSubsection('programs', subsectionName);
                                 }
                             };
                         });
@@ -905,42 +860,15 @@
                             return;
                         }
                         
-                        // Check URL for subsection first
-                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
-                        let activeSectionId = null;
-                        
-                        // If URL has progress subsection, set that as active
-                        if (urlInfo && urlInfo.section === 'progress' && urlInfo.subsection) {
-                            const subsectionMap = {
-                                'progress': 'chartSection',
-                                'chart': 'chartSection',
-                                'stats': 'statsSection',
-                                'activity': 'activitySection'
-                            };
-                            activeSectionId = subsectionMap[urlInfo.subsection];
-                            console.log('[setupProgressNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
-                        }
-                        
                         let activeBtn = progressSection.querySelector('.progress-nav-btn.progress-nav-active');
-                        
-                        // If we have a URL-based section, find and activate that button
-                        if (activeSectionId) {
-                            navButtons.forEach(function(b) { b.classList.remove('progress-nav-active'); });
-                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-progress-section') === activeSectionId);
-                            if (targetBtn) {
-                                targetBtn.classList.add('progress-nav-active');
-                                activeBtn = targetBtn;
-                            }
-                        }
                         
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('progress-nav-active'); });
                             navButtons[0].classList.add('progress-nav-active');
                             activeBtn = navButtons[0];
-                            activeSectionId = navButtons[0].getAttribute('data-progress-section');
-                        } else if (!activeSectionId) {
-                            activeSectionId = activeBtn.getAttribute('data-progress-section');
                         }
+                        
+                        const activeSectionId = activeBtn.getAttribute('data-progress-section');
                         
                         progressSection.querySelectorAll('.profile-subsection').forEach(function(s) {
                             s.style.display = 'none';
@@ -1006,35 +934,22 @@
                                 const targetSection = document.getElementById(targetSectionId);
                                 if (targetSection) {
                                     targetSection.style.display = 'block';
-                                    targetSection.classList.add('active');
-                                    
-                                    // Redraw chart if switching to chart section
-                                    if (targetSectionId === 'chartSection' && window.chartProgressData) {
-                                        setTimeout(function() {
-                                            if (window.drawLineChartGlobal) {
-                                                window.drawLineChartGlobal(window.chartProgressData);
-                                            }
-                                        }, 100);
-                                    }
+                                    setTimeout(function() {
+                                        targetSection.classList.add('active');
+                                        
+                                        // Redraw chart if switching to chart section
+                                        if (targetSectionId === 'chartSection' && window.chartProgressData) {
+                                            setTimeout(function() {
+                                                if (window.drawLineChartGlobal) {
+                                                    window.drawLineChartGlobal(window.chartProgressData);
+                                                }
+                                            }, 100);
+                                        }
+                                    }, 10);
                                 }
                                 
-                                // Update underline AFTER DOM updates complete
-                                requestAnimationFrame(() => {
-                                    updateUnderline(btn);
-                                    // Double-check after layout recalculation
-                                    setTimeout(() => updateUnderline(btn), 10);
-                                });
-                                
-                                // Update URL with subsection IMMEDIATELY (no delay)
-                                const subsectionMap = {
-                                    'chartSection': 'progress',
-                                    'statsSection': 'stats',
-                                    'activitySection': 'activity'
-                                };
-                                const subsectionName = subsectionMap[targetSectionId];
-                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                    updateUrlForSubsection('progress', subsectionName);
-                                }
+                                updateUnderline(btn);
+                                setTimeout(function() { updateUnderline(btn); }, 50);
                             });
                         });
                     }
@@ -1283,45 +1198,18 @@
                             return;
                         }
                         
-                        // Check URL for subsection first
-                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
-                        let activeSectionId = null;
-                        
-                        // If URL has payment subsection, set that as active
-                        if (urlInfo && urlInfo.section === 'payment' && urlInfo.subsection) {
-                            const subsectionMap = {
-                                'subscription': 'subscriptionInfoSection',
-                                'plans': 'plansSection',
-                                'payment-method': 'paymentMethodSection',
-                                'billing': 'billingHistorySection'
-                            };
-                            activeSectionId = subsectionMap[urlInfo.subsection];
-                            console.log('[setupPaymentNav] Setting from URL:', urlInfo.subsection, '->', activeSectionId);
-                        }
-                        
                         // Check which tab is active and sync content with it
                         let activeBtn = paymentSection.querySelector('.payment-nav-btn.payment-nav-active');
-                        
-                        // If we have a URL-based section, find and activate that button
-                        if (activeSectionId) {
-                            navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
-                            const targetBtn = Array.from(navButtons).find(b => b.getAttribute('data-payment-section') === activeSectionId);
-                            if (targetBtn) {
-                                targetBtn.classList.add('payment-nav-active');
-                                activeBtn = targetBtn;
-                            }
-                        }
                         
                         // If no active button, default to subscription
                         if (!activeBtn) {
                             navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                             navButtons[0].classList.add('payment-nav-active');
                             activeBtn = navButtons[0];
-                            activeSectionId = navButtons[0].getAttribute('data-payment-section');
-                        } else if (!activeSectionId) {
-                            // Get the section ID from the active button
-                            activeSectionId = activeBtn.getAttribute('data-payment-section');
                         }
+                        
+                        // Get the section ID from the active button
+                        const activeSectionId = activeBtn.getAttribute('data-payment-section');
                         
                         // Hide all subsections first
                         paymentSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -1392,6 +1280,7 @@
                             btn.onclick = function() {
                                 navButtons.forEach(function(b) { b.classList.remove('payment-nav-active'); });
                                 this.classList.add('payment-nav-active');
+                                updateUnderline(this);
                                 
                                 const sectionId = this.getAttribute('data-payment-section');
                                 paymentSection.querySelectorAll('.profile-subsection').forEach(function(s) {
@@ -1403,25 +1292,6 @@
                                 if (target) {
                                     target.style.display = 'block';
                                     target.classList.add('active');
-                                }
-                                
-                                // Update underline AFTER DOM updates complete
-                                requestAnimationFrame(() => {
-                                    updateUnderline(this);
-                                    // Double-check after layout recalculation
-                                    setTimeout(() => updateUnderline(this), 10);
-                                });
-                                
-                                // Update URL with subsection IMMEDIATELY (no delay)
-                                const subsectionMap = {
-                                    'subscriptionInfoSection': 'subscription',
-                                    'plansSection': 'plans',
-                                    'paymentMethodSection': 'payment-method',
-                                    'billingHistorySection': 'billing'
-                                };
-                                const subsectionName = subsectionMap[sectionId];
-                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                    updateUrlForSubsection('payment', subsectionName);
                                 }
                             };
                         });
@@ -2775,187 +2645,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <script>
-                // PROFILE NAVIGATION
-                (function() {
-                    function setupProfileNav() {
-                        const profileSection = document.getElementById('profile');
-                        if (!profileSection) return;
-                        
-                        const profileTabs = profileSection.querySelectorAll('.profile-tab');
-                        const profileNavItems = document.querySelectorAll('.profile-nav-item');
-                        const tabIndicator = profileSection.querySelector('.profile-tab-indicator');
-                        
-                        if (!profileTabs.length) {
-                            console.log('Profile tabs not ready');
-                            return;
-                        }
-                        
-                        // Check URL for subsection first
-                        const urlInfo = typeof parseSectionFromUrl === 'function' ? parseSectionFromUrl() : null;
-                        let targetSectionId = null;
-                        
-                        // If URL has profile subsection, set that as active
-                        if (urlInfo && urlInfo.section === 'profile' && urlInfo.subsection) {
-                            const subsectionMap = {
-                                'personal': 'personalInfoSection',
-                                'account': 'googleAccountSection',
-                                'preferences': 'preferencesSection',
-                                'advanced': 'advancedSection'
-                            };
-                            targetSectionId = subsectionMap[urlInfo.subsection];
-                            console.log('[setupProfileNav] Setting from URL:', urlInfo.subsection, '->', targetSectionId);
-                            
-                            // Activate the correct tab
-                            if (targetSectionId) {
-                                profileTabs.forEach(tab => tab.classList.remove('active'));
-                                const targetTab = Array.from(profileTabs).find(tab => tab.getAttribute('data-section') === targetSectionId);
-                                if (targetTab) {
-                                    targetTab.classList.add('active');
-                                }
-                                
-                                // Activate the correct nav item
-                                profileNavItems.forEach(nav => nav.classList.remove('active'));
-                                const targetNav = Array.from(profileNavItems).find(nav => nav.getAttribute('data-section') === targetSectionId);
-                                if (targetNav) {
-                                    targetNav.classList.add('active');
-                                }
-                                
-                                // Show the correct subsection
-                                profileSection.querySelectorAll('.profile-subsection').forEach(s => {
-                                    s.style.display = 'none';
-                                    s.classList.remove('active');
-                                });
-                                const targetSubsection = document.getElementById(targetSectionId);
-                                if (targetSubsection) {
-                                    targetSubsection.style.display = 'block';
-                                    targetSubsection.classList.add('active');
-                                }
-                            }
-                        }
-                        
-                        // Update indicator position
-                        function updateIndicator(tab) {
-                            if (!tab || !tabIndicator) return;
-                            
-                            requestAnimationFrame(function() {
-                                const tabsContainer = tab.parentElement;
-                                const tabRect = tab.getBoundingClientRect();
-                                const containerRect = tabsContainer.getBoundingClientRect();
-                                
-                                if (tabRect.width > 0 && containerRect.width > 0) {
-                                    const left = tabRect.left - containerRect.left;
-                                    const width = tabRect.width;
-                                    
-                                    tabIndicator.style.left = left + 'px';
-                                    tabIndicator.style.width = width + 'px';
-                                }
-                            });
-                        }
-                        
-                        // Initialize indicator position
-                        const activeTab = profileSection.querySelector('.profile-tab.active') || profileTabs[0];
-                        if (activeTab) {
-                            updateIndicator(activeTab);
-                            setTimeout(() => updateIndicator(activeTab), 50);
-                            setTimeout(() => updateIndicator(activeTab), 150);
-                        }
-                        
-                        // Profile tab click handlers
-                        profileTabs.forEach(function(tab) {
-                            tab.addEventListener('click', function() {
-                                const sectionId = this.getAttribute('data-section');
-                                if (!sectionId) return;
-                                
-                                // Update tabs FIRST
-                                profileTabs.forEach(t => t.classList.remove('active'));
-                                this.classList.add('active');
-                                
-                                // Update nav items
-                                profileNavItems.forEach(nav => nav.classList.remove('active'));
-                                const matchingNav = Array.from(profileNavItems).find(nav => 
-                                    nav.getAttribute('data-section') === sectionId
-                                );
-                                if (matchingNav) {
-                                    matchingNav.classList.add('active');
-                                }
-                                
-                                // Update subsections
-                                const subsections = profileSection.querySelectorAll('.profile-subsection');
-                                subsections.forEach(s => {
-                                    s.style.display = 'none';
-                                    s.classList.remove('active');
-                                });
-                                
-                                const targetSection = document.getElementById(sectionId);
-                                if (targetSection) {
-                                    targetSection.style.display = 'block';
-                                    targetSection.classList.add('active');
-                                }
-                                
-                                // Update indicator AFTER all DOM updates complete
-                                requestAnimationFrame(() => {
-                                    updateIndicator(this);
-                                    // Double-check after layout recalculation
-                                    setTimeout(() => updateIndicator(this), 10);
-                                });
-                                
-                                // Update URL with subsection IMMEDIATELY (no delay)
-                                const subsectionMap = {
-                                    'personalInfoSection': 'personal',
-                                    'googleAccountSection': 'account',
-                                    'preferencesSection': 'preferences',
-                                    'advancedSection': 'advanced'
-                                };
-                                const subsectionName = subsectionMap[sectionId];
-                                if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                                    updateUrlForSubsection('profile', subsectionName);
-                                }
-                            });
-                        });
-                        
-                        // Profile nav item click handlers
-                        profileNavItems.forEach(function(navItem) {
-                            navItem.addEventListener('click', function(e) {
-                                e.preventDefault();
-                                const sectionId = this.getAttribute('data-section');
-                                if (!sectionId) return;
-                                
-                                // Find corresponding tab and trigger its click
-                                const correspondingTab = Array.from(profileTabs).find(tab => 
-                                    tab.getAttribute('data-section') === sectionId
-                                );
-                                if (correspondingTab) {
-                                    correspondingTab.click();
-                                }
-                            });
-                        });
-                    }
-                    
-                    // Initialize on load
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', setupProfileNav);
-                    } else {
-                        setupProfileNav();
-                    }
-                    
-                    // Retry setup multiple times to ensure it works
-                    setTimeout(setupProfileNav, 100);
-                    setTimeout(setupProfileNav, 300);
-                    
-                    // Watch for profile section activation
-                    const profileSection = document.getElementById('profile');
-                    if (profileSection) {
-                        const observer = new MutationObserver(function() {
-                            if (profileSection.classList.contains('active')) {
-                                setTimeout(setupProfileNav, 50);
-                            }
-                        });
-                        observer.observe(profileSection, { attributes: true, attributeFilter: ['class'] });
-                    }
-                })();
-                </script>
             </section>
             
             <!-- Right Side Navigation Panel -->
@@ -3394,12 +3083,12 @@
         </div>
     </div>
 
-    <!-- Marketplace Filter Drawer -->
-    <div id="marketplaceFilterPopup" class="marketplace-filter-drawer">
+    <!-- Marketplace Filter Popup -->
+    <div id="marketplaceFilterPopup" class="marketplace-filter-popup">
         <div class="marketplace-filter-overlay"></div>
-        <div class="marketplace-filter-panel">
+        <div class="marketplace-filter-content">
             <div class="marketplace-filter-header">
-                <h3 class="marketplace-filter-title">Filters</h3>
+                <h3 class="marketplace-filter-title">Filter Programs</h3>
                 <button class="marketplace-filter-close" id="marketplaceFilterClose">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -3476,6 +3165,7 @@
             </div>
             <div class="marketplace-filter-footer">
                 <button class="marketplace-filter-clear" id="marketplaceFilterClear">Clear All</button>
+                <button class="marketplace-filter-apply" id="marketplaceFilterApply">Apply Filters</button>
             </div>
         </div>
     </div>
@@ -3560,934 +3250,12 @@
     <!-- Theme & Sidebar Handler moved to js/theme-sidebar.js -->
     <script src="/js/theme-sidebar.js"></script>
     
-<<<<<<< Updated upstream
-    <script>
-        // Helper function to refresh user name in header
-        async function refreshUserNameInHeader() {
-            const userName = document.getElementById('userName');
-            if (!userName) return;
-            
-            // Use cached value immediately if available
-            const cachedFirstName = window.cachedUserFirstName || 'Student';
-            const currentSection = document.querySelector('.content-section.active');
-            const isOverview = currentSection && currentSection.id === 'overview';
-            
-            if (isOverview && cachedFirstName) {
-                userName.textContent = cachedFirstName;
-                userName.style.display = 'inline';
-            }
-            
-            // Then update from Firestore in background and update cache
-            try {
-                const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                const auth = getAuth();
-                const user = auth.currentUser;
-                
-                if (user && window.firebase?.db) {
-                    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-                    const userDocRef = doc(window.firebase.db, 'users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        let firstName = 'Student';
-                        
-                        // Prioritize firstName from Firestore
-                        if (userData.firstName) {
-                            firstName = userData.firstName.trim();
-                        } else if (userData.displayName) {
-                            firstName = userData.displayName.split(' ')[0].trim() || 'Student';
-                        }
-                        
-                        if (!firstName || firstName === 'User' || firstName === '' || firstName.toLowerCase() === 'user') {
-                            firstName = 'Student';
-                        }
-                        
-                        // Update cache
-                        window.cachedUserFirstName = firstName;
-                        
-                        // Update display if still on overview
-                        if (isOverview) {
-                            userName.textContent = firstName;
-                            userName.style.display = 'inline';
-                            console.log('Header user name refreshed:', firstName);
-                        } else {
-                            userName.style.display = 'none';
-                            userName.textContent = '';
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error refreshing user name:', error);
-            }
-        }
-        
-        // Navigation functions moved to js/dashboard-navigation.js
-        // Keeping parseSectionFromUrl here as it's used inline before dashboard-navigation.js loads
-        function parseSectionFromUrl() {
-            const pathname = window.location.pathname;
-            
-            // Remove account prefix if present: /acct_xxx/section/subsection -> /section/subsection
-            const cleanPath = pathname.replace(/^\/acct_[^\/]+/, '');
-            
-            // Split path into segments
-            const segments = cleanPath.split('/').filter(s => s);
-            
-            if (segments.length === 0) {
-                return { section: 'overview', subsection: null };
-            }
-            
-            const section = segments[0];
-            const subsection = segments[1] || null;
-            
-            return { section, subsection };
-        }
-    </script>
-    
     <!-- Dashboard Navigation Handler moved to js/dashboard-navigation.js -->
     <script src="/js/dashboard-navigation.js"></script>
 
     <!-- Marketplace Filter Dropdown moved to js/marketplace-filters.js -->
     <script src="/js/marketplace-filters.js"></script>
 
-        // Resume course functionality
-        function resumeCourse() {
-            const continueCourse = document.getElementById('continueCourse');
-            if (continueCourse && continueCourse.style.display !== 'none') {
-                const courseId = continueCourse.getAttribute('data-course-id');
-                if (courseId) {
-                    // Store courseId in sessionStorage for CourseRouter to detect course context
-                    sessionStorage.setItem('currentCourseId', courseId);
-                    // Navigate to course with courseId in URL: /{courseId}/details
-                    window.location.href = `/${courseId}/details`;
-                }
-            }
-        }
-
-        // Toggle filters drawer
-        function toggleFilters() {
-            const drawer = document.getElementById('marketplaceFilterPopup');
-            if (drawer) {
-                const isOpening = !drawer.classList.contains('active');
-                drawer.classList.toggle('active');
-                
-                if (drawer.classList.contains('active')) {
-                    document.body.style.overflow = 'hidden';
-                    
-                    // Sync filter states when opening
-                    if (isOpening && window.marketplace) {
-                        const currentFilters = window.marketplace.currentFilters || {
-                            category: 'all',
-                            price: 'all',
-                            difficulty: 'all'
-                        };
-                        
-                        const filterOptions = drawer.querySelectorAll('.marketplace-filter-option');
-                        filterOptions.forEach(option => {
-                            const filterType = option.getAttribute('data-filter-type');
-                            const value = option.getAttribute('data-value');
-                            
-                            if (currentFilters[filterType] === value) {
-                                option.classList.add('active');
-                            } else {
-                                option.classList.remove('active');
-                            }
-                        });
-                    }
-                } else {
-                    document.body.style.overflow = '';
-                }
-            }
-        }
-
-        // Initialize marketplace filter drawer
-        function initMarketplaceFilterPopup() {
-            const drawer = document.getElementById('marketplaceFilterPopup');
-            const closeBtn = document.getElementById('marketplaceFilterClose');
-            const overlay = drawer?.querySelector('.marketplace-filter-overlay');
-            const clearBtn = document.getElementById('marketplaceFilterClear');
-            const filterOptions = drawer?.querySelectorAll('.marketplace-filter-option');
-
-            if (!drawer) return;
-
-            // Close drawer
-            function closeDrawer() {
-                drawer.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            // Close button
-            if (closeBtn) {
-                closeBtn.addEventListener('click', closeDrawer);
-            }
-
-            // Overlay click
-            if (overlay) {
-                overlay.addEventListener('click', closeDrawer);
-            }
-
-            // Escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && drawer.classList.contains('active')) {
-                    closeDrawer();
-                }
-            });
-
-            // Filter option clicks - Apply filters in real-time
-            if (filterOptions) {
-                filterOptions.forEach(option => {
-                    option.addEventListener('click', function() {
-                        const filterType = this.getAttribute('data-filter-type');
-                        const value = this.getAttribute('data-value');
-                        
-                        // Remove active from siblings of same type
-                        const siblings = drawer.querySelectorAll(`[data-filter-type="${filterType}"]`);
-                        siblings.forEach(sibling => sibling.classList.remove('active'));
-                        
-                        // Add active to clicked option
-                        this.classList.add('active');
-
-                        // Apply filters immediately
-                        if (window.marketplace) {
-                            const selectedFilters = {
-                                category: 'all',
-                                price: 'all',
-                                difficulty: 'all'
-                            };
-
-                            filterOptions.forEach(opt => {
-                                if (opt.classList.contains('active')) {
-                                    const type = opt.getAttribute('data-filter-type');
-                                    const val = opt.getAttribute('data-value');
-                                    selectedFilters[type] = val;
-                                }
-                            });
-
-                            window.marketplace.currentFilters = selectedFilters;
-                            window.marketplace.applyFilters();
-                        }
-                    });
-                });
-            }
-
-            // Clear all filters
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function() {
-                    if (filterOptions) {
-                        filterOptions.forEach(option => {
-                            const value = option.getAttribute('data-value');
-                            if (value === 'all') {
-                                option.classList.add('active');
-                            } else {
-                                option.classList.remove('active');
-                            }
-                        });
-
-                        // Apply cleared filters
-                        if (window.marketplace) {
-                            window.marketplace.currentFilters = {
-                                category: 'all',
-                                price: 'all',
-                                difficulty: 'all'
-                            };
-                            window.marketplace.applyFilters();
-                        }
-                    }
-                });
-            }
-        }
-
-        // Initialize on DOM ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMarketplaceFilterPopup);
-        } else {
-            initMarketplaceFilterPopup();
-        }
-
-        // Load user information from Firebase
-        window.loadUserInfo = async function loadUserInfo() {
-            try {
-                if (!window.firebase || !window.firebase.auth || !window.firebase.db) {
-                    console.log('Firebase not ready yet');
-                    setTimeout(loadUserInfo, 100);
-                    return;
-                }
-
-                const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                const { doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-                
-                const auth = getAuth();
-                const user = auth.currentUser;
-                
-                if (!user) {
-                    console.log('No user logged in');
-                    return;
-                }
-
-                console.log('Loading user info for:', user.uid, user.email);
-
-                // Get user data from Firestore
-                let displayName = user.displayName || user.email?.split('@')[0] || 'User';
-                let photoURL = user.photoURL || null;
-                let userData = null; // Declare userData in outer scope
-                
-                try {
-                    const userDocRef = doc(window.firebase.db, 'users', user.uid);
-                    let userDoc = await getDoc(userDocRef);
-                    
-                    // Create user document if it doesn't exist
-                    if (!userDoc.exists()) {
-                        console.log('User document not found in loadUserInfo, creating one...');
-                        try {
-                            await setDoc(userDocRef, {
-                                uid: user.uid,
-                                email: user.email,
-                                displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                                photoURL: user.photoURL || null,
-                                createdAt: new Date(),
-                                enrolledCourses: [],
-                                progress: {},
-                                role: 'user' // Default role for all new users
-                            });
-                            // Reload the document
-                            userDoc = await getDoc(userDocRef);
-                            console.log('User document created successfully in loadUserInfo');
-                        } catch (createError) {
-                            console.error('Error creating user document in loadUserInfo:', createError);
-                        }
-                    }
-                    
-                    if (userDoc.exists()) {
-                        userData = userDoc.data();
-                        console.log('User data loaded from Firestore:', userData);
-                        // Use Firestore data if available
-                        if (userData.displayName) {
-                            displayName = userData.displayName;
-                        } else if (userData.firstName && userData.lastName) {
-                            displayName = `${userData.firstName} ${userData.lastName}`.trim();
-                        }
-                        
-                        if (userData.photoURL) {
-                            photoURL = userData.photoURL;
-                        }
-                    } else {
-                        console.log('User document still does not exist after creation attempt');
-                    }
-                } catch (error) {
-                    console.error('Error loading user data from Firestore:', error);
-                    userData = null;
-                }
-
-                // Update user name in header - BUT only if we're on overview section
-                const userName = document.getElementById('userName');
-                const userNameMini = document.getElementById('userNameMini');
-                
-                // Get firstName - prioritize from userData.firstName
-                let firstName = 'Student';
-                if (userData && userData.firstName) {
-                    firstName = userData.firstName.trim();
-                } else if (displayName) {
-                    firstName = displayName.split(' ')[0].trim() || 'Student';
-                }
-                
-                if (!firstName || firstName === 'User' || firstName === '' || firstName.toLowerCase() === 'user') {
-                    firstName = 'Student';
-                }
-                
-                // Cache the first name globally for immediate access
-                window.cachedUserFirstName = firstName;
-                
-                const currentSection = document.querySelector('.content-section.active');
-                const isOverview = currentSection && currentSection.id === 'overview';
-                
-                if (userName) {
-                    if (isOverview) {
-                        // Always show "Welcome, [FirstName]" when on overview section
-                        userName.textContent = firstName;
-                        userName.style.display = 'inline';
-                    } else {
-                        // Not on overview - hide and clear userName
-                        userName.style.display = 'none';
-                        userName.textContent = '';
-                    }
-                }
-                if (userNameMini) {
-                    userNameMini.textContent = firstName;
-                }
-
-                // Update user avatar
-                const userAvatar = document.getElementById('userAvatar');
-                if (userAvatar) {
-                    // Validate photoURL is a valid URL string, not a template literal
-                    if (photoURL && typeof photoURL === 'string' && photoURL.startsWith('http') && !photoURL.includes('${')) {
-                        // Use photo URL
-                        userAvatar.innerHTML = `<img src="${photoURL}" alt="${displayName || 'User'}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
-                    } else {
-                        // Use initials
-                        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                        userAvatar.textContent = initials;
-                    }
-                }
-
-                console.log('User info loaded:', { displayName, firstName, photoURL });
-                
-                // Check if user is a Google user and show/hide set password option
-                if (user && user.providerData) {
-                    const isGoogleUser = user.providerData.some(provider => provider.providerId === 'google.com');
-                    const hasEmailPassword = user.providerData.some(provider => provider.providerId === 'password');
-                    
-                    const setPasswordField = document.getElementById('setPasswordField');
-                    if (setPasswordField) {
-                        // Show set password field only if user is Google user and doesn't have email/password linked
-                        if (isGoogleUser && !hasEmailPassword) {
-                            setPasswordField.style.display = 'block';
-                        } else {
-                            setPasswordField.style.display = 'none';
-                        }
-                    }
-                    
-                    // Update sign-in method text
-                    const signInMethodText = document.getElementById('signInMethodText');
-                    if (signInMethodText) {
-                        if (isGoogleUser && hasEmailPassword) {
-                            signInMethodText.textContent = 'Google & Email/Password';
-                        } else if (isGoogleUser) {
-                            signInMethodText.textContent = 'Google';
-                        } else if (hasEmailPassword) {
-                            signInMethodText.textContent = 'Email/Password';
-                        } else {
-                            signInMethodText.textContent = 'Unknown';
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading user info:', error);
-            }
-        };
-        
-        // Handle Set Password functionality for Google users
-        (function() {
-            const setPasswordBtn = document.getElementById('setPasswordBtn');
-            const setPasswordForm = document.getElementById('setPasswordForm');
-            const savePasswordBtn = document.getElementById('savePasswordBtn');
-            const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
-            const newPasswordInput = document.getElementById('newPasswordInput');
-            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
-            const passwordError = document.getElementById('passwordError');
-            const passwordSuccess = document.getElementById('passwordSuccess');
-            
-            if (setPasswordBtn) {
-                setPasswordBtn.addEventListener('click', () => {
-                    if (setPasswordForm) {
-                        setPasswordForm.style.display = 'block';
-                        setPasswordBtn.style.display = 'none';
-                    }
-                });
-            }
-            
-            if (cancelPasswordBtn) {
-                cancelPasswordBtn.addEventListener('click', () => {
-                    if (setPasswordForm) {
-                        setPasswordForm.style.display = 'none';
-                        if (setPasswordBtn) setPasswordBtn.style.display = 'inline-block';
-                        if (newPasswordInput) newPasswordInput.value = '';
-                        if (confirmPasswordInput) confirmPasswordInput.value = '';
-                        if (passwordError) {
-                            passwordError.style.display = 'none';
-                            passwordError.textContent = '';
-                        }
-                        if (passwordSuccess) {
-                            passwordSuccess.style.display = 'none';
-                            passwordSuccess.textContent = '';
-                        }
-                    }
-                });
-            }
-            
-            if (savePasswordBtn) {
-                savePasswordBtn.addEventListener('click', async () => {
-                    const newPassword = newPasswordInput?.value || '';
-                    const confirmPassword = confirmPasswordInput?.value || '';
-                    
-                    // Hide previous messages
-                    if (passwordError) {
-                        passwordError.style.display = 'none';
-                        passwordError.textContent = '';
-                    }
-                    if (passwordSuccess) {
-                        passwordSuccess.style.display = 'none';
-                        passwordSuccess.textContent = '';
-                    }
-                    
-                    // Validate
-                    if (!newPassword || newPassword.length < 6) {
-                        if (passwordError) {
-                            passwordError.textContent = 'Password must be at least 6 characters long.';
-                            passwordError.style.display = 'block';
-                        }
-                        return;
-                    }
-                    
-                    if (newPassword !== confirmPassword) {
-                        if (passwordError) {
-                            passwordError.textContent = 'Passwords do not match.';
-                            passwordError.style.display = 'block';
-                        }
-                        return;
-                    }
-                    
-                    try {
-                        const { getAuth, EmailAuthProvider, linkWithCredential } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                        const auth = getAuth();
-                        const user = auth.currentUser;
-                        
-                        if (!user || !user.email) {
-                            throw new Error('User not found');
-                        }
-                        
-                        // Create email/password credential
-                        const credential = EmailAuthProvider.credential(user.email, newPassword);
-                        
-                        // Link the credential to the Google account
-                        await linkWithCredential(user, credential);
-                        
-                        // Show success message
-                        if (passwordSuccess) {
-                            passwordSuccess.textContent = 'Password set successfully! You can now login with email/password.';
-                            passwordSuccess.style.display = 'block';
-                        }
-                        
-                        // Hide form after 2 seconds
-                        setTimeout(() => {
-                            if (setPasswordForm) setPasswordForm.style.display = 'none';
-                            if (setPasswordBtn) setPasswordBtn.style.display = 'inline-block';
-                            if (newPasswordInput) newPasswordInput.value = '';
-                            if (confirmPasswordInput) confirmPasswordInput.value = '';
-                            if (passwordSuccess) passwordSuccess.style.display = 'none';
-                            
-                            // Reload user info to update UI
-                            if (window.loadUserInfo) {
-                                window.loadUserInfo();
-                            }
-                        }, 2000);
-                        
-                    } catch (error) {
-                        console.error('Error setting password:', error);
-                        if (passwordError) {
-                            let errorMsg = 'Failed to set password. Please try again.';
-                            if (error.code === 'auth/email-already-in-use') {
-                                errorMsg = 'This email is already in use with a different account.';
-                            } else if (error.code === 'auth/weak-password') {
-                                errorMsg = 'Password is too weak. Please choose a stronger password.';
-                            } else if (error.code === 'auth/requires-recent-login') {
-                                errorMsg = 'For security, please sign out and sign in again, then try setting your password.';
-                            }
-                            passwordError.textContent = errorMsg;
-                            passwordError.style.display = 'block';
-                        }
-                    }
-                });
-            }
-        })();
-        
-        // Call loadUserInfo when Firebase is ready
-        // Wait for Firebase to be initialized
-        if (window.firebase && window.firebase.auth && window.firebase.db) {
-            // Firebase already ready, call immediately
-            loadUserInfo();
-        } else {
-            // Wait for Firebase to be ready
-            const checkFirebase = setInterval(() => {
-                if (window.firebase && window.firebase.auth && window.firebase.db) {
-                    clearInterval(checkFirebase);
-                    loadUserInfo();
-                }
-            }, 100);
-            
-            // Safety timeout - stop checking after 5 seconds
-            setTimeout(() => {
-                clearInterval(checkFirebase);
-            }, 5000);
-        }
-    </script>
-    
-    <script>
-        // Header Search Autocomplete Functionality
-        (function() {
-            const headerSearchInput = document.getElementById('headerSearchInput');
-            const headerSearchDropdown = document.getElementById('headerSearchDropdown');
-            const headerSearchSuggestions = document.getElementById('headerSearchSuggestions');
-            const headerSearchClear = document.getElementById('headerSearchClear');
-            
-            // Define all searchable items including profile subsections
-            const searchItems = [
-                // Main Sections
-                { title: 'Overview', section: 'overview', type: 'section', icon: 'grid' },
-                { title: 'My Programs', section: 'programs', type: 'section', icon: 'book' },
-                { title: 'Progress', section: 'progress', type: 'section', icon: 'activity' },
-                { title: 'Resources', section: 'resources', type: 'section', icon: 'book' },
-                { title: 'Marketplace', section: 'marketplace', type: 'section', icon: 'shopping' },
-                { title: 'Tasks', section: 'tasks', type: 'section', icon: 'check' },
-                { title: 'Notes', section: 'notes', type: 'section', icon: 'file-text' },
-                { title: 'Payment', section: 'payment', type: 'section', icon: 'card' },
-                { title: 'Help', section: 'help', type: 'section', icon: 'help' },
-                { title: 'Profile', section: 'profile', type: 'section', icon: 'user' },
-                { title: 'Settings', section: 'settings', type: 'section', icon: 'settings' },
-                
-                // Profile Subsections
-                { title: 'Personal Information', section: 'profile', subsection: 'personalInfoSection', type: 'subsection', icon: 'user', meta: 'Profile' },
-                { title: 'Google Account', section: 'profile', subsection: 'googleAccountSection', type: 'subsection', icon: 'user', meta: 'Profile' },
-                { title: 'Preferences', section: 'profile', subsection: 'preferencesSection', type: 'subsection', icon: 'sliders', meta: 'Profile' },
-                { title: 'Subscription', section: 'profile', subsection: 'subscriptionSection', type: 'subsection', icon: 'card', meta: 'Profile' },
-                { title: 'Security', section: 'profile', subsection: 'securitySection', type: 'subsection', icon: 'shield', meta: 'Profile' },
-                { title: 'Privacy', section: 'profile', subsection: 'privacySection', type: 'subsection', icon: 'lock', meta: 'Profile' },
-                { title: 'Active Sessions', section: 'profile', subsection: 'sessionsSection', type: 'subsection', icon: 'monitor', meta: 'Profile' },
-                { title: 'Notifications', section: 'profile', subsection: 'notificationsSection', type: 'subsection', icon: 'bell', meta: 'Profile' },
-                { title: 'Appearance', section: 'profile', subsection: 'appearanceSection', type: 'subsection', icon: 'eye', meta: 'Profile' },
-                
-                // Personal Info Fields
-                { title: 'Name', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Name' },
-                { title: 'Email', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Email' },
-                { title: 'Password', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'lock', meta: 'Personal Info', fieldLabel: 'Password' },
-                { title: 'Contact', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Contact' },
-                { title: 'Job Title', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Job Title' },
-                { title: 'Location', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Location' },
-                { title: 'Website', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Website' },
-                { title: 'Bio', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Bio' },
-                { title: 'Learning Goals', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Learning Goals' },
-                { title: 'Social Links', section: 'profile', subsection: 'personalInfoSection', type: 'field', icon: 'user', meta: 'Personal Info', fieldLabel: 'Social Links' },
-                
-                // Google Account Fields
-                { title: 'Member Since', section: 'profile', subsection: 'googleAccountSection', type: 'field', icon: 'user', meta: 'Account', fieldLabel: 'Member Since' },
-                { title: 'Account Type', section: 'profile', subsection: 'googleAccountSection', type: 'field', icon: 'user', meta: 'Account', fieldLabel: 'Account Type' },
-                { title: 'Programs Enrolled', section: 'profile', subsection: 'googleAccountSection', type: 'field', icon: 'user', meta: 'Account', fieldLabel: 'Programs Enrolled' },
-                { title: 'Sign-In Method', section: 'profile', subsection: 'googleAccountSection', type: 'field', icon: 'user', meta: 'Account', fieldLabel: 'Sign-In Method' },
-                { title: 'Google Account', section: 'profile', subsection: 'googleAccountSection', type: 'field', icon: 'user', meta: 'Account', fieldLabel: 'Google Account' },
-                
-                // Preferences Items
-                { title: 'Email Notifications', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'bell', meta: 'Preferences', fieldLabel: 'Email Notifications' },
-                { title: 'Marketing Emails', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'bell', meta: 'Preferences', fieldLabel: 'Marketing Emails' },
-                { title: 'Push Notifications', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'bell', meta: 'Preferences', fieldLabel: 'Push Notifications' },
-                { title: 'Course Updates', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'book', meta: 'Preferences', fieldLabel: 'Course Updates' },
-                { title: 'Assignment Reminders', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'check', meta: 'Preferences', fieldLabel: 'Assignment Reminders' },
-                { title: 'Study Reminders', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'check', meta: 'Preferences', fieldLabel: 'Study Reminders' },
-                { title: 'Animations', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'eye', meta: 'Preferences', fieldLabel: 'Animations' },
-                { title: 'Compact Sidebar', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'settings', meta: 'Preferences', fieldLabel: 'Compact Sidebar' },
-                { title: 'Auto-play Videos', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'settings', meta: 'Preferences', fieldLabel: 'Auto-play Videos' },
-                { title: 'Progress Tracking', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'activity', meta: 'Preferences', fieldLabel: 'Progress Tracking' },
-                { title: 'Language', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'settings', meta: 'Preferences', fieldLabel: 'Language' },
-                { title: 'Timezone', section: 'profile', subsection: 'preferencesSection', type: 'field', icon: 'settings', meta: 'Preferences', fieldLabel: 'Timezone' }
-            ];
-            
-            // Icon SVG templates
-            const icons = {
-                grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
-                book: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>',
-                activity: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>',
-                award: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>',
-                shopping: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>',
-                check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"></path><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path></svg>',
-                users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
-                card: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>',
-                help: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
-                user: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-                settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path></svg>',
-                sliders: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>',
-                shield: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>',
-                lock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
-                monitor: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>',
-                bell: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',
-                eye: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
-            };
-            
-            // Search and filter items
-            function performSearch(query) {
-                if (!query) return [];
-                
-                const lowercaseQuery = query.toLowerCase();
-                const matches = searchItems.filter(item => 
-                    item.title.toLowerCase().includes(lowercaseQuery) ||
-                    (item.meta && item.meta.toLowerCase().includes(lowercaseQuery))
-                );
-                
-                return matches.slice(0, 12);
-            }
-            
-            // Highlight matching text
-            function highlightMatch(text, query) {
-                const regex = new RegExp(`(${query})`, 'gi');
-                return text.replace(regex, '<span class="search-highlight">$1</span>');
-            }
-            
-            let selectedIndex = -1;
-            let currentMatches = [];
-            
-            // Show suggestions
-            function showSuggestions(query) {
-                currentMatches = performSearch(query);
-                
-                if (currentMatches.length === 0) {
-                    headerSearchDropdown.classList.remove('show');
-                    selectedIndex = -1;
-                    return;
-                }
-                
-                selectedIndex = -1;
-                headerSearchSuggestions.innerHTML = currentMatches.map((item, index) => `
-                    <div class="header-search-item" data-section="${item.section}" ${item.subsection ? `data-subsection="${item.subsection}"` : ''} ${item.fieldLabel ? `data-field-label="${item.fieldLabel}"` : ''} data-index="${index}">
-                        <div class="header-search-item-icon">
-                            ${icons[item.icon] || icons.grid}
-                        </div>
-                        <div class="header-search-item-content">
-                            <div class="header-search-item-title">${highlightMatch(item.title, query)}</div>
-                            ${item.meta ? `<div class="header-search-item-meta">${item.meta}</div>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                
-                headerSearchDropdown.classList.add('show');
-                
-                // Add click handlers to search items
-                const searchItemElements = headerSearchSuggestions.querySelectorAll('.header-search-item');
-                searchItemElements.forEach(el => {
-                    el.addEventListener('click', function() {
-                        handleSearchItemClick(this);
-                    });
-                });
-                
-                // Update scroll container max height
-                headerSearchSuggestions.style.maxHeight = '400px';
-                headerSearchSuggestions.style.overflowY = 'auto';
-            }
-            
-            // Handle search item click
-            function handleSearchItemClick(element) {
-                const section = element.getAttribute('data-section');
-                const subsection = element.getAttribute('data-subsection');
-                const fieldLabel = element.getAttribute('data-field-label');
-                
-                // Navigate to section WITH subsection - this will update URL and activate correct tabs
-                if (typeof navigateToSection === 'function') {
-                    navigateToSection(section, subsection);
-                }
-                
-                // If there's a subsection, ensure it's properly activated (for tab indicators)
-                if (subsection) {
-                    setTimeout(() => {
-                        // Use the generic navigateToSubsection function instead of profile-specific one
-                        if (typeof navigateToSubsection === 'function') {
-                            navigateToSubsection(section, subsection);
-                        } else if (section === 'profile' && typeof navigateToProfileSubsection === 'function') {
-                            // Fallback for profile section
-                            navigateToProfileSubsection(subsection);
-                        }
-                        
-                        // If there's a field label, scroll to it and highlight
-                        if (fieldLabel) {
-                            setTimeout(() => {
-                                if (typeof scrollToAndHighlightField === 'function') {
-                                    scrollToAndHighlightField(fieldLabel);
-                                }
-                            }, 300);
-                        }
-                    }, 200);
-                }
-                
-                // Clear search
-                headerSearchInput.value = '';
-                headerSearchClear.style.display = 'none';
-                headerSearchDropdown.classList.remove('show');
-                selectedIndex = -1;
-            }
-            
-            // Scroll to and highlight a field by its label text
-            function scrollToAndHighlightField(labelText) {
-                // Find all profile field labels
-                const labels = document.querySelectorAll('.profile-field-label');
-                
-                // Find the label that matches
-                let targetField = null;
-                labels.forEach(label => {
-                    if (label.textContent.trim() === labelText) {
-                        targetField = label.closest('.profile-field');
-                    }
-                });
-                
-                if (targetField) {
-                    // Ensure subsection is visible
-                    const subsection = targetField.closest('.profile-subsection');
-                    if (subsection) {
-                        subsection.style.display = 'block';
-                        subsection.classList.add('active');
-                    }
-                    
-                    // Scroll to the field
-                    setTimeout(() => {
-                        targetField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Simple highlight
-                        targetField.classList.add('search-highlight-field');
-                        
-                        // Remove highlight after 2 seconds
-                        setTimeout(() => {
-                            targetField.classList.remove('search-highlight-field');
-                        }, 2000);
-                    }, 100);
-                }
-            }
-            
-            // Update selected item highlight
-            function updateSelectedItem() {
-                const items = headerSearchSuggestions.querySelectorAll('.header-search-item');
-                items.forEach((item, index) => {
-                    if (index === selectedIndex) {
-                        item.classList.add('selected');
-                        // Scroll into view
-                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    } else {
-                        item.classList.remove('selected');
-                    }
-                });
-            }
-            
-            // Handle keyboard navigation
-            function handleKeyboardNavigation(e) {
-                if (!headerSearchDropdown.classList.contains('show')) return;
-                
-                const items = headerSearchSuggestions.querySelectorAll('.header-search-item');
-                if (items.length === 0) return;
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedIndex = (selectedIndex + 1) % items.length;
-                    updateSelectedItem();
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
-                    updateSelectedItem();
-                } else if (e.key === 'Enter' && selectedIndex >= 0) {
-                    e.preventDefault();
-                    const selectedItem = items[selectedIndex];
-                    if (selectedItem) {
-                        handleSearchItemClick(selectedItem);
-                    }
-                }
-            }
-            
-            // Navigate to profile subsection
-            function navigateToProfileSubsection(subsectionId) {
-                const profileNavItems = document.querySelectorAll('.profile-nav-item');
-                const profileSubsections = document.querySelectorAll('.profile-subsection');
-                const profileTabs = document.querySelectorAll('.profile-tab');
-                
-                // Find the corresponding nav item
-                const targetNavItem = Array.from(profileNavItems).find(item => 
-                    item.getAttribute('data-section') === subsectionId
-                );
-                
-                // Also activate the corresponding profile tab if it exists
-                const targetTab = Array.from(profileTabs).find(tab => 
-                    tab.getAttribute('data-section') === subsectionId
-                );
-                
-                if (targetTab) {
-                    // Remove active class from all tabs
-                    profileTabs.forEach(tab => tab.classList.remove('active'));
-                    // Add active class to target tab
-                    targetTab.classList.add('active');
-                }
-                
-                if (targetNavItem) {
-                    // Remove active class from all nav items
-                    profileNavItems.forEach(nav => nav.classList.remove('active'));
-                    
-                    // Add active class to target item
-                    targetNavItem.classList.add('active');
-                }
-                
-                // Hide all subsections
-                profileSubsections.forEach(section => {
-                    section.style.display = 'none';
-                    section.classList.remove('active');
-                });
-                
-                // Show target subsection
-                const targetSection = document.getElementById(subsectionId);
-                if (targetSection) {
-                    targetSection.style.display = 'block';
-                    targetSection.classList.add('active');
-                }
-                
-                // Update URL with subsection
-                const subsectionMap = {
-                    'personalInfoSection': 'personal',
-                    'googleAccountSection': 'account',
-                    'preferencesSection': 'preferences',
-                    'advancedSection': 'advanced'
-                };
-                const subsectionName = subsectionMap[subsectionId];
-                if (subsectionName && typeof updateUrlForSubsection === 'function') {
-                    updateUrlForSubsection('profile', subsectionName);
-                }
-            }
-            
-            // Event listeners
-            if (headerSearchInput) {
-                headerSearchInput.addEventListener('input', function(e) {
-                    const query = e.target.value.trim();
-                    
-                    if (query) {
-                        headerSearchClear.style.display = 'block';
-                        showSuggestions(query);
-                    } else {
-                        headerSearchClear.style.display = 'none';
-                        headerSearchDropdown.classList.remove('show');
-                        selectedIndex = -1;
-                    }
-                });
-                
-                headerSearchInput.addEventListener('focus', function() {
-                    if (this.value.trim()) {
-                        showSuggestions(this.value.trim());
-                    }
-                });
-                
-                // Keyboard navigation
-                headerSearchInput.addEventListener('keydown', function(e) {
-                    handleKeyboardNavigation(e);
-                });
-                
-                // Keyboard shortcut: '/' to focus search
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-                        e.preventDefault();
-                        headerSearchInput.focus();
-                    } else if (e.key === 'Escape' && document.activeElement === headerSearchInput) {
-                        headerSearchInput.blur();
-                        headerSearchDropdown.classList.remove('show');
-                        selectedIndex = -1;
-                    }
-                });
-            }
-            
-            if (headerSearchClear) {
-                headerSearchClear.addEventListener('click', function() {
-                    headerSearchInput.value = '';
-                    this.style.display = 'none';
-                    headerSearchDropdown.classList.remove('show');
-                    headerSearchInput.focus();
-                });
-            }
-            
-            // Click outside to close dropdown
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.header-search-bar')) {
-                    headerSearchDropdown.classList.remove('show');
-                }
-            });
-        })();
-    </script>
-    
     <!-- User Info Loading moved to js/user-info.js (includes Firebase initialization check) -->
     <script src="/js/user-info.js"></script>
     

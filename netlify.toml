@@ -1,6 +1,13 @@
+functionsDirectory = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy/netlify/functions"
+functionsDirectoryOrigin = "config-v1"
+headersOrigin = "config"
+redirectsOrigin = "config"
+plugins = []
+
 [build]
-publish = "."
-functions = "netlify/functions"
+publish = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy"
+publishOrigin = "config"
+functions = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy/netlify/functions"
 
   [build.environment]
 

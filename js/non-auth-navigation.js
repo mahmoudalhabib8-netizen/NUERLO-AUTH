@@ -2,40 +2,18 @@
 // This file contains all navigation functions (desktop & mobile) for non-authenticated users
 // When creating authenticated user pages, use auth-navigation.js instead
 
-// Suppress Firebase init.json 404 errors and COOP warnings
+// Suppress Firebase COOP warnings (harmless but noisy)
 (function() {
-    // Suppress network requests for Firebase init.json (harmless 404)
-    const originalFetch = window.fetch;
-    window.fetch = function(...args) {
-        const url = args[0];
-        if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
-            // Return a rejected promise that we'll catch silently
-            return Promise.reject(new Error('Suppressed Firebase init.json request'));
-        }
-        return originalFetch.apply(this, args);
-    };
-    
     const originalWarn = console.warn;
     const originalError = console.error;
     const originalLog = console.log;
     
-    const shouldFilter = function(message) {
-        if (!message) return false;
-        const msg = String(message);
-        return msg.includes('Cross-Origin-Opener-Policy') || 
-               msg.includes('window.closed call') ||
-               msg.includes('popup.ts') ||
-               msg.includes('init.json') ||
-               msg.includes('firebase/init.json') ||
-               (msg.includes('404') && msg.includes('firebaseapp.com')) ||
-               (msg.includes('Failed to load resource') && msg.includes('init.json')) ||
-               (msg.includes('400') && msg.includes('identitytoolkit')) ||
-               msg.includes('createAuthUri');
-    };
-    
     console.warn = function(...args) {
         const message = args.join(' ');
-        if (shouldFilter(message)) {
+        // Filter out Cross-Origin-Opener-Policy warnings from Firebase
+        if (message.includes('Cross-Origin-Opener-Policy') || 
+            message.includes('window.closed call') ||
+            message.includes('popup.ts')) {
             return; // Silently ignore
         }
         originalWarn.apply(console, args);
@@ -43,7 +21,10 @@
     
     console.error = function(...args) {
         const message = args.join(' ');
-        if (shouldFilter(message)) {
+        // Filter out Cross-Origin-Opener-Policy errors from Firebase
+        if (message.includes('Cross-Origin-Opener-Policy') || 
+            message.includes('window.closed call') ||
+            message.includes('popup.ts')) {
             return; // Silently ignore
         }
         originalError.apply(console, args);
@@ -51,59 +32,14 @@
     
     console.log = function(...args) {
         const message = args.join(' ');
-        if (shouldFilter(message)) {
+        // Filter out Cross-Origin-Opener-Policy logs from Firebase
+        if (message.includes('Cross-Origin-Opener-Policy') || 
+            message.includes('window.closed call') ||
+            message.includes('popup.ts')) {
             return; // Silently ignore
         }
         originalLog.apply(console, args);
     };
-    
-    // Also filter network errors for init.json and Google Identity Toolkit
-    window.addEventListener('error', function(event) {
-        const message = event.message || '';
-        const filename = event.filename || '';
-        const target = event.target;
-        
-        // Filter network errors for init.json and Google Identity Toolkit 400 errors
-        if (target && (target.src || target.href)) {
-            const url = target.src || target.href || '';
-            if (url.includes('init.json') || 
-                url.includes('firebaseapp.com/__/firebase') ||
-                (url.includes('identitytoolkit') && url.includes('createAuthUri'))) {
-                event.preventDefault();
-                event.stopPropagation();
-                return false;
-            }
-        }
-        
-        // Also filter errors from fetch and error messages
-        if (message.includes('init.json') || message.includes('firebaseapp.com/__/firebase')) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        }
-        
-        if (shouldFilter(message) || shouldFilter(filename) || 
-            (filename && filename.includes('init.json'))) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        }
-    }, true);
-    
-    // Filter unhandled promise rejections for 400 errors
-    window.addEventListener('unhandledrejection', function(event) {
-        const reason = event.reason;
-        const message = reason?.message || String(reason || '');
-        if ((message.includes('400') && message.includes('identitytoolkit')) ||
-            message.includes('createAuthUri')) {
-            event.preventDefault();
-            return false;
-        }
-        if (shouldFilter(message)) {
-            event.preventDefault();
-            return false;
-        }
-    });
 })();
 
 // Custom Notification System for Non-Auth Pages
@@ -390,11 +326,12 @@ function switchAuthTab(tab) {
 }
 
 // Firebase Auth Integration
-// Import popup functions immediately, but only import redirect functions when needed (mobile)
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   GithubAuthProvider,
   signOut,
@@ -403,29 +340,9 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// Lazy load redirect functions only when needed (mobile devices)
-let signInWithRedirect, getRedirectResult;
-async function loadRedirectFunctions() {
-    if (!signInWithRedirect) {
-        const redirectModule = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        signInWithRedirect = redirectModule.signInWithRedirect;
-        getRedirectResult = redirectModule.getRedirectResult;
-    }
-    return { signInWithRedirect, getRedirectResult };
-}
-
-// Initialize providers - create fresh instances to avoid state issues
-function getGoogleProvider() {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        prompt: 'select_account'
-    });
-    return provider;
-}
-
-function getGithubProvider() {
-    return new GithubAuthProvider();
-}
+// Initialize providers
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
 
 // Helper function to get dashboard URL with account ID
 function getDashboardUrl(user) {
@@ -492,51 +409,51 @@ async function signIn(email, password) {
 
 async function signInWithGoogle() {
     try {
-        // Always use popup on desktop to avoid redirect flow issues (404 errors)
-        // Only use redirect on mobile devices where popup doesn't work well
+        // Use redirect on mobile to avoid COOP issues
         const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // Use redirect on mobile - load redirect functions only when needed
-            const { signInWithRedirect } = await loadRedirectFunctions();
-            sessionStorage.setItem('pendingRedirect', 'true');
-            await signInWithRedirect(window.firebase.auth, getGoogleProvider());
+            // Use redirect on mobile
+            await signInWithRedirect(window.firebase.auth, googleProvider);
             return { success: true, redirect: true }; // Will redirect, so return early
         } else {
-            // Use popup on desktop - this avoids the 404 error from redirect flow
-            // Create fresh provider instance for each attempt
-            const provider = getGoogleProvider();
-            const result = await signInWithPopup(window.firebase.auth, provider);
-            if (!result || !result.user) {
-                throw new Error('No user returned from authentication');
-            }
-            
-            const user = result.user;
-            
-            // Create user document if it doesn't exist
+            // Use popup on desktop
             try {
-                if (window.firebase && window.firebase.db) {
-                    const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
-                    if (!userDoc.exists()) {
-                        await setDoc(doc(window.firebase.db, 'users', user.uid), {
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName,
-                            photoURL: user.photoURL,
-                            createdAt: new Date(),
-                            enrolledCourses: [],
-                            progress: {},
-                            role: 'user' // Default role for all new users
-                        });
-                    }
+                const result = await signInWithPopup(window.firebase.auth, googleProvider);
+                if (!result || !result.user) {
+                    throw new Error('No user returned from authentication');
                 }
-            } catch (dbError) {
-                // If database operation fails, still return success (user is authenticated)
-                // Database errors shouldn't prevent login
-                console.warn('Failed to create/update user document:', dbError);
+                
+                const user = result.user;
+                
+                // Create user document if it doesn't exist
+                try {
+                    if (window.firebase && window.firebase.db) {
+                        const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
+                        if (!userDoc.exists()) {
+                            await setDoc(doc(window.firebase.db, 'users', user.uid), {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL,
+                                createdAt: new Date(),
+                                enrolledCourses: [],
+                                progress: {},
+                                role: 'user' // Default role for all new users
+                            });
+                        }
+                    }
+                } catch (dbError) {
+                    // If database operation fails, still return success (user is authenticated)
+                    // Database errors shouldn't prevent login
+                    console.warn('Failed to create/update user document:', dbError);
+                }
+                
+                return { success: true, user };
+            } catch (popupError) {
+                // If popup fails with COOP or other issues, throw to be caught by outer catch
+                throw popupError;
             }
-            
-            return { success: true, user };
         }
     } catch (error) {
         // Check for specific error codes
@@ -550,17 +467,17 @@ async function signInWithGoogle() {
             return { success: false, error: 'Sign-in cancelled', cancelled: true };
         }
         
-        // Don't fall back to redirect on desktop - it causes issues
-        // Instead, show a clear error message
-        if (errorCode === 'auth/popup-blocked') {
-            return { success: false, error: 'Popup was blocked. Please allow popups for this site and try again.' };
-        }
-        
-        // Handle 400 errors from Google Identity Toolkit
-        if (errorCode === 'auth/network-request-failed' || 
-            errorMessage.includes('400') ||
-            errorMessage.includes('Bad Request')) {
-            return { success: false, error: 'Authentication service error. Please try again in a moment.' };
+        // If popup fails due to COOP or blocking, try redirect as fallback
+        if (errorCode === 'auth/popup-blocked' || 
+            errorMessage.includes('Cross-Origin') ||
+            errorMessage.includes('popup') ||
+            errorCode.includes('popup')) {
+            try {
+                await signInWithRedirect(window.firebase.auth, googleProvider);
+                return { success: true, redirect: true };
+            } catch (redirectError) {
+                return { success: false, error: redirectError.message || 'Authentication failed. Please try again.' };
+            }
         }
         
         // Return user-friendly error message
@@ -569,8 +486,8 @@ async function signInWithGoogle() {
             userMessage = 'An account already exists with this email. Please sign in with your original method.';
         } else if (errorCode === 'auth/operation-not-allowed') {
             userMessage = 'This sign-in method is not enabled. Please contact support.';
-        } else if (!userMessage || userMessage.includes('Firebase')) {
-            userMessage = 'Authentication failed. Please try again.';
+        } else if (errorCode === 'auth/popup-blocked') {
+            userMessage = 'Popup was blocked. Please allow popups and try again.';
         }
         
         return { success: false, error: userMessage };
@@ -583,14 +500,12 @@ async function signInWithGitHub() {
         const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // Use redirect on mobile - load redirect functions only when needed
-            const { signInWithRedirect } = await loadRedirectFunctions();
-            sessionStorage.setItem('pendingRedirect', 'true');
-            await signInWithRedirect(window.firebase.auth, getGithubProvider());
+            // Use redirect on mobile
+            await signInWithRedirect(window.firebase.auth, githubProvider);
             return { success: true, redirect: true }; // Will redirect, so return early
         } else {
             // Use popup on desktop
-            const result = await signInWithPopup(window.firebase.auth, getGithubProvider());
+            const result = await signInWithPopup(window.firebase.auth, githubProvider);
             const user = result.user;
             
             // Create user document if it doesn't exist
@@ -611,12 +526,10 @@ async function signInWithGitHub() {
             return { success: true, user };
         }
     } catch (error) {
-        // If popup fails, try redirect as fallback (only on mobile)
+        // If popup fails, try redirect as fallback
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('Cross-Origin')) {
             try {
-                const { signInWithRedirect } = await loadRedirectFunctions();
-                sessionStorage.setItem('pendingRedirect', 'true');
-                await signInWithRedirect(window.firebase.auth, getGithubProvider());
+                await signInWithRedirect(window.firebase.auth, githubProvider);
                 return { success: true, redirect: true };
             } catch (redirectError) {
                 return { success: false, error: redirectError.message };
@@ -627,63 +540,11 @@ async function signInWithGitHub() {
 }
 
 // Handle redirect result (when user returns from OAuth provider)
-// ONLY call this when we're actually on a redirect callback page
 async function handleRedirectResult() {
-    // STRICT check - only proceed if we have explicit redirect indicators
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasApiKey = urlParams.has('apiKey');
-    const hasMode = urlParams.has('mode');
-    const hasOobCode = urlParams.has('oobCode');
-    const hasHashToken = window.location.hash.includes('access_token') || window.location.hash.includes('id_token');
-    const pendingRedirect = sessionStorage.getItem('pendingRedirect') === 'true';
-    
-    // Only check if we have STRONG indicators of a redirect callback
-    // This prevents Firebase from initializing redirect flow unnecessarily
-    if (!hasApiKey && !hasMode && !hasOobCode && !hasHashToken && !pendingRedirect) {
-        return; // Exit immediately - don't touch Firebase redirect at all
-    }
-    
-    // Double-check: if we don't have URL params but have pendingRedirect, 
-    // wait a moment to see if params arrive (they might be in hash)
-    if (pendingRedirect && !hasApiKey && !hasMode && !hasHashToken) {
-        // Wait a bit for hash to be processed, but don't call getRedirectResult yet
-        setTimeout(() => {
-            const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            if (!hashParams.has('access_token') && !hashParams.has('id_token')) {
-                // No redirect params found, clear the flag and exit
-                sessionStorage.removeItem('pendingRedirect');
-                return;
-            }
-            // Now we can safely check
-            checkRedirectResult();
-        }, 500);
-        return;
-    }
-    
-    // Only now call getRedirectResult if we're sure we're on a redirect page
-    checkRedirectResult();
-}
-
-async function checkRedirectResult() {
     try {
-        // Only load redirect functions when we actually need them
-        const { getRedirectResult } = await loadRedirectFunctions();
         const result = await getRedirectResult(window.firebase.auth);
         if (result && result.user) {
-            sessionStorage.removeItem('pendingRedirect');
             const user = result.user;
-            
-            // Get Firebase ID token and set cross-domain cookie
-            try {
-                const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                const token = await getIdToken(user);
-                
-                // Import and set the auth cookie
-                const { setAuthCookie } = await import('./cookie-auth.js');
-                setAuthCookie(token);
-            } catch (cookieError) {
-                console.error('Error setting auth cookie:', cookieError);
-            }
             
             // Create user document if it doesn't exist
             const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
@@ -696,26 +557,37 @@ async function checkRedirectResult() {
                     createdAt: new Date(),
                     enrolledCourses: [],
                     progress: {},
-                    role: 'user'
+                    role: 'user' // Default role for all new users
                 });
             }
             
-            sessionStorage.setItem('freshLogin', 'true');
+            // Redirect to dashboard with account ID
             const redirectUrl = getDashboardUrl(user);
             window.location.href = redirectUrl;
         }
     } catch (error) {
-        sessionStorage.removeItem('pendingRedirect');
-        // Silently ignore - don't log redirect errors
-        return;
+        // If there's an error, show it but don't block the page
+        // Filter out operation-not-allowed errors (they're configuration issues)
+        if (error.code !== 'auth/operation-not-allowed' && 
+            !error.message?.includes('operation-not-allowed')) {
+            // Show user-friendly error for other issues
+            if (error.code === 'auth/account-exists-with-different-credential') {
+                showAuthError('An account already exists with this email. Please sign in with your original method.');
+            } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                // User cancelled - don't show error
+                return;
+            } else {
+                // Only log non-configuration errors
+                console.error('Redirect auth error:', error);
+            }
+        }
     }
 }
 
 // Handle form submissions
 document.addEventListener('DOMContentLoaded', function() {
-    // DON'T check for redirect result on page load - this causes 404 errors
-    // Only check if we're explicitly on a redirect callback page
-    // We'll check manually after a redirect if needed
+    // Check for redirect result first
+    handleRedirectResult();
     // Add click outside to close modal functionality
     const authModal = document.getElementById('authModal');
     if (authModal) {
@@ -827,178 +699,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Google sign in - handle both modal buttons and standalone login page button
-    // Use more specific selector to avoid confusion with GitHub button
-    let googleBtn = document.getElementById('googleLoginBtn');
-    
-    // If not found by ID, try to find by text content (more reliable)
-    if (!googleBtn) {
-        const allSocialBtns = document.querySelectorAll('.social-btn[href="#"]');
-        for (const btn of allSocialBtns) {
-            const text = btn.textContent || btn.innerText || '';
-            if (text.includes('Google') && !text.includes('GitHub')) {
-                googleBtn = btn;
-                break;
-            }
-        }
-    }
-    
-    // Fallback to first social button if still not found (but log a warning)
-    if (!googleBtn) {
-        googleBtn = document.querySelector('.social-btn[href="#"]:first-of-type');
-        if (googleBtn) {
-            console.warn('Google button not found by ID or text, using first social button');
-        }
-    }
-    
-    if (googleBtn && !googleBtn.hasAttribute('data-listener-attached')) {
-        googleBtn.setAttribute('data-listener-attached', 'true');
-        
-        // Store original button content (including innerHTML for span elements)
-        const originalHTML = googleBtn.innerHTML;
-        const originalText = googleBtn.textContent.trim();
-        
+    // Google sign in
+    const googleBtn = document.querySelector('.social-btn[href="#"]:first-of-type');
+    if (googleBtn) {
         googleBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            e.stopPropagation();
             
-            // Prevent multiple simultaneous clicks
-            if (googleBtn.disabled || googleBtn.hasAttribute('data-auth-in-progress')) {
-                return;
-            }
-            
-            googleBtn.setAttribute('data-auth-in-progress', 'true');
-            
-            // Hide any error messages
-            const errorMessage = document.getElementById('errorMessage');
-            if (errorMessage) errorMessage.style.display = 'none';
-            
-            // Check "Remember me" checkbox for Google sign-in (if on login page)
-            const rememberMeCheckbox = document.getElementById('rememberMe');
-            let rememberMe = false;
-            if (rememberMeCheckbox) {
-                rememberMe = rememberMeCheckbox.checked;
-                
-                // Set persistence based on "Remember me" checkbox
-                try {
-                    const { setPersistence, browserLocalPersistence, browserSessionPersistence } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                    if (rememberMe) {
-                        await setPersistence(window.firebase.auth, browserLocalPersistence);
-                        localStorage.setItem('nuerlo_remember_me', 'true');
-                    } else {
-                        await setPersistence(window.firebase.auth, browserSessionPersistence);
-                        localStorage.removeItem('nuerlo_remember_me');
-                    }
-                } catch (persistenceError) {
-                    console.error('Error setting persistence:', persistenceError);
-                }
-            }
-            
-            // Show loading state - preserve the SVG icon
-            const spanElement = googleBtn.querySelector('span');
-            if (spanElement) {
-                spanElement.textContent = 'Signing in with Google...';
-            } else {
-                googleBtn.textContent = 'Signing in with Google...';
-            }
+            // Show loading state
+            const originalText = googleBtn.textContent;
+            googleBtn.textContent = 'Signing in with Google...';
             googleBtn.disabled = true;
             
             try {
-                // On desktop, use popup directly to avoid any redirect initialization
-                const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const result = await signInWithGoogle();
                 
-                if (isMobile) {
-                    // Mobile: use redirect flow
-                    const result = await signInWithGoogle();
-                    if (result.redirect) {
-                        return; // Page will redirect
-                    }
-                    // If redirect didn't happen, fall through to error handling
-                    googleBtn.innerHTML = originalHTML;
-                    googleBtn.disabled = false;
-                    googleBtn.removeAttribute('data-auth-in-progress');
-                    showAuthError('Redirect failed. Please try again.');
-                    return;
+                // If redirect was used, don't reset button (page will redirect)
+                if (result.redirect) {
+                    return; // Page will redirect, don't do anything else
                 }
                 
-                // Desktop: use popup directly - this prevents any redirect initialization
-                const provider = getGoogleProvider();
+                // Reset button state
+                googleBtn.textContent = originalText;
+                googleBtn.disabled = false;
                 
-                // Set a timeout to detect if popup hangs
-                const popupPromise = signInWithPopup(window.firebase.auth, provider);
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Authentication timeout')), 60000)
-                );
-                
-                const popupResult = await Promise.race([popupPromise, timeoutPromise]);
-                
-                if (!popupResult || !popupResult.user) {
-                    throw new Error('No user returned from authentication');
+                if (result.success && result.user) {
+                    const user = result.user;
+                    closeAuthModal();
+                    
+                    // Wait a moment for auth state to fully update
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Double-check user is still authenticated
+                    const currentUser = window.firebase?.auth?.currentUser || user;
+                    const redirectUrl = getDashboardUrl(currentUser);
+                    
+                    // Show success message briefly before redirect
+                    showCustomNotification('success', 'Welcome!', 'Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                } else if (result.cancelled) {
+                    // User cancelled - don't show error, button already reset
+                } else {
+                    showAuthError(result.error || 'Authentication failed. Please try again.');
                 }
-                
-                const user = popupResult.user;
-                
-                // Create user document if it doesn't exist
-                try {
-                    if (window.firebase && window.firebase.db) {
-                        const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
-                        if (!userDoc.exists()) {
-                            await setDoc(doc(window.firebase.db, 'users', user.uid), {
-                                uid: user.uid,
-                                email: user.email,
-                                displayName: user.displayName,
-                                photoURL: user.photoURL,
-                                createdAt: new Date(),
-                                enrolledCourses: [],
-                                progress: {},
-                                role: 'user'
-                            });
-                        }
-                    }
-                } catch (dbError) {
-                    console.warn('Failed to create/update user document:', dbError);
-                }
-                
-                // Get Firebase ID token and set cross-domain cookie
-                try {
-                    const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                    const token = await getIdToken(user);
-                    const { setAuthCookie } = await import('./cookie-auth.js');
-                    setAuthCookie(token);
-                } catch (cookieError) {
-                    console.error('Error setting auth cookie:', cookieError);
-                }
-                
-                // Set flag and redirect
-                sessionStorage.setItem('freshLogin', 'true');
-                sessionStorage.setItem('skipAuthCheck', 'true'); // Prevent auth state listener from interfering
-                closeAuthModal();
-                
-                // Redirect immediately - don't wait
-                const redirectUrl = getDashboardUrl(user);
-                window.location.href = redirectUrl;
-                
             } catch (err) {
                 // Reset button on any error
-                googleBtn.innerHTML = originalHTML;
+                googleBtn.textContent = originalText;
                 googleBtn.disabled = false;
-                googleBtn.removeAttribute('data-auth-in-progress');
-                
-                // Handle specific error cases
-                if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-                    // User cancelled - don't show error
-                    return;
-                }
-                
-                // Show user-friendly error
-                let errorMsg = 'Authentication failed. Please try again.';
-                if (err.code === 'auth/popup-blocked') {
-                    errorMsg = 'Popup was blocked. Please allow popups for this site and try again.';
-                } else if (err.message) {
-                    errorMsg = err.message;
-                }
-                
-                showAuthError(errorMsg);
+                showAuthError(err.message || 'An error occurred during sign-in. Please try again.');
             }
         });
     }

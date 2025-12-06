@@ -4200,6 +4200,7 @@ body.light-mode .marketplace-search-input:focus {
     padding: 10px 0;
     background: none;
     border: none;
+    border-bottom: 1px solid transparent;
     color: #888;
     font-size: 13px;
     font-weight: 500;
@@ -5217,21 +5218,25 @@ body.dark-mode .logout-btn-cancel:hover {
 
 
 /* ==========================================
-   MARKETPLACE FILTER DRAWER
-   Modern slide-out panel from right
+   MARKETPLACE FILTER POPUP
    ========================================== */
-.marketplace-filter-drawer {
+.marketplace-filter-popup {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 10000;
-    pointer-events: none;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-.marketplace-filter-drawer.active {
-    pointer-events: all;
+.marketplace-filter-popup.active {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
 }
 
 .marketplace-filter-overlay {
@@ -5240,85 +5245,78 @@ body.dark-mode .logout-btn-cancel:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    pointer-events: none;
-}
-
-.marketplace-filter-drawer.active .marketplace-filter-overlay {
-    opacity: 1;
-    pointer-events: all;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 body.dark-mode .marketplace-filter-overlay {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
 }
 
-<<<<<<< Updated upstream
-.marketplace-filter-panel {
+.marketplace-filter-content {
     position: absolute;
     top: 0;
     right: 0;
+    background: #0a0a0a;
+    border-radius: 0;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 360px;
+    max-width: 420px;
     height: 100%;
-    background: var(--color-bg-primary);
-    border-left: 1px solid var(--color-border-light);
+    margin: 0;
+    border-left: 1px solid #222;
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-}
-
-.marketplace-filter-drawer.active .marketplace-filter-panel,
-.marketplace-filter-popup.active .marketplace-filter-content {
-    transform: translateX(0);
 }
 
 body.dark-mode .marketplace-filter-content {
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.5);
 }
 
+.marketplace-filter-popup.active .marketplace-filter-content {
+    transform: translateX(0);
+}
+
 .marketplace-filter-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px;
-    border-bottom: 1px solid var(--color-border-light);
-    background: var(--color-bg-primary);
+    padding: 24px 28px;
+    border-bottom: 1px solid #222;
 }
 
 .marketplace-filter-title {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
-    color: var(--color-text-primary);
+    color: #fff;
     margin: 0;
 }
 
 .marketplace-filter-close {
     background: none;
     border: none;
-    color: var(--color-text-tertiary);
+    color: #666;
     cursor: pointer;
-    padding: 6px;
+    padding: 4px;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: all 0.15s ease;
+    border-radius: 0;
+    transition: color 0.2s ease;
 }
 
 .marketplace-filter-close:hover {
-    background: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    background: none;
+    color: #fff;
 }
 
 .marketplace-filter-body {
-    padding: 24px;
+    padding: 28px;
     overflow-y: auto;
     flex: 1;
 }
@@ -5334,77 +5332,42 @@ body.dark-mode .marketplace-filter-content {
 .marketplace-filter-section-title {
     font-size: 12px;
     font-weight: 500;
-    color: var(--color-text-tertiary);
-    margin-bottom: 12px;
+    color: #888;
+    margin-bottom: 16px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .marketplace-filter-options {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .marketplace-filter-option {
-    padding: 10px 14px;
+    padding: 8px 16px;
     background: transparent;
-    border: 1px solid var(--color-border-light);
-    border-radius: 6px;
-    color: var(--color-text-secondary);
-    font-size: 14px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #888;
+    font-size: 13px;
     font-weight: 400;
     cursor: pointer;
-    transition: all 0.15s ease;
+    white-space: nowrap;
+    transition: all 0.2s ease;
     font-family: var(--font-family);
-    text-align: left;
 }
 
 .marketplace-filter-option:hover {
-    background: var(--color-bg-secondary);
-    border-color: var(--color-border-medium);
-    color: var(--color-text-primary);
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #444;
 }
 
 .marketplace-filter-option.active {
-    background: var(--color-text-primary);
-    color: var(--color-bg-primary);
-    border-color: var(--color-text-primary);
-    font-weight: 500;
-}
-
-.marketplace-filter-footer {
-    padding: 16px 24px;
-    border-top: 1px solid var(--color-border-light);
-    background: var(--color-bg-primary);
-}
-
-.marketplace-filter-clear {
-    width: 100%;
-    padding: 10px 16px;
-    background: transparent;
-    border: 1px solid var(--color-border-light);
-    border-radius: 6px;
-    color: var(--color-text-secondary);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    font-family: var(--font-family);
-}
-
-.marketplace-filter-clear:hover {
-    background: var(--color-bg-secondary);
-    border-color: var(--color-border-medium);
-    color: var(--color-text-primary);
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .marketplace-filter-panel {
-        max-width: 100%;
-        width: 100%;
-    }
+    background: #fff;
+    color: #000;
+    border-color: #fff;
 }
 
 .marketplace-filter-footer {
@@ -6701,20 +6664,6 @@ body.dark-mode .help-view-more:hover {
 
 .plan-action-link:hover svg {
     transform: translateX(2px);
-}
-
-/* Redirecting pulse animation */
-.redirecting-pulse {
-    animation: smooth-pulse 2s ease-in-out infinite;
-}
-
-@keyframes smooth-pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.4;
-    }
 }
 
 .plan-features-list {

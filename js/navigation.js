@@ -1,23 +1,6 @@
 // Shared Navigation Functionality for Non-Auth Users
 // This file contains all navigation functions (desktop & mobile) that are shared across pages
 
-// Suppress Firebase init.json 404 errors BEFORE any Firebase code runs
-(function() {
-    // Suppress network requests for Firebase init.json (harmless 404)
-    if (!window._firebaseFetchSuppressed) {
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            const url = args[0];
-            if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
-                // Return a rejected promise that we'll catch silently
-                return Promise.reject(new Error('Suppressed Firebase init.json request'));
-            }
-            return originalFetch.apply(this, args);
-        };
-        window._firebaseFetchSuppressed = true;
-    }
-})();
-
 function toggleMenu(element) {
     element.classList.toggle('active');
     const mobileMenu = document.getElementById('mobileMenuOverlay');

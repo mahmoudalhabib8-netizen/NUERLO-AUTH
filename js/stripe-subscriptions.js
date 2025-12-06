@@ -773,11 +773,6 @@ function updatePlansDisplay(subscriptionInfo) {
             linkElement.dataset.originalText = originalText;
             linkElement.style.pointerEvents = 'none';
             
-<<<<<<< Updated upstream
-            // Set pulsing "Redirecting" text
-            const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
-            linkElement.innerHTML = `<span class="redirecting-pulse">Redirecting</span>${arrowSvg}`;
-            
             // Change text to "Redirecting" and add smooth pulse animation
             const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
             linkElement.innerHTML = `Redirecting${arrowSvg}`;
@@ -790,7 +785,7 @@ function updatePlansDisplay(subscriptionInfo) {
             if (user) {
                 try {
                     await createCheckoutSession(priceId, user.uid, user.email);
-                    // If successful, the redirect will happen
+                    // If successful, the redirect will happen, so we don't clear the interval here
                 } catch (error) {
                     // If error, restore original text
                     linkElement.innerHTML = originalText;
