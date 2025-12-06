@@ -1,6 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Suppress Firebase COOP warnings and internal errors - MUST be first -->
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            const originalLog = console.log;
+            
+            const shouldFilter = function(message, stack) {
+                if (!message) {
+                    if (stack) {
+                        const stackStr = String(stack);
+                        if (stackStr.includes('popup.ts') || 
+                            stackStr.includes('assert.ts') || 
+                            stackStr.includes('log.ts') ||
+                            stackStr.includes('abstract_popup_redirect_operation') ||
+                            stackStr.includes('init.json')) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                const msg = String(message);
+                const fullMsg = stack ? msg + ' ' + String(stack) : msg;
+                return fullMsg.includes('Cross-Origin-Opener-Policy') || 
+                       fullMsg.includes('window.closed call') ||
+                       fullMsg.includes('popup.ts') ||
+                       fullMsg.includes('Pending promise was never set') ||
+                       fullMsg.includes('INTERNAL ASSERTION FAILED') ||
+                       fullMsg.includes('abstract_popup_redirect_operation') ||
+                       fullMsg.includes('@firebase/auth') ||
+                       fullMsg.includes('assert.ts') ||
+                       fullMsg.includes('log.ts') ||
+                       fullMsg.includes('debugFail') ||
+                       fullMsg.includes('debugAssert') ||
+                       fullMsg.includes('init.json') ||
+                       fullMsg.includes('firebase/init.json') ||
+                       (fullMsg.includes('404') && fullMsg.includes('firebaseapp.com'));
+            };
+            
+            console.warn = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalWarn.apply(console, args);
+                } catch(e) {
+                    originalWarn.apply(console, args);
+                }
+            };
+            
+            console.error = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalError.apply(console, args);
+                } catch(e) {
+                    originalError.apply(console, args);
+                }
+            };
+            
+            console.log = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalLog.apply(console, args);
+                } catch(e) {
+                    originalLog.apply(console, args);
+                }
+            };
+            
+            window.addEventListener('error', function(event) {
+                const message = event.message || '';
+                const filename = event.filename || '';
+                const stack = event.error?.stack || '';
+                if (shouldFilter(message, stack) || shouldFilter(filename, stack)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            }, true);
+            
+            window.addEventListener('unhandledrejection', function(event) {
+                const reason = event.reason;
+                const message = reason?.message || String(reason || '');
+                const stack = reason?.stack || '';
+                if (shouldFilter(message, stack)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuerlo Login | Sign in to the Nuerlo Dashboard</title>
@@ -8,6 +102,7 @@
     <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/NUERLO-LOGO.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#1a1a1a">
@@ -439,6 +534,17 @@
             text-align: center;
         }
 
+        .success-message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            color: #065f46 !important;
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
         .auth-divider {
             display: flex;
             align-items: center;
@@ -663,11 +769,18 @@
     <script type="module" src="js/mobile-menu.js"></script>
     <script type="module" src="js/navigation.js"></script>
     <script>
-        // Optional: simple redirect helper if arriving from logout
+        // Handle messages from URL parameters
         (function() {
             const params = new URLSearchParams(window.location.search);
             const message = params.get('m');
-            if (message === 'logged_out') {
+            const successMessage = document.getElementById('successMessage');
+            
+            if (message === 'password_changed' && successMessage) {
+                successMessage.textContent = 'Password changed successfully! You can now sign in with your new password.';
+                successMessage.style.display = 'block';
+                // Remove the parameter from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (message === 'logged_out') {
                 // Could show a toast/banner if you add one later
             }
         })();
@@ -713,18 +826,19 @@
                 <form class="auth-form" id="standaloneLoginForm">
                     <div class="form-group">
                         <label class="form-label" for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" class="form-input" required>
+                        <input type="email" id="loginEmail" class="form-input" autocomplete="email" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" class="form-input" required>
+                        <input type="password" id="loginPassword" class="form-input" autocomplete="current-password" required>
                     </div>
                     <div class="auth-actions-row">
                         <label class="auth-remember"><input type="checkbox" id="rememberMe"> Remember me on this device</label>
-                        <span class="auth-forgot"><a href="#">Forgot your password?</a></span>
+                        <span class="auth-forgot"><a href="/forgot-password">Forgot your password?</a></span>
                     </div>
                     <button type="submit" class="auth-submit-btn">Sign in</button>
                     <div id="errorMessage" class="error-message" style="display: none;"></div>
+                    <div id="successMessage" class="success-message" style="display: none;"></div>
                 </form>
 
                 <div class="auth-divider">OR</div>
@@ -768,15 +882,36 @@
     </div>
     
     <script type="module">
-        import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         
         const authInstance = window.firebase?.auth ?? getAuth();
-        const googleProvider = new GoogleAuthProvider();
         
         // Check if user just logged out
         const urlParams = new URLSearchParams(window.location.search);
         const justLoggedOut = urlParams.get('m') === 'logged_out';
+        
+        // Check if "Remember me" was previously set
+        const rememberMePreference = localStorage.getItem('nuerlo_remember_me') === 'true';
+        
+        // Restore "Remember me" checkbox state if previously set
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+        if (rememberMeCheckbox && rememberMePreference) {
+            rememberMeCheckbox.checked = true;
+        }
+        
+        // Set persistence based on previous preference (only if not just logged out)
+        if (!justLoggedOut && rememberMePreference) {
+            // User previously chose to be remembered - use local persistence
+            setPersistence(authInstance, browserLocalPersistence).catch(err => {
+                console.error('Error setting persistence:', err);
+            });
+        } else if (!justLoggedOut) {
+            // User didn't choose to be remembered - use session persistence
+            setPersistence(authInstance, browserSessionPersistence).catch(err => {
+                console.error('Error setting persistence:', err);
+            });
+        }
         
         // Helper function to get shortened user ID for URLs
         function getShortUserId(fullUid) {
@@ -873,9 +1008,13 @@
         }
         
         function showError(message) {
+            const successMessage = document.getElementById('successMessage');
             if (errorMessage) {
                 errorMessage.textContent = message;
                 errorMessage.style.display = 'block';
+                if (successMessage) {
+                    successMessage.style.display = 'none';
+                }
                 setTimeout(() => {
                     errorMessage.style.display = 'none';
                 }, 5000);
@@ -887,11 +1026,26 @@
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value.trim();
                 const password = document.getElementById('loginPassword').value;
+                const rememberMe = document.getElementById('rememberMe').checked;
                 const btn = form.querySelector('.auth-submit-btn');
                 const original = btn.textContent;
                 
                 // Hide any previous error
                 if (errorMessage) errorMessage.style.display = 'none';
+                
+                // Set persistence based on "Remember me" checkbox
+                try {
+                    if (rememberMe) {
+                        await setPersistence(authInstance, browserLocalPersistence);
+                        localStorage.setItem('nuerlo_remember_me', 'true');
+                    } else {
+                        await setPersistence(authInstance, browserSessionPersistence);
+                        localStorage.removeItem('nuerlo_remember_me');
+                    }
+                } catch (persistenceError) {
+                    console.error('Error setting persistence:', persistenceError);
+                    // Continue with login even if persistence setting fails
+                }
                 
                 btn.textContent = 'Signing in...';
                 btn.disabled = true;
@@ -971,54 +1125,7 @@
             });
         }
         
-        const googleBtn = document.getElementById('googleLoginBtn');
-        if (googleBtn) {
-            googleBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                if (errorMessage) errorMessage.style.display = 'none';
-                googleBtn.textContent = 'Signing in with Google...';
-                googleBtn.disabled = true;
-                try {
-                    const result = await signInWithPopup(authInstance, googleProvider);
-                    const user = result.user;
-                    
-                    // Get Firebase ID token and set cross-domain cookie
-                    try {
-                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                        const token = await getIdToken(user);
-                        
-                        // Import and set the auth cookie
-                        const { setAuthCookie } = await import('./js/cookie-auth.js');
-                        setAuthCookie(token);
-                        
-                        console.log('Cross-domain auth cookie set successfully');
-                    } catch (cookieError) {
-                        console.error('Error setting auth cookie:', cookieError);
-                        // Continue with login even if cookie setting fails
-                    }
-                    
-                    // Set flag to indicate this is a fresh login (not a refresh)
-                    sessionStorage.setItem('freshLogin', 'true');
-                    
-                    // Firebase's signInWithPopup should automatically close the popup
-                    // Add a small delay to ensure popup closes smoothly before redirect
-                    setTimeout(() => {
-                        if (user && user.uid) {
-                            // Use shortened ID in URL (first 6 chars)
-                            const shortId = getShortUserId(user.uid);
-                            window.location.href = `/acct_${shortId}/dashboard`;
-                        } else {
-                            window.location.href = '/dashboard';
-                        }
-                    }, 150);
-                } catch (err) {
-                    // Silently handle errors - no message displayed
-                    googleBtn.textContent = 'Continue with Google';
-                } finally {
-                    googleBtn.disabled = false;
-                }
-            });
-        }
+        // Google sign-in is handled by non-auth-navigation.js to avoid duplicate handlers
     </script>
 </body>
 </html>

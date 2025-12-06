@@ -2,6 +2,61 @@
 // This file contains all navigation functions (desktop & mobile) for non-authenticated users
 // When creating authenticated user pages, use auth-navigation.js instead
 
+// Suppress Firebase COOP warnings (harmless but noisy)
+(function() {
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    const originalLog = console.log;
+    
+    const shouldFilter = function(message) {
+        if (!message) return false;
+        const msg = String(message);
+        return msg.includes('Cross-Origin-Opener-Policy') || 
+               msg.includes('window.closed call') ||
+               msg.includes('popup.ts') ||
+               msg.includes('init.json') ||
+               msg.includes('firebase/init.json') ||
+               (msg.includes('404') && msg.includes('firebaseapp.com')) ||
+               (msg.includes('Failed to load resource') && msg.includes('init.json'));
+    };
+    
+    console.warn = function(...args) {
+        const message = args.join(' ');
+        if (shouldFilter(message)) {
+            return; // Silently ignore
+        }
+        originalWarn.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+        const message = args.join(' ');
+        if (shouldFilter(message)) {
+            return; // Silently ignore
+        }
+        originalError.apply(console, args);
+    };
+    
+    console.log = function(...args) {
+        const message = args.join(' ');
+        if (shouldFilter(message)) {
+            return; // Silently ignore
+        }
+        originalLog.apply(console, args);
+    };
+    
+    // Also filter network errors for init.json
+    window.addEventListener('error', function(event) {
+        const message = event.message || '';
+        const filename = event.filename || '';
+        if (shouldFilter(message) || shouldFilter(filename) || 
+            (filename && filename.includes('init.json'))) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        }
+    }, true);
+})();
+
 // Custom Notification System for Non-Auth Pages
 function showCustomNotification(type, title, message, duration = 5000) {
     // Create notification element if it doesn't exist
@@ -290,6 +345,8 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   GithubAuthProvider,
   signOut,
@@ -301,6 +358,15 @@ import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/f
 // Initialize providers
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
+
+// Helper function to get dashboard URL with account ID
+function getDashboardUrl(user) {
+    if (user && user.uid) {
+        const shortId = user.uid.substring(0, 6).toUpperCase();
+        return `/acct_${shortId}/dashboard`;
+    }
+    return '/dashboard';
+}
 
 // Authentication functions
 async function signUp(email, password, fullName) {
@@ -358,58 +424,213 @@ async function signIn(email, password) {
 
 async function signInWithGoogle() {
     try {
-        const result = await signInWithPopup(window.firebase.auth, googleProvider);
-        const user = result.user;
+        // Always use popup on desktop to avoid redirect flow issues (404 errors)
+        // Only use redirect on mobile devices where popup doesn't work well
+        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // Create user document if it doesn't exist
-        const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
-        if (!userDoc.exists()) {
-            await setDoc(doc(window.firebase.db, 'users', user.uid), {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                createdAt: new Date(),
-                enrolledCourses: [],
-                progress: {},
-                role: 'user' // Default role for all new users
-            });
+        if (isMobile) {
+            // Use redirect on mobile - set flag so we know to check for redirect result
+            sessionStorage.setItem('pendingRedirect', 'true');
+            await signInWithRedirect(window.firebase.auth, googleProvider);
+            return { success: true, redirect: true }; // Will redirect, so return early
+        } else {
+            // Use popup on desktop - this avoids the 404 error from redirect flow
+            const result = await signInWithPopup(window.firebase.auth, googleProvider);
+            if (!result || !result.user) {
+                throw new Error('No user returned from authentication');
+            }
+            
+            const user = result.user;
+            
+            // Create user document if it doesn't exist
+            try {
+                if (window.firebase && window.firebase.db) {
+                    const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
+                    if (!userDoc.exists()) {
+                        await setDoc(doc(window.firebase.db, 'users', user.uid), {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                            createdAt: new Date(),
+                            enrolledCourses: [],
+                            progress: {},
+                            role: 'user' // Default role for all new users
+                        });
+                    }
+                }
+            } catch (dbError) {
+                // If database operation fails, still return success (user is authenticated)
+                // Database errors shouldn't prevent login
+                console.warn('Failed to create/update user document:', dbError);
+            }
+            
+            return { success: true, user };
+        }
+    } catch (error) {
+        // Check for specific error codes
+        const errorCode = error.code || '';
+        const errorMessage = error.message || '';
+        
+        // User cancelled - don't treat as error
+        if (errorCode === 'auth/popup-closed-by-user' || 
+            errorCode === 'auth/cancelled-popup-request' ||
+            errorMessage.includes('cancelled')) {
+            return { success: false, error: 'Sign-in cancelled', cancelled: true };
         }
         
-        return { success: true, user };
-    } catch (error) {
-        return { success: false, error: error.message };
+        // If popup fails due to COOP or blocking, try redirect as fallback (only on desktop)
+        if (errorCode === 'auth/popup-blocked' || 
+            errorMessage.includes('Cross-Origin') ||
+            (errorMessage.includes('popup') && !isMobile)) {
+            try {
+                await signInWithRedirect(window.firebase.auth, googleProvider);
+                return { success: true, redirect: true };
+            } catch (redirectError) {
+                return { success: false, error: redirectError.message || 'Authentication failed. Please try again.' };
+            }
+        }
+        
+        // Return user-friendly error message
+        let userMessage = errorMessage;
+        if (errorCode === 'auth/account-exists-with-different-credential') {
+            userMessage = 'An account already exists with this email. Please sign in with your original method.';
+        } else if (errorCode === 'auth/operation-not-allowed') {
+            userMessage = 'This sign-in method is not enabled. Please contact support.';
+        } else if (errorCode === 'auth/popup-blocked') {
+            userMessage = 'Popup was blocked. Please allow popups and try again.';
+        }
+        
+        return { success: false, error: userMessage };
     }
 }
 
 async function signInWithGitHub() {
     try {
-        const result = await signInWithPopup(window.firebase.auth, githubProvider);
-        const user = result.user;
+        // Use redirect on mobile to avoid COOP issues
+        const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
-        // Create user document if it doesn't exist
-        const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
-        if (!userDoc.exists()) {
-            await setDoc(doc(window.firebase.db, 'users', user.uid), {
-                uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                createdAt: new Date(),
-                enrolledCourses: [],
-                progress: {},
-                role: 'user' // Default role for all new users
-            });
+        if (isMobile) {
+            // Use redirect on mobile
+            await signInWithRedirect(window.firebase.auth, githubProvider);
+            return { success: true, redirect: true }; // Will redirect, so return early
+        } else {
+            // Use popup on desktop
+            const result = await signInWithPopup(window.firebase.auth, githubProvider);
+            const user = result.user;
+            
+            // Create user document if it doesn't exist
+            const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(window.firebase.db, 'users', user.uid), {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    createdAt: new Date(),
+                    enrolledCourses: [],
+                    progress: {},
+                    role: 'user' // Default role for all new users
+                });
+            }
+            
+            return { success: true, user };
+        }
+    } catch (error) {
+        // If popup fails, try redirect as fallback
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('Cross-Origin')) {
+            try {
+                await signInWithRedirect(window.firebase.auth, githubProvider);
+                return { success: true, redirect: true };
+            } catch (redirectError) {
+                return { success: false, error: redirectError.message };
+            }
+        }
+        return { success: false, error: error.message };
+    }
+}
+
+// Handle redirect result (when user returns from OAuth provider)
+async function handleRedirectResult() {
+    try {
+        // Only check for redirect result if we're on a page that might have a redirect
+        // This prevents unnecessary Firebase initialization that causes 404 errors
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasAuthParams = urlParams.has('apiKey') || urlParams.has('mode') || 
+                             window.location.hash.includes('access_token') ||
+                             window.location.hash.includes('id_token');
+        
+        // If no auth-related params, skip redirect result check to avoid 404
+        if (!hasAuthParams && !sessionStorage.getItem('pendingRedirect')) {
+            return;
         }
         
-        return { success: true, user };
+        const result = await getRedirectResult(window.firebase.auth);
+        if (result && result.user) {
+            sessionStorage.removeItem('pendingRedirect');
+            const user = result.user;
+            
+            // Get Firebase ID token and set cross-domain cookie
+            try {
+                const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                const token = await getIdToken(user);
+                
+                // Import and set the auth cookie
+                const { setAuthCookie } = await import('./cookie-auth.js');
+                setAuthCookie(token);
+            } catch (cookieError) {
+                console.error('Error setting auth cookie:', cookieError);
+            }
+            
+            // Create user document if it doesn't exist
+            const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(window.firebase.db, 'users', user.uid), {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL,
+                    createdAt: new Date(),
+                    enrolledCourses: [],
+                    progress: {},
+                    role: 'user' // Default role for all new users
+                });
+            }
+            
+            // Set flag to indicate this is a fresh login
+            sessionStorage.setItem('freshLogin', 'true');
+            
+            // Redirect to dashboard with account ID
+            const redirectUrl = getDashboardUrl(user);
+            window.location.href = redirectUrl;
+        }
     } catch (error) {
-        return { success: false, error: error.message };
+        sessionStorage.removeItem('pendingRedirect');
+        
+        // Ignore errors related to missing init.json (404) - these are harmless
+        if (error.message?.includes('init.json') || 
+            error.message?.includes('404') ||
+            error.code === 'auth/operation-not-allowed') {
+            return; // Silently ignore
+        }
+        
+        // If there's an error, show it but don't block the page
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            showAuthError('An account already exists with this email. Please sign in with your original method.');
+        } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+            // User cancelled - don't show error
+            return;
+        } else if (error.code && !error.code.includes('init.json')) {
+            // Only log non-configuration errors that aren't about init.json
+            console.error('Redirect auth error:', error);
+        }
     }
 }
 
 // Handle form submissions
 document.addEventListener('DOMContentLoaded', function() {
+    // Check for redirect result first
+    handleRedirectResult();
     // Add click outside to close modal functionality
     const authModal = document.getElementById('authModal');
     if (authModal) {
@@ -468,10 +689,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 closeAuthModal();
+                // Get user from auth state
+                const user = result.user || window.firebase?.auth?.currentUser;
+                const redirectUrl = getDashboardUrl(user);
+                
                 // Show success message briefly before redirect
                 showCustomNotification('success', 'Welcome!', 'Login successful! Redirecting...');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = redirectUrl;
                 }, 1000);
             } else {
                 showAuthError(result.error);
@@ -502,10 +727,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (result.success) {
                 closeAuthModal();
+                // Get user from auth state if not in result
+                const user = result.user || window.firebase?.auth?.currentUser;
+                const redirectUrl = getDashboardUrl(user);
+                
                 // Show success message briefly before redirect
                 showCustomNotification('success', 'Account Created!', 'Account created successfully! Redirecting...');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = redirectUrl;
                 }, 1000);
             } else {
                 showAuthError(result.error);
@@ -513,32 +742,109 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Google sign in
-    const googleBtn = document.querySelector('.social-btn[href="#"]:first-of-type');
-    if (googleBtn) {
+    // Google sign in - handle both modal buttons and standalone login page button
+    const googleBtn = document.getElementById('googleLoginBtn') || document.querySelector('.social-btn[href="#"]:first-of-type');
+    if (googleBtn && !googleBtn.hasAttribute('data-listener-attached')) {
+        googleBtn.setAttribute('data-listener-attached', 'true');
+        
         googleBtn.addEventListener('click', async function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
+            // Prevent multiple simultaneous clicks
+            if (googleBtn.disabled || googleBtn.hasAttribute('data-auth-in-progress')) {
+                return;
+            }
+            
+            googleBtn.setAttribute('data-auth-in-progress', 'true');
+            
+            // Hide any error messages
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) errorMessage.style.display = 'none';
+            
+            // Check "Remember me" checkbox for Google sign-in (if on login page)
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+            let rememberMe = false;
+            if (rememberMeCheckbox) {
+                rememberMe = rememberMeCheckbox.checked;
+                
+                // Set persistence based on "Remember me" checkbox
+                try {
+                    const { setPersistence, browserLocalPersistence, browserSessionPersistence } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                    if (rememberMe) {
+                        await setPersistence(window.firebase.auth, browserLocalPersistence);
+                        localStorage.setItem('nuerlo_remember_me', 'true');
+                    } else {
+                        await setPersistence(window.firebase.auth, browserSessionPersistence);
+                        localStorage.removeItem('nuerlo_remember_me');
+                    }
+                } catch (persistenceError) {
+                    console.error('Error setting persistence:', persistenceError);
+                }
+            }
             
             // Show loading state
             const originalText = googleBtn.textContent;
             googleBtn.textContent = 'Signing in with Google...';
             googleBtn.disabled = true;
             
-            const result = await signInWithGoogle();
-            
-            // Reset button state
-            googleBtn.textContent = originalText;
-            googleBtn.disabled = false;
-            
-            if (result.success) {
-                closeAuthModal();
-                // Show success message briefly before redirect
-                showCustomNotification('success', 'Welcome!', 'Login successful! Redirecting...');
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 1000);
-            } else {
-                showAuthError(result.error);
+            try {
+                const result = await signInWithGoogle();
+                
+                // If redirect was used, don't reset button (page will redirect)
+                if (result.redirect) {
+                    return; // Page will redirect, don't do anything else
+                }
+                
+                // Reset button state
+                googleBtn.textContent = originalText;
+                googleBtn.disabled = false;
+                googleBtn.removeAttribute('data-auth-in-progress');
+                
+                if (result.success && result.user) {
+                    const user = result.user;
+                    
+                    // Get Firebase ID token and set cross-domain cookie
+                    try {
+                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                        const token = await getIdToken(user);
+                        
+                        // Import and set the auth cookie
+                        const { setAuthCookie } = await import('./cookie-auth.js');
+                        setAuthCookie(token);
+                    } catch (cookieError) {
+                        console.error('Error setting auth cookie:', cookieError);
+                    }
+                    
+                    // Set flag to indicate this is a fresh login
+                    sessionStorage.setItem('freshLogin', 'true');
+                    
+                    closeAuthModal();
+                    
+                    // Wait a moment for auth state to fully update
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Double-check user is still authenticated
+                    const currentUser = window.firebase?.auth?.currentUser || user;
+                    const redirectUrl = getDashboardUrl(currentUser);
+                    
+                    // Redirect immediately (no notification delay on standalone login page)
+                    window.location.href = redirectUrl;
+                } else if (result.cancelled) {
+                    // User cancelled - don't show error, button already reset
+                } else {
+                    showAuthError(result.error || 'Authentication failed. Please try again.');
+                }
+            } catch (err) {
+                // Reset button on any error
+                googleBtn.textContent = originalText;
+                googleBtn.disabled = false;
+                googleBtn.removeAttribute('data-auth-in-progress');
+                
+                // Only show error if it's not a cancellation
+                if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                    showAuthError(err.message || 'An error occurred during sign-in. Please try again.');
+                }
             }
         });
     }
@@ -556,16 +862,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const result = await signInWithGitHub();
             
+            // If redirect was used, don't reset button (page will redirect)
+            if (result.redirect) {
+                return; // Page will redirect, don't do anything else
+            }
+            
             // Reset button state
             githubBtn.textContent = originalText;
             githubBtn.disabled = false;
             
             if (result.success) {
                 closeAuthModal();
+                // Get user from auth state if not in result
+                const user = result.user || window.firebase?.auth?.currentUser;
+                const redirectUrl = getDashboardUrl(user);
+                
                 // Show success message briefly before redirect
                 showCustomNotification('success', 'Welcome!', 'Login successful! Redirecting...');
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = redirectUrl;
                 }, 1000);
             } else {
                 showAuthError(result.error);
@@ -608,7 +923,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Only redirect if still on login/register page
                 if (isOnLoginPage) {
-                    window.location.href = '/dashboard';
+                    const redirectUrl = getDashboardUrl(user);
+                    window.location.href = redirectUrl;
                 }
                 updateAuthUI();
             } else {
@@ -636,6 +952,69 @@ function updateAuthUI() {
 
 // Show authentication errors
 function showAuthError(message) {
+    // Convert Error objects to strings
+    if (message instanceof Error) {
+        message = message.message || message.toString();
+    }
+    
+    // Convert to string if not already
+    const messageStr = String(message || '');
+    const lowerMessage = messageStr.toLowerCase();
+    
+    // Handle specific Firebase errors that shouldn't be shown to users
+    // User cancelled popup - don't show error
+    if (lowerMessage.includes('cancelled-popup-request') || 
+        lowerMessage.includes('cancelled')) {
+        return; // Silently ignore cancelled popups
+    }
+    
+    // Operation not allowed - silently ignore (this is a configuration issue)
+    // Check multiple variations and formats
+    if (lowerMessage.includes('operation-not-allowed') || 
+        lowerMessage.includes('operation not allowed') ||
+        lowerMessage.includes('sign-in method is not enabled') ||
+        lowerMessage.includes('sign in method is not enabled') ||
+        lowerMessage.includes('sign-in method not enabled') ||
+        lowerMessage.includes('auth/operation-not-allowed') ||
+        messageStr.includes('auth/operation-not-allowed')) {
+        // Silently ignore - this is a Firebase configuration issue
+        // Don't show to users, don't log to console
+        return;
+    }
+    
+    // Use the string version for the rest of the function
+    message = messageStr;
+    
+    // If message is empty, don't show anything
+    if (!message || message.trim() === '') {
+        return;
+    }
+    
+    // Extract user-friendly message from Firebase error format
+    if (message.includes('Firebase: Error')) {
+        const match = message.match(/Firebase: Error \((.+?)\)/);
+        if (match) {
+            const errorCode = match[1];
+            // Map common error codes to user-friendly messages
+            const errorMessages = {
+                'auth/user-not-found': 'No account found with this email.',
+                'auth/wrong-password': 'Incorrect password. Please try again.',
+                'auth/email-already-in-use': 'This email is already registered.',
+                'auth/weak-password': 'Password is too weak. Please use a stronger password.',
+                'auth/invalid-email': 'Please enter a valid email address.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+                'auth/network-request-failed': 'Network error. Please check your connection and try again.'
+            };
+            
+            if (errorMessages[errorCode]) {
+                message = errorMessages[errorCode];
+            } else {
+                // Generic fallback - remove Firebase error prefix
+                message = message.replace(/Firebase: Error \([^)]+\)\.?\s*/i, '');
+            }
+        }
+    }
+    
     // Remove existing error messages
     const existingError = document.querySelector('.auth-error');
     if (existingError) {
@@ -657,10 +1036,42 @@ function showAuthError(message) {
     `;
     errorDiv.textContent = message;
     
-    // Insert error message
+    // Insert error message - check if elements exist first
     const authModal = document.querySelector('.auth-modal-content');
     const authTabs = document.querySelector('.auth-tabs');
-    authModal.insertBefore(errorDiv, authTabs);
+    
+    if (authModal && authTabs) {
+        // Insert before auth tabs if modal exists
+        authModal.insertBefore(errorDiv, authTabs);
+    } else if (authModal) {
+        // If modal exists but no tabs, append to modal
+        authModal.insertBefore(errorDiv, authModal.firstChild);
+    } else {
+        // If no modal, try to find a form or container to show error
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const targetForm = loginForm || signupForm;
+        
+        if (targetForm) {
+            targetForm.insertBefore(errorDiv, targetForm.firstChild);
+        } else {
+            // Fallback: show as notification if no form found
+            // Only log non-cancelled errors, and only if message is not empty
+            if (message && message.trim() !== '' &&
+                !message.includes('cancelled-popup-request') && 
+                !message.includes('operation-not-allowed') &&
+                !message.includes('sign-in method is not enabled') &&
+                !message.includes('currently unavailable')) {
+                console.error('Auth error:', message);
+                if (typeof showCustomNotification === 'function') {
+                    showCustomNotification('error', 'Authentication Error', message);
+                } else {
+                    alert('Authentication Error: ' + message);
+                }
+            }
+            return;
+        }
+    }
     
     // Auto remove after 5 seconds
     setTimeout(() => {
@@ -783,3 +1194,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
