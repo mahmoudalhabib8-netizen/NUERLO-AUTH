@@ -595,21 +595,45 @@ async function signInWithGitHub() {
 }
 
 // Handle redirect result (when user returns from OAuth provider)
+// ONLY call this when we're actually on a redirect callback page
 async function handleRedirectResult() {
-    // Only check for redirect result if we're on a page that might have a redirect
-    // This prevents unnecessary Firebase initialization that causes 404 errors
+    // STRICT check - only proceed if we have explicit redirect indicators
     const urlParams = new URLSearchParams(window.location.search);
-    const hasAuthParams = urlParams.has('apiKey') || urlParams.has('mode') || 
-                         window.location.hash.includes('access_token') ||
-                         window.location.hash.includes('id_token');
+    const hasApiKey = urlParams.has('apiKey');
+    const hasMode = urlParams.has('mode');
+    const hasOobCode = urlParams.has('oobCode');
+    const hasHashToken = window.location.hash.includes('access_token') || window.location.hash.includes('id_token');
+    const pendingRedirect = sessionStorage.getItem('pendingRedirect') === 'true';
     
-    // If no auth-related params and no pending redirect, skip entirely to avoid 404
-    if (!hasAuthParams && !sessionStorage.getItem('pendingRedirect')) {
+    // Only check if we have STRONG indicators of a redirect callback
+    // This prevents Firebase from initializing redirect flow unnecessarily
+    if (!hasApiKey && !hasMode && !hasOobCode && !hasHashToken && !pendingRedirect) {
+        return; // Exit immediately - don't touch Firebase redirect at all
+    }
+    
+    // Double-check: if we don't have URL params but have pendingRedirect, 
+    // wait a moment to see if params arrive (they might be in hash)
+    if (pendingRedirect && !hasApiKey && !hasMode && !hasHashToken) {
+        // Wait a bit for hash to be processed, but don't call getRedirectResult yet
+        setTimeout(() => {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            if (!hashParams.has('access_token') && !hashParams.has('id_token')) {
+                // No redirect params found, clear the flag and exit
+                sessionStorage.removeItem('pendingRedirect');
+                return;
+            }
+            // Now we can safely check
+            checkRedirectResult();
+        }, 500);
         return;
     }
     
+    // Only now call getRedirectResult if we're sure we're on a redirect page
+    checkRedirectResult();
+}
+
+async function checkRedirectResult() {
     try {
-        // Wrap in try-catch to prevent 404 errors from breaking the page
         const result = await getRedirectResult(window.firebase.auth);
         if (result && result.user) {
             sessionStorage.removeItem('pendingRedirect');
@@ -638,34 +662,26 @@ async function handleRedirectResult() {
                     createdAt: new Date(),
                     enrolledCourses: [],
                     progress: {},
-                    role: 'user' // Default role for all new users
+                    role: 'user'
                 });
             }
             
-            // Set flag to indicate this is a fresh login
             sessionStorage.setItem('freshLogin', 'true');
-            
-            // Redirect to dashboard with account ID
             const redirectUrl = getDashboardUrl(user);
             window.location.href = redirectUrl;
         }
     } catch (error) {
         sessionStorage.removeItem('pendingRedirect');
-        
-        // Silently ignore all redirect-related errors - they're usually harmless
-        // The 404 for init.json and 400 errors happen during initialization
-        // and don't affect functionality when using popup flow
-        return; // Don't log or show these errors
+        // Silently ignore - don't log redirect errors
+        return;
     }
 }
 
 // Handle form submissions
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for redirect result first - but only if we're expecting one
-    // Delay slightly to ensure Firebase is fully initialized
-    setTimeout(() => {
-        handleRedirectResult();
-    }, 100);
+    // DON'T check for redirect result on page load - this causes 404 errors
+    // Only check if we're explicitly on a redirect callback page
+    // We'll check manually after a redirect if needed
     // Add click outside to close modal functionality
     const authModal = document.getElementById('authModal');
     if (authModal) {
