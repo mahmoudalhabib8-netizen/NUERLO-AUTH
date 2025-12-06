@@ -2,8 +2,19 @@
 // This file contains all navigation functions (desktop & mobile) for non-authenticated users
 // When creating authenticated user pages, use auth-navigation.js instead
 
-// Suppress Firebase COOP warnings (harmless but noisy)
+// Suppress Firebase init.json 404 errors and COOP warnings
 (function() {
+    // Suppress network requests for Firebase init.json (harmless 404)
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        const url = args[0];
+        if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
+            // Return a rejected promise that we'll catch silently
+            return Promise.reject(new Error('Suppressed Firebase init.json request'));
+        }
+        return originalFetch.apply(this, args);
+    };
+    
     const originalWarn = console.warn;
     const originalError = console.error;
     const originalLog = console.log;
@@ -56,11 +67,19 @@
         if (target && (target.src || target.href)) {
             const url = target.src || target.href || '';
             if (url.includes('init.json') || 
+                url.includes('firebaseapp.com/__/firebase') ||
                 (url.includes('identitytoolkit') && url.includes('createAuthUri'))) {
                 event.preventDefault();
                 event.stopPropagation();
                 return false;
             }
+        }
+        
+        // Also filter errors from fetch and error messages
+        if (message.includes('init.json') || message.includes('firebaseapp.com/__/firebase')) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
         }
         
         if (shouldFilter(message) || shouldFilter(filename) || 
