@@ -131,8 +131,8 @@ async function createCheckoutSession(priceId, userId, userEmail) {
         console.log('Creating checkout session for:', { priceId, userId, userEmail });
 
         // Call your backend to create checkout session
-        // Netlify Functions: automatically routes to /.netlify/functions/create-checkout-session
-        const functionUrl = '/.netlify/functions/create-checkout-session';
+        // Try /api/ first (with rewrite), fallback to /.netlify/functions/
+        const functionUrl = '/api/create-checkout-session';
         console.log('Calling function:', functionUrl);
         console.log('Current origin:', window.location.origin);
         
@@ -364,7 +364,7 @@ async function createCustomerPortalSession(userId) {
     try {
         let response;
         try {
-            response = await fetch('/.netlify/functions/create-portal-session', {
+            response = await fetch('/api/create-portal-session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -852,7 +852,7 @@ async function updateBillingHistoryDisplay(subscriptionInfo) {
         // Fetch invoices from Netlify function
         let response;
         try {
-            response = await fetch('/.netlify/functions/get-invoices', {
+            response = await fetch('/api/get-invoices', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

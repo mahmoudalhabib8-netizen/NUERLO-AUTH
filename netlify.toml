@@ -1,13 +1,6 @@
-functionsDirectory = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy/netlify/functions"
-functionsDirectoryOrigin = "config-v1"
-headersOrigin = "config"
-redirectsOrigin = "config"
-plugins = []
-
 [build]
-publish = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy"
-publishOrigin = "config"
-functions = "/Users/mahmoudalhabib/Desktop/NUERLO-AUTH copy/netlify/functions"
+publish = "."
+functions = "netlify/functions"
 
   [build.environment]
 
@@ -632,3 +625,22 @@ force = false
   [redirects.conditions]
 
   [redirects.headers]
+
+# Netlify Functions rewrites - make functions accessible via /api/
+[[redirects]]
+from = "/api/create-checkout-session"
+to = "/.netlify/functions/create-checkout-session"
+status = 200
+force = false
+
+[[redirects]]
+from = "/api/create-portal-session"
+to = "/.netlify/functions/create-portal-session"
+status = 200
+force = false
+
+[[redirects]]
+from = "/api/get-invoices"
+to = "/.netlify/functions/get-invoices"
+status = 200
+force = false
