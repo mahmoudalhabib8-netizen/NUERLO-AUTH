@@ -1,7 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Suppress Firebase COOP warnings and internal errors - MUST be first -->
+    <!-- Suppress Firebase init.json 404 errors - MUST be absolute first, before any other scripts -->
+    <script>
+        // Intercept both fetch and XMLHttpRequest BEFORE Firebase loads to prevent init.json 404
+        (function() {
+            if (window._firebaseFetchSuppressed) return;
+            
+            // Intercept fetch
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+                if (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase')) {
+                    return Promise.reject(new Error('Suppressed'));
+                }
+                return originalFetch.apply(this, args);
+            };
+            
+            // Intercept XMLHttpRequest (Firebase might use this)
+            const originalXHROpen = XMLHttpRequest.prototype.open;
+            const originalXHRSend = XMLHttpRequest.prototype.send;
+            
+            XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                this._url = url;
+                if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
+                    this._suppressed = true;
+                    return;
+                }
+                return originalXHROpen.apply(this, [method, url, ...rest]);
+            };
+            
+            XMLHttpRequest.prototype.send = function(...args) {
+                if (this._suppressed) {
+                    // Silently fail
+                    setTimeout(() => {
+                        this.onerror && this.onerror(new Error('Suppressed'));
+                    }, 0);
+                    return;
+                }
+                return originalXHRSend.apply(this, args);
+            };
+            
+            window._firebaseFetchSuppressed = true;
+        })();
+    </script>
+    <!-- Suppress Firebase COOP warnings and internal errors -->
     <script>
         (function() {
             const originalWarn = console.warn;
