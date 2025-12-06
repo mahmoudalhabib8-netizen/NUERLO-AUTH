@@ -37,7 +37,9 @@
                        fullMsg.includes('debugAssert') ||
                        fullMsg.includes('init.json') ||
                        fullMsg.includes('firebase/init.json') ||
-                       (fullMsg.includes('404') && fullMsg.includes('firebaseapp.com'));
+                       (fullMsg.includes('404') && fullMsg.includes('firebaseapp.com')) ||
+                       (fullMsg.includes('400') && fullMsg.includes('identitytoolkit')) ||
+                       fullMsg.includes('createAuthUri');
             };
             
             console.warn = function(...args) {
@@ -77,6 +79,19 @@
                 const message = event.message || '';
                 const filename = event.filename || '';
                 const stack = event.error?.stack || '';
+                const target = event.target;
+                
+                // Filter network errors for init.json and Google Identity Toolkit
+                if (target && (target.src || target.href)) {
+                    const url = target.src || target.href || '';
+                    if (url.includes('init.json') || 
+                        (url.includes('identitytoolkit') && url.includes('400'))) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return false;
+                    }
+                }
+                
                 if (shouldFilter(message, stack) || shouldFilter(filename, stack)) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -88,6 +103,13 @@
                 const reason = event.reason;
                 const message = reason?.message || String(reason || '');
                 const stack = reason?.stack || '';
+                
+                // Filter 400 errors from Google Identity Toolkit
+                if (message.includes('400') && message.includes('identitytoolkit')) {
+                    event.preventDefault();
+                    return false;
+                }
+                
                 if (shouldFilter(message, stack)) {
                     event.preventDefault();
                     return false;

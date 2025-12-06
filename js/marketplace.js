@@ -1,3 +1,5 @@
+console.log('[MARKETPLACE.JS] Module loading started');
+
 import { 
     collection, 
     doc, 
@@ -11,10 +13,12 @@ import {
     where 
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+console.log('[MARKETPLACE.JS] Firebase imports successful');
+
 // Helper function to normalize image paths (convert relative to absolute)
 function normalizeImagePath(path) {
     if (!path || path.trim() === '') {
-        return '/assets/images/COURSE-AI-WEBSITE.png'; // Default fallback
+        return ''; // No default fallback - each course has its own image
     }
     // If already absolute (starts with / or http), return as is
     if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
@@ -32,7 +36,8 @@ class Marketplace {
         this.currentFilters = {
             category: 'all',
             price: 'all',
-            difficulty: 'all'
+            difficulty: 'all',
+            duration: 'all'
         };
         this.searchQuery = '';
         this.sortBy = 'popular';
@@ -45,6 +50,8 @@ class Marketplace {
     async init() {
         if (this.initialized) {
             console.log('Marketplace already initialized');
+            // Still render courses in case filters changed
+            this.applyFilters();
             return;
         }
         
@@ -55,7 +62,8 @@ class Marketplace {
         await this.loadFavorites();
         console.log('Marketplace initialized, courses:', this.courses.length);
         this.initialized = true;
-        this.renderCourses();
+        // Apply filters will call renderCourses
+        this.applyFilters();
     }
 
     async checkAuth() {
@@ -72,8 +80,10 @@ class Marketplace {
     }
 
     bindEvents() {
-        // Search functionality
-        const searchInput = document.querySelector('.search-input');
+        // Search functionality - check multiple possible selectors
+        const searchInput = document.querySelector('.marketplace-search-input') || 
+                           document.querySelector('.search-input') ||
+                           document.getElementById('marketplaceSearch');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.searchQuery = e.target.value.toLowerCase();
@@ -165,11 +175,12 @@ class Marketplace {
         this.currentFilters = {
             category: 'all',
             price: 'all',
-            difficulty: 'all'
+            difficulty: 'all',
+            duration: 'all'
         };
         
-        // Remove active classes
-        document.querySelectorAll('.filter-option, .filter-price, .filter-difficulty').forEach(btn => {
+        // Remove active classes from all filter chips
+        document.querySelectorAll('.filter-chip, .marketplace-filter-option, .filter-option, .filter-price, .filter-difficulty').forEach(btn => {
             btn.classList.remove('active');
         });
         
@@ -178,8 +189,10 @@ class Marketplace {
             btn.classList.add('active');
         });
         
-        // Clear search
-        const searchInput = document.querySelector('.search-input');
+        // Clear search - check multiple possible selectors
+        const searchInput = document.querySelector('.marketplace-search-input') || 
+                           document.querySelector('.search-input') ||
+                           document.getElementById('marketplaceSearch');
         if (searchInput) {
             searchInput.value = '';
         }
@@ -191,6 +204,24 @@ class Marketplace {
 
     async loadCourses() {
         try {
+            const isLocalPreview = window.location.protocol === 'file:' ||
+                window.location.hostname === '127.0.0.1' ||
+                window.location.hostname === 'localhost';
+            
+            const user = window.firebase?.auth?.currentUser;
+            
+            if (isLocalPreview && !user) {
+                console.log('Running locally without Firebase auth - using fallback courses');
+                this.loadFallbackCourses();
+                return;
+            }
+            
+            if (isLocalPreview && user) {
+                console.log('Running locally with Firebase auth - using fallback courses');
+                this.loadFallbackCourses();
+                return;
+            }
+            
             if (!window.firebase || !window.firebase.db) {
                 console.log('Firebase not initialized, using fallback courses');
                 this.loadFallbackCourses();
@@ -202,39 +233,100 @@ class Marketplace {
             // Check if courses exist first
             const coursesSnapshot = await getDocs(coursesRef);
             
+            // Only initialize courses if user is admin/mentor and courses don't exist
+            // Regular users shouldn't try to create courses (causes 400 errors)
             if (coursesSnapshot.empty) {
-                console.log('No courses found in Firebase, initializing...');
-                await this.initializeCourses();
-                // Reload after initialization
-                const newSnapshot = await getDocs(coursesRef);
-                this.courses = newSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-            } else {
-                console.log('Loading courses from Firebase:', coursesSnapshot.size);
-                this.courses = coursesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                
-                // Update student count to 112 for all courses
-                const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-                for (const course of this.courses) {
-                    if (course.id === 'ai-powered-website-development' && course.students !== 112) {
-                        const courseRef = doc(window.firebase.db, 'courses', course.id);
-                        await updateDoc(courseRef, { students: 112 });
-                        course.students = 112;
-                        console.log('Updated course student count to 112:', course.id);
+                // Check if user is admin/mentor before initializing
+                if (user) {
+                    try {
+                        const userRef = doc(window.firebase.db, 'users', user.uid);
+                        const userDoc = await getDoc(userRef);
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data();
+                            const userRole = userData.role;
+                            if (userRole === 'admin' || userRole === 'mentor') {
+                                console.log('User is admin/mentor, initializing courses...');
+                                await this.initializeCourses();
+                            } else {
+                                console.log('User is not admin/mentor, skipping course initialization');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error checking user role for course initialization:', error);
                     }
                 }
             }
             
+            // Reload courses after potential initialization
+            const newSnapshot = await getDocs(coursesRef);
+            
+            if (newSnapshot.empty) {
+                console.log('No courses found after initialization');
+                this.loadFallbackCourses();
+            } else {
+                console.log('Loading courses from Firebase:', newSnapshot.size);
+                this.courses = newSnapshot.docs.map(doc => {
+                    const courseData = doc.data();
+                    console.log('Course loaded:', doc.id, 'Title:', courseData.title, 'Image:', courseData.image);
+                    return {
+                        id: doc.id,
+                        ...courseData
+                    };
+                });
+                
+                // Fetch real enrollment counts from users
+                // DISABLED: Requires permission to read all users, which violates Firestore security rules
+                // await this.updateEnrollmentCounts();
+            }
+            
+            // Apply filters after loading courses to ensure all courses are properly filtered
             this.filteredCourses = [...this.courses];
+            this.applyFilters();
             console.log('Courses loaded:', this.courses.length, this.courses);
         } catch (error) {
             console.error('Error loading courses:', error);
             this.loadFallbackCourses();
+            // Apply filters even on fallback
+            this.applyFilters();
+        }
+    }
+
+    async updateEnrollmentCounts() {
+        if (!window.firebase || !window.firebase.db) return;
+
+        try {
+            const usersRef = collection(window.firebase.db, 'users');
+            const usersSnapshot = await getDocs(usersRef);
+            
+            // Count enrollments for each course
+            const enrollmentCounts = {};
+            
+            usersSnapshot.forEach((userDoc) => {
+                const userData = userDoc.data();
+                
+                // Check both enrolledCourses and courseProgress
+                const enrolledCourses = userData.enrolledCourses || [];
+                const courseProgress = userData.courseProgress || {};
+                
+                // Combine both sources
+                const allEnrolledCourses = new Set([
+                    ...enrolledCourses,
+                    ...Object.keys(courseProgress)
+                ]);
+                
+                allEnrolledCourses.forEach(courseId => {
+                    enrollmentCounts[courseId] = (enrollmentCounts[courseId] || 0) + 1;
+                });
+            });
+            
+            // Update course objects with real counts
+            this.courses.forEach(course => {
+                course.enrolledStudents = enrollmentCounts[course.id] || 0;
+            });
+            
+            console.log('Updated enrollment counts:', enrollmentCounts);
+        } catch (error) {
+            console.error('Error updating enrollment counts:', error);
         }
     }
 
@@ -249,10 +341,122 @@ class Marketplace {
                 difficulty: "intermediate",
                 rating: 4.8,
                 students: 112,
-                image: "/assets/images/COURSE-AI-WEBSITE.png",
+                image: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop&auto=format&q=80",
                 instructor: "Expert Team",
                 duration: "8 weeks",
                 lessons: 30,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-content-creation-copywriting",
+                title: "AI Content Creation & Copywriting",
+                description: "Master AI-powered content creation. Generate compelling copy, blog posts, and marketing materials using advanced AI tools.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.9,
+                students: 87,
+                image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "6 weeks",
+                lessons: 24,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-data-analysis-insights",
+                title: "AI Data Analysis & Insights",
+                description: "Learn to analyze data and extract insights using AI. Build predictive models and automate data processing workflows.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.7,
+                students: 95,
+                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "10 weeks",
+                lessons: 35,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-image-video-generation",
+                title: "AI Image & Video Generation",
+                description: "Create stunning visuals with AI. Master image generation, video editing, and creative automation using cutting-edge tools.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.8,
+                students: 103,
+                image: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "7 weeks",
+                lessons: 28,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-business-automation",
+                title: "AI Business Automation",
+                description: "Streamline your business operations with AI. Learn to automate workflows, customer service, and business processes for maximum efficiency.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.9,
+                students: 128,
+                image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "9 weeks",
+                lessons: 32,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-marketing-strategy",
+                title: "AI Marketing Strategy & Analytics",
+                description: "Master AI-driven marketing strategies. Learn to optimize campaigns, analyze customer behavior, and automate marketing workflows.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.7,
+                students: 156,
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "8 weeks",
+                lessons: 30,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-productivity-tools",
+                title: "AI Productivity & Workflow Tools",
+                description: "Boost your productivity with AI tools. Learn to automate tasks, manage projects, and optimize your daily workflow using intelligent systems.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.8,
+                students: 142,
+                image: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "6 weeks",
+                lessons: 22,
+                enrolled: [],
+                createdAt: new Date()
+            },
+            {
+                id: "ai-entrepreneurship",
+                title: "AI Entrepreneurship & Innovation",
+                description: "Build AI-powered businesses from the ground up. Learn to identify opportunities, develop AI solutions, and scale innovative ventures.",
+                category: "ai",
+                price: 0,
+                difficulty: "advanced",
+                rating: 4.9,
+                students: 98,
+                image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "12 weeks",
+                lessons: 40,
                 enrolled: [],
                 createdAt: new Date()
             }
@@ -274,25 +478,56 @@ class Marketplace {
                 return;
             }
             
-            // Check if course already exists, if not create it
-            for (const course of coursesData) {
-                const courseRef = doc(window.firebase.db, 'courses', course.id);
-                const courseDoc = await getDoc(courseRef);
+            // Check if user is authenticated and has admin/mentor role
+            const user = window.firebase.auth.currentUser;
+            if (!user) {
+                console.error('User not authenticated, cannot initialize courses');
+                return;
+            }
+            
+            // Verify user has admin or mentor role
+            try {
+                const userRef = doc(window.firebase.db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+                if (!userDoc.exists()) {
+                    console.error('User document not found, cannot initialize courses');
+                    return;
+                }
                 
-                if (!courseDoc.exists()) {
-                    console.log('Creating course in database:', course.id);
-                    await setDoc(courseRef, course);
-                    console.log('Course created successfully:', course.id);
-                } else {
-                    console.log('Course already exists in database:', course.id);
-                    // Update course data but preserve enrolled array and students count
-                    const existingData = courseDoc.data();
+                const userData = userDoc.data();
+                const userRole = userData.role;
+                if (userRole !== 'admin' && userRole !== 'mentor') {
+                    console.error('User does not have admin/mentor role, cannot initialize courses');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking user permissions:', error);
+                return;
+            }
+            
+            // FORCE UPDATE all courses with new images (only if admin/mentor)
+            for (const course of coursesData) {
+                try {
+                    const courseRef = doc(window.firebase.db, 'courses', course.id);
+                    const courseDoc = await getDoc(courseRef);
+                    
+                    // Preserve enrolled array if exists
+                    const enrolled = courseDoc.exists() ? (courseDoc.data().enrolled || []) : [];
+                    
+                    // COMPLETELY OVERWRITE course data with new image
                     await setDoc(courseRef, {
                         ...course,
-                        enrolled: existingData.enrolled || [],
-                        students: existingData.students || 112 // Preserve actual student count
-                    }, { merge: true });
-                    console.log('Course data updated:', course.id);
+                        enrolled: enrolled
+                    }).catch(error => {
+                        console.error(`Error updating course ${course.id}:`, error);
+                        // Continue with next course even if this one fails
+                    });
+                    
+                    console.log('✅ Course OVERWRITTEN:', course.id);
+                    console.log('   Image:', course.image);
+                } catch (error) {
+                    console.error(`Error processing course ${course.id}:`, error);
+                    // Continue with next course
                 }
             }
             console.log('Courses initialization complete');
@@ -312,13 +547,113 @@ class Marketplace {
                 difficulty: "intermediate",
                 rating: 4.8,
                 students: 112,
-                image: "/assets/images/COURSE-AI-WEBSITE.png",
+                image: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop&auto=format&q=80",
                 instructor: "Expert Team",
                 duration: "8 weeks",
                 lessons: 30
+            },
+            {
+                id: "ai-content-creation-copywriting",
+                title: "AI Content Creation & Copywriting",
+                description: "Master AI-powered content creation. Generate compelling copy, blog posts, and marketing materials using advanced AI tools.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.9,
+                students: 87,
+                image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "6 weeks",
+                lessons: 24
+            },
+            {
+                id: "ai-data-analysis-insights",
+                title: "AI Data Analysis & Insights",
+                description: "Learn to analyze data and extract insights using AI. Build predictive models and automate data processing workflows.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.7,
+                students: 95,
+                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "10 weeks",
+                lessons: 35
+            },
+            {
+                id: "ai-image-video-generation",
+                title: "AI Image & Video Generation",
+                description: "Create stunning visuals with AI. Master image generation, video editing, and creative automation using cutting-edge tools.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.8,
+                students: 103,
+                image: "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "7 weeks",
+                lessons: 28
+            },
+            {
+                id: "ai-business-automation",
+                title: "AI Business Automation",
+                description: "Streamline your business operations with AI. Learn to automate workflows, customer service, and business processes for maximum efficiency.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.9,
+                students: 128,
+                image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "9 weeks",
+                lessons: 32
+            },
+            {
+                id: "ai-marketing-strategy",
+                title: "AI Marketing Strategy & Analytics",
+                description: "Master AI-driven marketing strategies. Learn to optimize campaigns, analyze customer behavior, and automate marketing workflows.",
+                category: "ai",
+                price: 0,
+                difficulty: "intermediate",
+                rating: 4.7,
+                students: 156,
+                image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "8 weeks",
+                lessons: 30
+            },
+            {
+                id: "ai-productivity-tools",
+                title: "AI Productivity & Workflow Tools",
+                description: "Boost your productivity with AI tools. Learn to automate tasks, manage projects, and optimize your daily workflow using intelligent systems.",
+                category: "ai",
+                price: 0,
+                difficulty: "beginner",
+                rating: 4.8,
+                students: 142,
+                image: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "6 weeks",
+                lessons: 22
+            },
+            {
+                id: "ai-entrepreneurship",
+                title: "AI Entrepreneurship & Innovation",
+                description: "Build AI-powered businesses from the ground up. Learn to identify opportunities, develop AI solutions, and scale innovative ventures.",
+                category: "ai",
+                price: 0,
+                difficulty: "advanced",
+                rating: 4.9,
+                students: 98,
+                image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=450&fit=crop&auto=format&q=80",
+                instructor: "Expert Team",
+                duration: "12 weeks",
+                lessons: 40
             }
         ];
         this.filteredCourses = [...this.courses];
+        // Apply filters to fallback courses as well
+        this.applyFilters();
     }
 
     async loadEnrolledCourses() {
@@ -340,140 +675,114 @@ class Marketplace {
     }
 
     async loadFavorites() {
-        if (!this.currentUser || !window.firebase || !window.firebase.db) {
-            // Load from localStorage as fallback
-            const savedFavorites = localStorage.getItem('favoriteCourses');
-            if (savedFavorites) {
-                try {
-                    this.favoriteCourseIds = JSON.parse(savedFavorites);
-                } catch (e) {
-                    this.favoriteCourseIds = [];
-                }
+        // Load from localStorage only
+        const savedFavorites = localStorage.getItem('favoriteCourses');
+        if (savedFavorites) {
+            try {
+                this.favoriteCourseIds = JSON.parse(savedFavorites);
+            } catch (e) {
+                this.favoriteCourseIds = [];
             }
-            return;
-        }
-
-        try {
-            const userRef = doc(window.firebase.db, 'users', this.currentUser.uid);
-            const userDoc = await getDoc(userRef);
-            
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                this.favoriteCourseIds = userData.favoriteCourses || [];
-                // Sync to localStorage
-                localStorage.setItem('favoriteCourses', JSON.stringify(this.favoriteCourseIds));
-            }
-        } catch (error) {
-            console.error('Error loading favorites:', error);
-            // Fallback to localStorage
-            const savedFavorites = localStorage.getItem('favoriteCourses');
-            if (savedFavorites) {
-                try {
-                    this.favoriteCourseIds = JSON.parse(savedFavorites);
-                } catch (e) {
-                    this.favoriteCourseIds = [];
-                }
-            }
+        } else {
+            this.favoriteCourseIds = [];
         }
     }
 
     async toggleFavorite(courseId) {
-        if (!this.currentUser && !window.firebase) {
-            // Allow favorites without auth, store in localStorage
-            const index = this.favoriteCourseIds.indexOf(courseId);
-            if (index > -1) {
-                this.favoriteCourseIds.splice(index, 1);
-            } else {
-                this.favoriteCourseIds.push(courseId);
-            }
-            localStorage.setItem('favoriteCourses', JSON.stringify(this.favoriteCourseIds));
-            this.updateFavoriteButtons();
-            return;
+        // Use localStorage only for favorites
+        const index = this.favoriteCourseIds.indexOf(courseId);
+        if (index > -1) {
+            this.favoriteCourseIds.splice(index, 1);
+        } else {
+            this.favoriteCourseIds.push(courseId);
         }
-
-        if (!this.currentUser) {
-            alert('Please sign in to save favorites');
-            return;
-        }
-
-        try {
-            const userRef = doc(window.firebase.db, 'users', this.currentUser.uid);
-            const userDoc = await getDoc(userRef);
-            
-            const isFavorited = this.favoriteCourseIds.includes(courseId);
-            
-            if (isFavorited) {
-                // Remove from favorites
-                this.favoriteCourseIds = this.favoriteCourseIds.filter(id => id !== courseId);
-                if (userDoc.exists()) {
-                    await updateDoc(userRef, {
-                        favoriteCourses: this.favoriteCourseIds
-                    });
-                }
-            } else {
-                // Add to favorites
-                this.favoriteCourseIds.push(courseId);
-                if (userDoc.exists()) {
-                    await updateDoc(userRef, {
-                        favoriteCourses: arrayUnion(courseId)
-                    });
-                } else {
-                    await setDoc(userRef, {
-                        favoriteCourses: [courseId],
-                        uid: this.currentUser.uid,
-                        email: this.currentUser.email || ''
-                    }, { merge: true });
-                }
-            }
-            
-            // Sync to localStorage
-            localStorage.setItem('favoriteCourses', JSON.stringify(this.favoriteCourseIds));
-            
-            // Update UI
-            this.updateFavoriteButtons();
-        } catch (error) {
-            console.error('Error toggling favorite:', error);
-            alert('Failed to update favorite. Please try again.');
-        }
+        
+        // Save to localStorage
+        localStorage.setItem('favoriteCourses', JSON.stringify(this.favoriteCourseIds));
+        
+        // Update UI
+        this.updateFavoriteButtons();
     }
 
     updateFavoriteButtons() {
         const favoriteButtons = document.querySelectorAll('.marketplace-course-favorite, .marketplace-course-favorite-small');
         favoriteButtons.forEach(btn => {
             const courseId = btn.getAttribute('data-course-id');
+            const svg = btn.querySelector('svg');
             if (this.favoriteCourseIds.includes(courseId)) {
                 btn.classList.add('favorited');
+                if (svg) {
+                    svg.setAttribute('fill', 'currentColor');
+                }
             } else {
                 btn.classList.remove('favorited');
+                if (svg) {
+                    svg.setAttribute('fill', 'none');
+                }
             }
         });
     }
 
     applyFilters() {
+        console.log('Applying filters...', this.currentFilters, 'Total courses:', this.courses.length);
+        
+        // Make sure we have courses to filter
+        if (!this.courses || this.courses.length === 0) {
+            console.warn('No courses available to filter');
+            this.filteredCourses = [];
+            this.renderCourses();
+            return;
+        }
+        
         let filtered = [...this.courses];
 
         // Apply search filter
-        if (this.searchQuery) {
+        if (this.searchQuery && this.searchQuery.trim()) {
             filtered = filtered.filter(course => 
-                course.title.toLowerCase().includes(this.searchQuery) ||
-                course.description.toLowerCase().includes(this.searchQuery)
+                (course.title && course.title.toLowerCase().includes(this.searchQuery)) ||
+                (course.description && course.description.toLowerCase().includes(this.searchQuery))
             );
+            console.log('After search filter:', filtered.length);
         }
 
         // Apply category filter
-        if (this.currentFilters.category !== 'all') {
-            filtered = filtered.filter(course => course.category === this.currentFilters.category);
+        if (this.currentFilters.category && this.currentFilters.category !== 'all') {
+            if (this.currentFilters.category === 'favorited') {
+                // Show only favorited courses
+                filtered = filtered.filter(course => this.favoriteCourseIds.includes(course.id));
+            } else {
+                // Map HTML filter values to actual course categories
+                const categoryMap = {
+                    'ai': 'ai',
+                    'ai-writing': 'ai',
+                    'ai-design': 'ai',
+                    'ai-coding': 'ai',
+                    'ai-data': 'ai',
+                    'ai-marketing': 'ai',
+                    'automation': 'ai',
+                    'productivity': 'ai',
+                    'business': 'ai',
+                    'tech': 'ai',
+                    'design': 'ai'
+                };
+                const mappedCategory = categoryMap[this.currentFilters.category] || this.currentFilters.category;
+                filtered = filtered.filter(course => {
+                    const courseCategory = course.category || 'ai';
+                    return courseCategory === mappedCategory || courseCategory === this.currentFilters.category;
+                });
+            }
+            console.log('After category filter:', filtered.length, 'Category:', this.currentFilters.category);
         }
 
         // Apply price filter
-        if (this.currentFilters.price !== 'all') {
+        if (this.currentFilters.price && this.currentFilters.price !== 'all') {
             filtered = filtered.filter(course => {
-                const price = course.price;
+                const price = course.price || 0;
                 switch (this.currentFilters.price) {
                     case 'free':
                         return price === 0;
                     case 'under-50':
-                        return price < 50;
+                        return price > 0 && price < 50;
                     case '50-100':
                         return price >= 50 && price <= 100;
                     case '100-200':
@@ -484,16 +793,50 @@ class Marketplace {
                         return true;
                 }
             });
+            console.log('After price filter:', filtered.length);
         }
 
         // Apply difficulty filter
-        if (this.currentFilters.difficulty !== 'all') {
-            filtered = filtered.filter(course => course.difficulty === this.currentFilters.difficulty);
+        if (this.currentFilters.difficulty && this.currentFilters.difficulty !== 'all') {
+            filtered = filtered.filter(course => {
+                const courseDifficulty = course.difficulty || '';
+                // Handle both "beginner" and "absolute-beginner" as beginner
+                if (this.currentFilters.difficulty === 'beginner') {
+                    return courseDifficulty === 'beginner' || courseDifficulty === 'absolute-beginner';
+                }
+                return courseDifficulty === this.currentFilters.difficulty;
+            });
+            console.log('After difficulty filter:', filtered.length, 'Difficulty:', this.currentFilters.difficulty);
+        }
+
+        // Apply duration filter
+        if (this.currentFilters.duration && this.currentFilters.duration !== 'all') {
+            filtered = filtered.filter(course => {
+                const duration = course.duration || '';
+                // Extract number from duration string (e.g., "8 weeks" -> 8, "12 weeks" -> 12)
+                const weeksMatch = duration.toString().match(/\d+/);
+                const weeks = weeksMatch ? parseInt(weeksMatch[0]) : 0;
+                
+                switch (this.currentFilters.duration) {
+                    case 'short':
+                        return weeks > 0 && weeks < 4;
+                    case 'medium':
+                        return weeks >= 4 && weeks <= 8;
+                    case 'long':
+                        return weeks > 8 && weeks <= 12;
+                    case 'extended':
+                        return weeks > 12;
+                    default:
+                        return true;
+                }
+            });
+            console.log('After duration filter:', filtered.length);
         }
 
         // Apply sorting
         filtered = this.sortCourses(filtered, this.sortBy);
 
+        console.log('Final filtered courses:', filtered.length);
         this.filteredCourses = filtered;
         this.renderCourses();
     }
@@ -550,26 +893,40 @@ class Marketplace {
             placeholder.remove();
         }
 
-        const loadingState = container.querySelector('#marketplaceLoading');
+        const loadingState = container.querySelector('#marketplaceLoading') || container.querySelector('#recommendedLoading');
         if (loadingState) {
             loadingState.style.display = 'none';
         }
 
-        // Filter out enrolled courses from the marketplace
-        const unenrolledCourses = this.filteredCourses.filter(
-            course => !this.enrolledCourseIds.includes(course.id)
-        );
-
-        // Limit to 3 courses for recommended section
-        const coursesToRender = (container.id === 'recommendedGrid') ? unenrolledCourses.slice(0, 3) : unenrolledCourses;
-
-        console.log('Unenrolled courses:', unenrolledCourses.length, 'Courses to render:', coursesToRender.length, 'Total courses:', this.filteredCourses.length);
+        // Filter out enrolled courses only for recommended section
+        // Main marketplace should show all courses (enrolled or not)
+        let coursesToRender;
+        if (container.id === 'recommendedGrid') {
+            // Recommended section: only show unenrolled courses
+            const unenrolledCourses = this.filteredCourses.filter(
+                course => !this.enrolledCourseIds.includes(course.id)
+            );
+            coursesToRender = unenrolledCourses.slice(0, 3);
+            console.log('Recommended section - Unenrolled courses:', unenrolledCourses.length, 'Courses to render:', coursesToRender.length);
+        } else {
+            // Main marketplace: show all filtered courses
+            coursesToRender = this.filteredCourses;
+            console.log('Marketplace - Courses to render:', coursesToRender.length, 'Total filtered courses:', this.filteredCourses.length);
+        }
 
         if (coursesToRender.length === 0) {
             container.innerHTML = `
                 <div class="no-courses-library" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                    <h3 style="color: var(--color-text-secondary); margin-bottom: 0.5rem;">No courses available</h3>
-                    <p>${this.enrolledCourseIds.length > 0 ? 'You\'ve enrolled in all available courses! Check "My Programs" to continue learning.' : 'Try adjusting your filters or search terms'}</p>
+                    <h3 style="color: var(--color-text-secondary); margin-bottom: 0.5rem;">No courses found</h3>
+                    <p>Try adjusting your filters or search terms to see more courses.</p>
+                    <button onclick="window.marketplace?.clearFilters()" style="margin-top: 1rem; padding: 8px 16px; background: transparent; color: var(--color-text-primary); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span>Clear All Filters</span>
+                    </button>
                 </div>
             `;
             return;
@@ -581,13 +938,17 @@ class Marketplace {
 
         console.log('Courses to render:', coursesToRender.map(c => ({ id: c.id, title: c.title, image: c.image, hasImage: !!c.image })));
         
-        // Ensure we're using marketplace-course-card, not program-card
-        const existingOldCards = container.querySelectorAll('.program-card');
+        // FORCE clear any old cards and ensure clean state
+        const existingOldCards = container.querySelectorAll('.program-card, .marketplace-course-card');
         if (existingOldCards.length > 0) {
-            console.warn('Found old program-card elements, removing them');
+            console.warn('Found old card elements, removing them:', existingOldCards.length);
             existingOldCards.forEach(card => card.remove());
         }
         
+        // Clear container completely before rendering
+        container.innerHTML = '';
+        
+        // Render new cards
         container.innerHTML = coursesToRender.map(course => {
             const isEnrolled = this.enrolledCourseIds.includes(course.id);
             const buttonText = this.currentUser ? 'Enroll' : 'Sign in to Enroll';
@@ -634,13 +995,14 @@ class Marketplace {
                     <div class="marketplace-course-content">
                         <div class="marketplace-course-header">
                             <h3 class="marketplace-course-title">${course.title}</h3>
+                            <p class="marketplace-course-description">${course.description || ''}</p>
                         </div>
                         <div class="marketplace-course-rating">
                             <div class="marketplace-course-stars">
                                 ${starsHtml}
                             </div>
                             <span class="marketplace-course-rating-number">${course.rating.toFixed(1)}</span>
-                            <span class="marketplace-course-students">${course.students.toLocaleString()} students</span>
+                            <span class="marketplace-course-students">${(course.enrolledStudents || 0).toLocaleString()} ${(course.enrolledStudents === 1) ? 'student' : 'students'}</span>
                         </div>
                         <div class="marketplace-course-actions">
                             <button class="marketplace-course-enroll-btn" onclick="event.stopPropagation(); window.marketplace.enrollInCourse('${course.id}')">${buttonText}</button>
@@ -682,9 +1044,25 @@ class Marketplace {
 
             console.log('Enrolling user:', this.currentUser.uid, 'in course:', courseId);
 
-            // Get current user document to check existing enrolledCourses
+            // Get current user document to check existing enrolledCourses and subscription
             const userDoc = await getDoc(userRef);
-            const existingEnrolledCourses = userDoc.exists() ? (userDoc.data().enrolledCourses || []) : [];
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const existingEnrolledCourses = userData.enrolledCourses || [];
+            const subscription = userData.subscription || null;
+            
+            // Check if user is on free plan and has reached the 3-course limit
+            const isOnFreePlan = !subscription || !subscription.status || 
+                                 (subscription.status !== 'active' && subscription.status !== 'trialing');
+            
+            if (isOnFreePlan && existingEnrolledCourses.length >= 3) {
+                const message = 'Free plan users can only enroll in up to 3 courses. Please upgrade to a paid plan to enroll in more courses.';
+                if (typeof window.showCustomNotification === 'function') {
+                    window.showCustomNotification('error', 'Enrollment Limit Reached', message);
+                } else {
+                    alert(message);
+                }
+                return;
+            }
             
             // Use updateDoc with arrayUnion if user doc exists, otherwise create it
             if (userDoc.exists()) {
@@ -730,6 +1108,10 @@ class Marketplace {
 
             // Update local state
             this.enrolledCourseIds.push(courseId);
+
+            // Update enrollment counts
+            // DISABLED: Requires permission to read all users
+            // await this.updateEnrollmentCounts();
 
             // Refresh dashboard sections to show newly enrolled course
             if (typeof window.loadContinueLearning === 'function') {
@@ -838,6 +1220,10 @@ class Marketplace {
                 this.currentUser = currentUser;
             }
 
+            // Update enrollment counts
+            // DISABLED: Requires permission to read all users
+            // await this.updateEnrollmentCounts();
+
             // Show success notification
             const courseTitle = course?.title || courseDoc?.data()?.title || 'this course';
             if (typeof window.showCustomNotification === 'function') {
@@ -863,57 +1249,44 @@ class Marketplace {
 // Load recommended courses for overview section
 async function loadRecommendedCourses() {
     const recommendedGrid = document.getElementById('recommendedGrid');
-    if (!recommendedGrid) {
-        console.log('Recommended grid not found');
+    const recommendedLoading = document.getElementById('recommendedLoading');
+    
+    if (!recommendedGrid) return;
+
+    // Show loading spinner, clear old courses
+    if (recommendedLoading) {
+        recommendedLoading.style.display = 'block';
+    }
+    
+    // Clear old cards but keep loading spinner
+    const oldCards = recommendedGrid.querySelectorAll('.marketplace-course-card');
+    oldCards.forEach(card => card.remove());
+
+    // If marketplace already initialized and has courses, render immediately
+    if (window.marketplace && window.marketplace.initialized && window.marketplace.courses.length > 0) {
+        window.marketplace.renderCourses('recommendedGrid');
         return;
     }
 
-    console.log('Loading recommended courses...');
-
-    // Clear any existing content FIRST to prevent old design from showing
-    recommendedGrid.innerHTML = '';
-    
-    // Force remove any program-card elements that might be there
-    const oldCards = recommendedGrid.querySelectorAll('.program-card');
-    oldCards.forEach(card => card.remove());
-
-    // Ensure marketplace is initialized
+    // Marketplace not ready - initialize it
     if (!window.marketplace || !window.marketplace.initialized) {
         if (typeof Marketplace !== 'undefined') {
-            console.log('Initializing marketplace for recommended courses');
             window.marketplace = new Marketplace();
             await window.marketplace.init();
         } else {
-            console.warn('Marketplace class not available for recommended courses');
             return;
         }
     }
 
-    // Wait a bit to ensure DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Render courses to recommended grid - explicitly pass recommendedGrid ID
-    if (window.marketplace && typeof window.marketplace.renderCourses === 'function') {
-        console.log('Rendering courses to recommended grid');
+    // Render courses
+    if (window.marketplace && window.marketplace.initialized) {
         window.marketplace.renderCourses('recommendedGrid');
-        
-        // Verify the cards were rendered correctly
-        setTimeout(() => {
-            const cards = recommendedGrid.querySelectorAll('.marketplace-course-card');
-            const oldCards = recommendedGrid.querySelectorAll('.program-card');
-            console.log('Marketplace cards rendered:', cards.length, 'Old program cards found:', oldCards.length);
-            
-            // If old cards are found, remove them and re-render
-            if (oldCards.length > 0) {
-                console.warn('Old program cards detected, removing and re-rendering...');
-                oldCards.forEach(card => card.remove());
-                window.marketplace.renderCourses('recommendedGrid');
-            }
-        }, 300);
-    } else {
-        console.warn('Marketplace renderCourses function not available');
     }
 }
+
+// Export to global scope for dashboard.html to use
+window.loadRecommendedCourses = loadRecommendedCourses;
+console.log('[MARKETPLACE.JS] loadRecommendedCourses exported to window');
 
 // Initialize marketplace when DOM is loaded
 async function initializeMarketplace() {
@@ -954,8 +1327,11 @@ async function initializeMarketplace() {
         await window.marketplace.init();
     }
     
-    // Also load recommended courses if on overview section
-    loadRecommendedCourses();
+    // Load recommended courses if currently on overview section
+    const overviewSection = document.getElementById('overview');
+    if (overviewSection && overviewSection.classList.contains('active')) {
+        loadRecommendedCourses();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initializeMarketplace);
@@ -1008,4 +1384,34 @@ window.initializeMarketplaceCourses = async function() {
     await marketplace.checkAuth();
     await marketplace.initializeCourses();
     console.log('Courses updated in Firebase. Please refresh the page.');
+};
+
+// Force update course images
+window.updateCourseImages = async function() {
+    try {
+        if (!window.firebase || !window.firebase.db) {
+            console.error('Firebase not initialized');
+            return;
+        }
+
+        const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        
+        const imageUpdates = {
+            "ai-powered-website-development": "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&h=450&fit=crop&auto=format&q=80",
+            "ai-content-creation-copywriting": "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&h=450&fit=crop&auto=format&q=80",
+            "ai-data-analysis-insights": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop&auto=format&q=80",
+            "ai-image-video-generation": "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&h=450&fit=crop&auto=format&q=80"
+        };
+
+        for (const [courseId, imageUrl] of Object.entries(imageUpdates)) {
+            const courseRef = doc(window.firebase.db, 'courses', courseId);
+            await updateDoc(courseRef, { image: imageUrl });
+            console.log('Updated image for:', courseId);
+        }
+
+        console.log('All course images updated! Refreshing page...');
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        console.error('Error updating images:', error);
+    }
 };

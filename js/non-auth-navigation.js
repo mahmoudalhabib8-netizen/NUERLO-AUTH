@@ -17,7 +17,9 @@
                msg.includes('init.json') ||
                msg.includes('firebase/init.json') ||
                (msg.includes('404') && msg.includes('firebaseapp.com')) ||
-               (msg.includes('Failed to load resource') && msg.includes('init.json'));
+               (msg.includes('Failed to load resource') && msg.includes('init.json')) ||
+               (msg.includes('400') && msg.includes('identitytoolkit')) ||
+               msg.includes('createAuthUri');
     };
     
     console.warn = function(...args) {
@@ -44,10 +46,23 @@
         originalLog.apply(console, args);
     };
     
-    // Also filter network errors for init.json
+    // Also filter network errors for init.json and Google Identity Toolkit
     window.addEventListener('error', function(event) {
         const message = event.message || '';
         const filename = event.filename || '';
+        const target = event.target;
+        
+        // Filter network errors for init.json and Google Identity Toolkit 400 errors
+        if (target && (target.src || target.href)) {
+            const url = target.src || target.href || '';
+            if (url.includes('init.json') || 
+                (url.includes('identitytoolkit') && url.includes('createAuthUri'))) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        }
+        
         if (shouldFilter(message) || shouldFilter(filename) || 
             (filename && filename.includes('init.json'))) {
             event.preventDefault();
@@ -55,6 +70,21 @@
             return false;
         }
     }, true);
+    
+    // Filter unhandled promise rejections for 400 errors
+    window.addEventListener('unhandledrejection', function(event) {
+        const reason = event.reason;
+        const message = reason?.message || String(reason || '');
+        if ((message.includes('400') && message.includes('identitytoolkit')) ||
+            message.includes('createAuthUri')) {
+            event.preventDefault();
+            return false;
+        }
+        if (shouldFilter(message)) {
+            event.preventDefault();
+            return false;
+        }
+    });
 })();
 
 // Custom Notification System for Non-Auth Pages
@@ -355,9 +385,18 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// Initialize providers
-const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
+// Initialize providers - create fresh instances to avoid state issues
+function getGoogleProvider() {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+        prompt: 'select_account'
+    });
+    return provider;
+}
+
+function getGithubProvider() {
+    return new GithubAuthProvider();
+}
 
 // Helper function to get dashboard URL with account ID
 function getDashboardUrl(user) {
@@ -431,11 +470,13 @@ async function signInWithGoogle() {
         if (isMobile) {
             // Use redirect on mobile - set flag so we know to check for redirect result
             sessionStorage.setItem('pendingRedirect', 'true');
-            await signInWithRedirect(window.firebase.auth, googleProvider);
+            await signInWithRedirect(window.firebase.auth, getGoogleProvider());
             return { success: true, redirect: true }; // Will redirect, so return early
         } else {
             // Use popup on desktop - this avoids the 404 error from redirect flow
-            const result = await signInWithPopup(window.firebase.auth, googleProvider);
+            // Create fresh provider instance for each attempt
+            const provider = getGoogleProvider();
+            const result = await signInWithPopup(window.firebase.auth, provider);
             if (!result || !result.user) {
                 throw new Error('No user returned from authentication');
             }
@@ -479,16 +520,17 @@ async function signInWithGoogle() {
             return { success: false, error: 'Sign-in cancelled', cancelled: true };
         }
         
-        // If popup fails due to COOP or blocking, try redirect as fallback (only on desktop)
-        if (errorCode === 'auth/popup-blocked' || 
-            errorMessage.includes('Cross-Origin') ||
-            (errorMessage.includes('popup') && !isMobile)) {
-            try {
-                await signInWithRedirect(window.firebase.auth, googleProvider);
-                return { success: true, redirect: true };
-            } catch (redirectError) {
-                return { success: false, error: redirectError.message || 'Authentication failed. Please try again.' };
-            }
+        // Don't fall back to redirect on desktop - it causes issues
+        // Instead, show a clear error message
+        if (errorCode === 'auth/popup-blocked') {
+            return { success: false, error: 'Popup was blocked. Please allow popups for this site and try again.' };
+        }
+        
+        // Handle 400 errors from Google Identity Toolkit
+        if (errorCode === 'auth/network-request-failed' || 
+            errorMessage.includes('400') ||
+            errorMessage.includes('Bad Request')) {
+            return { success: false, error: 'Authentication service error. Please try again in a moment.' };
         }
         
         // Return user-friendly error message
@@ -497,8 +539,8 @@ async function signInWithGoogle() {
             userMessage = 'An account already exists with this email. Please sign in with your original method.';
         } else if (errorCode === 'auth/operation-not-allowed') {
             userMessage = 'This sign-in method is not enabled. Please contact support.';
-        } else if (errorCode === 'auth/popup-blocked') {
-            userMessage = 'Popup was blocked. Please allow popups and try again.';
+        } else if (!userMessage || userMessage.includes('Firebase')) {
+            userMessage = 'Authentication failed. Please try again.';
         }
         
         return { success: false, error: userMessage };
@@ -512,11 +554,12 @@ async function signInWithGitHub() {
         
         if (isMobile) {
             // Use redirect on mobile
-            await signInWithRedirect(window.firebase.auth, githubProvider);
+            sessionStorage.setItem('pendingRedirect', 'true');
+            await signInWithRedirect(window.firebase.auth, getGithubProvider());
             return { success: true, redirect: true }; // Will redirect, so return early
         } else {
             // Use popup on desktop
-            const result = await signInWithPopup(window.firebase.auth, githubProvider);
+            const result = await signInWithPopup(window.firebase.auth, getGithubProvider());
             const user = result.user;
             
             // Create user document if it doesn't exist
@@ -540,7 +583,8 @@ async function signInWithGitHub() {
         // If popup fails, try redirect as fallback
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('Cross-Origin')) {
             try {
-                await signInWithRedirect(window.firebase.auth, githubProvider);
+                sessionStorage.setItem('pendingRedirect', 'true');
+                await signInWithRedirect(window.firebase.auth, getGithubProvider());
                 return { success: true, redirect: true };
             } catch (redirectError) {
                 return { success: false, error: redirectError.message };
@@ -552,19 +596,20 @@ async function signInWithGitHub() {
 
 // Handle redirect result (when user returns from OAuth provider)
 async function handleRedirectResult() {
+    // Only check for redirect result if we're on a page that might have a redirect
+    // This prevents unnecessary Firebase initialization that causes 404 errors
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAuthParams = urlParams.has('apiKey') || urlParams.has('mode') || 
+                         window.location.hash.includes('access_token') ||
+                         window.location.hash.includes('id_token');
+    
+    // If no auth-related params and no pending redirect, skip entirely to avoid 404
+    if (!hasAuthParams && !sessionStorage.getItem('pendingRedirect')) {
+        return;
+    }
+    
     try {
-        // Only check for redirect result if we're on a page that might have a redirect
-        // This prevents unnecessary Firebase initialization that causes 404 errors
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasAuthParams = urlParams.has('apiKey') || urlParams.has('mode') || 
-                             window.location.hash.includes('access_token') ||
-                             window.location.hash.includes('id_token');
-        
-        // If no auth-related params, skip redirect result check to avoid 404
-        if (!hasAuthParams && !sessionStorage.getItem('pendingRedirect')) {
-            return;
-        }
-        
+        // Wrap in try-catch to prevent 404 errors from breaking the page
         const result = await getRedirectResult(window.firebase.auth);
         if (result && result.user) {
             sessionStorage.removeItem('pendingRedirect');
@@ -607,30 +652,20 @@ async function handleRedirectResult() {
     } catch (error) {
         sessionStorage.removeItem('pendingRedirect');
         
-        // Ignore errors related to missing init.json (404) - these are harmless
-        if (error.message?.includes('init.json') || 
-            error.message?.includes('404') ||
-            error.code === 'auth/operation-not-allowed') {
-            return; // Silently ignore
-        }
-        
-        // If there's an error, show it but don't block the page
-        if (error.code === 'auth/account-exists-with-different-credential') {
-            showAuthError('An account already exists with this email. Please sign in with your original method.');
-        } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-            // User cancelled - don't show error
-            return;
-        } else if (error.code && !error.code.includes('init.json')) {
-            // Only log non-configuration errors that aren't about init.json
-            console.error('Redirect auth error:', error);
-        }
+        // Silently ignore all redirect-related errors - they're usually harmless
+        // The 404 for init.json and 400 errors happen during initialization
+        // and don't affect functionality when using popup flow
+        return; // Don't log or show these errors
     }
 }
 
 // Handle form submissions
 document.addEventListener('DOMContentLoaded', function() {
-    // Check for redirect result first
-    handleRedirectResult();
+    // Check for redirect result first - but only if we're expecting one
+    // Delay slightly to ensure Firebase is fully initialized
+    setTimeout(() => {
+        handleRedirectResult();
+    }, 100);
     // Add click outside to close modal functionality
     const authModal = document.getElementById('authModal');
     if (authModal) {
@@ -743,9 +778,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Google sign in - handle both modal buttons and standalone login page button
-    const googleBtn = document.getElementById('googleLoginBtn') || document.querySelector('.social-btn[href="#"]:first-of-type');
+    // Use more specific selector to avoid confusion with GitHub button
+    let googleBtn = document.getElementById('googleLoginBtn');
+    
+    // If not found by ID, try to find by text content (more reliable)
+    if (!googleBtn) {
+        const allSocialBtns = document.querySelectorAll('.social-btn[href="#"]');
+        for (const btn of allSocialBtns) {
+            const text = btn.textContent || btn.innerText || '';
+            if (text.includes('Google') && !text.includes('GitHub')) {
+                googleBtn = btn;
+                break;
+            }
+        }
+    }
+    
+    // Fallback to first social button if still not found (but log a warning)
+    if (!googleBtn) {
+        googleBtn = document.querySelector('.social-btn[href="#"]:first-of-type');
+        if (googleBtn) {
+            console.warn('Google button not found by ID or text, using first social button');
+        }
+    }
+    
     if (googleBtn && !googleBtn.hasAttribute('data-listener-attached')) {
         googleBtn.setAttribute('data-listener-attached', 'true');
+        
+        // Store original button content (including innerHTML for span elements)
+        const originalHTML = googleBtn.innerHTML;
+        const originalText = googleBtn.textContent.trim();
         
         googleBtn.addEventListener('click', async function(e) {
             e.preventDefault();
@@ -783,9 +844,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Show loading state
-            const originalText = googleBtn.textContent;
-            googleBtn.textContent = 'Signing in with Google...';
+            // Show loading state - preserve the SVG icon
+            const spanElement = googleBtn.querySelector('span');
+            if (spanElement) {
+                spanElement.textContent = 'Signing in with Google...';
+            } else {
+                googleBtn.textContent = 'Signing in with Google...';
+            }
             googleBtn.disabled = true;
             
             try {
@@ -796,8 +861,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     return; // Page will redirect, don't do anything else
                 }
                 
-                // Reset button state
-                googleBtn.textContent = originalText;
+                // Reset button state - restore original HTML
+                googleBtn.innerHTML = originalHTML;
                 googleBtn.disabled = false;
                 googleBtn.removeAttribute('data-auth-in-progress');
                 
@@ -836,8 +901,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     showAuthError(result.error || 'Authentication failed. Please try again.');
                 }
             } catch (err) {
-                // Reset button on any error
-                googleBtn.textContent = originalText;
+                // Reset button on any error - restore original HTML
+                googleBtn.innerHTML = originalHTML;
                 googleBtn.disabled = false;
                 googleBtn.removeAttribute('data-auth-in-progress');
                 

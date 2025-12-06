@@ -1,6 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Suppress Firebase COOP warnings and internal errors - MUST be first -->
+    <script>
+        (function() {
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            const originalLog = console.log;
+            
+            const shouldFilter = function(message, stack) {
+                if (!message) {
+                    if (stack) {
+                        const stackStr = String(stack);
+                        if (stackStr.includes('popup.ts') || 
+                            stackStr.includes('assert.ts') || 
+                            stackStr.includes('log.ts') ||
+                            stackStr.includes('abstract_popup_redirect_operation')) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                const msg = String(message);
+                const fullMsg = stack ? msg + ' ' + String(stack) : msg;
+                return fullMsg.includes('Cross-Origin-Opener-Policy') || 
+                       fullMsg.includes('window.closed call') ||
+                       fullMsg.includes('popup.ts') ||
+                       fullMsg.includes('Pending promise was never set') ||
+                       fullMsg.includes('INTERNAL ASSERTION FAILED') ||
+                       fullMsg.includes('abstract_popup_redirect_operation') ||
+                       fullMsg.includes('@firebase/auth') ||
+                       fullMsg.includes('assert.ts') ||
+                       fullMsg.includes('log.ts') ||
+                       fullMsg.includes('debugFail') ||
+                       fullMsg.includes('debugAssert');
+            };
+            
+            console.warn = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalWarn.apply(console, args);
+                } catch(e) {
+                    originalWarn.apply(console, args);
+                }
+            };
+            
+            console.error = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalError.apply(console, args);
+                } catch(e) {
+                    originalError.apply(console, args);
+                }
+            };
+            
+            console.log = function(...args) {
+                try {
+                    const message = args.join(' ');
+                    const stack = new Error().stack;
+                    if (shouldFilter(message, stack)) return;
+                    originalLog.apply(console, args);
+                } catch(e) {
+                    originalLog.apply(console, args);
+                }
+            };
+            
+            window.addEventListener('error', function(event) {
+                const message = event.message || '';
+                const filename = event.filename || '';
+                const stack = event.error?.stack || '';
+                if (shouldFilter(message, stack) || shouldFilter(filename, stack)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            }, true);
+            
+            window.addEventListener('unhandledrejection', function(event) {
+                const reason = event.reason;
+                const message = reason?.message || String(reason || '');
+                const stack = reason?.stack || '';
+                if (shouldFilter(message, stack)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up and Create an Account to Start Learning</title>
@@ -8,6 +98,7 @@
     <link rel="apple-touch-icon" href="assets/images/NUERLO-LOGO.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/NUERLO-LOGO.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#1a1a1a">
@@ -33,7 +124,7 @@
         .login-container h2,
         .login-container h3,
         .login-container p,
-        .login-container span:not(.auth-forgot span):not(.auth-footer span):not(.auth-bottom-legal span),
+        .login-container span:not(.auth-forgot span):not(.auth-footer span):not(.auth-bottom-legal span):not(.terms-checkbox-label span),
         .login-container div,
         .login-container label {
             color: #1f2937 !important;
@@ -390,6 +481,18 @@
             box-shadow: none !important;
             background: #1f2937 !important;
         }
+        
+        .auth-submit-btn:disabled {
+            background: #9ca3af !important;
+            color: #ffffff !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        
+        .auth-submit-btn:disabled:hover {
+            background: #9ca3af !important;
+            color: #ffffff !important;
+        }
 
         .error-message {
             margin-top: 16px;
@@ -571,13 +674,42 @@
             margin-top: 2px;
         }
         
-        .terms-link {
-            color: #a476ff !important;
-            text-decoration: none;
-            font-weight: 500;
+        .terms-checkbox-label span {
+            color: #374151 !important;
         }
         
-        .terms-link:hover {
+        .terms-link,
+        .terms-link:link,
+        .terms-link:visited,
+        .terms-link:active,
+        .terms-link:focus,
+        .terms-checkbox-label .terms-link,
+        .terms-checkbox-label .terms-link:link,
+        .terms-checkbox-label .terms-link:visited,
+        .terms-checkbox-label .terms-link:active,
+        .terms-checkbox-label .terms-link:focus {
+            color: #a476ff !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+        }
+        
+        .terms-link:hover,
+        .terms-checkbox-label .terms-link:hover {
+            color: #8b5fff !important;
+            text-decoration: none !important;
+        }
+        
+        /* Ensure terms links stay purple even when wrapping */
+        .terms-checkbox-label span a.terms-link,
+        .terms-checkbox-label span a.terms-link:link,
+        .terms-checkbox-label span a.terms-link:visited,
+        .terms-checkbox-label span a.terms-link:active,
+        .terms-checkbox-label span a.terms-link:focus,
+        .terms-checkbox-label span a.terms-link:hover {
+            color: #a476ff !important;
+        }
+        
+        .terms-checkbox-label span a.terms-link:hover {
             color: #8b5fff !important;
         }
 
@@ -587,6 +719,7 @@
                 display: flex;
                 flex-direction: column;
                 position: relative;
+                min-height: 100vh;
             }
 
             .login-left {
@@ -599,6 +732,8 @@
                 height: auto;
                 min-height: 65vh;
                 padding: 0;
+                padding-top: 120px;
+                padding-bottom: 100px;
                 display: flex;
                 flex-direction: column;
                 flex: 1;
@@ -613,31 +748,49 @@
                 transform: none;
                 padding: 20px;
                 margin: 0;
+                width: 100%;
+                max-width: none;
                 z-index: 10;
             }
 
             .auth-card {
                 padding: 32px 24px;
+                margin-bottom: 16px;
             }
 
             .auth-heading {
                 font-size: 1.75rem;
             }
 
+            .auth-security-message {
+                margin-bottom: 20px;
+            }
+
             .auth-bottom-legal {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
                 padding: 20px;
                 z-index: 5;
+                margin-top: auto;
             }
         }
 
         @media (max-width: 480px) {
+            .login-right {
+                padding-top: 100px;
+                padding-bottom: 80px;
+            }
+
+            .form-wrapper {
+                transform: translateY(-40px);
+            }
+
             .auth-card {
                 padding: 28px 20px;
                 border-radius: 20px;
+                margin-bottom: 12px;
             }
 
             .auth-heading {
@@ -647,6 +800,10 @@
             .auth-header {
                 top: 20px;
                 left: 20px;
+            }
+
+            .auth-bottom-legal {
+                padding: 16px 20px;
             }
         }
     </style>
@@ -704,23 +861,23 @@
                 <form class="auth-form" id="standaloneRegisterForm">
                     <div class="form-group">
                         <label class="form-label" for="registerEmail">Email</label>
-                        <input type="email" id="registerEmail" class="form-input" required>
+                        <input type="email" id="registerEmail" class="form-input" autocomplete="email" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="registerFullName">Full Name</label>
-                        <input type="text" id="registerFullName" class="form-input" required>
+                        <input type="text" id="registerFullName" class="form-input" autocomplete="name" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="registerPassword">Password</label>
-                        <input type="password" id="registerPassword" class="form-input" required minlength="6">
+                        <input type="password" id="registerPassword" class="form-input" autocomplete="new-password" required minlength="6">
                     </div>
                     <div class="form-group">
                         <label class="terms-checkbox-label">
                             <input type="checkbox" id="agreeTerms" required>
-                            <span>I agree to <a href="https://nuerlo.com/user-agreement" class="terms-link">Terms & Conditions</a> and <a href="https://nuerlo.com/privacy-policy" class="terms-link">Privacy Policy</a></span>
+                            <span>I agree to <a href="https://nuerlo.com/user-agreement" class="terms-link">Terms of Service</a> and <a href="https://nuerlo.com/privacy-policy" class="terms-link">Privacy Policy</a></span>
                         </label>
                     </div>
-                    <button type="submit" class="auth-submit-btn">Create account</button>
+                    <button type="submit" class="auth-submit-btn" id="createAccountBtn" disabled>Create account</button>
                     <div id="errorMessage" class="error-message" style="display: none;"></div>
                 </form>
 
@@ -782,6 +939,15 @@
         
         const form = document.getElementById('standaloneRegisterForm');
         const errorMessage = document.getElementById('errorMessage');
+        const agreeTermsCheckbox = document.getElementById('agreeTerms');
+        const createAccountBtn = document.getElementById('createAccountBtn');
+        
+        // Enable/disable submit button based on checkbox state
+        if (agreeTermsCheckbox && createAccountBtn) {
+            agreeTermsCheckbox.addEventListener('change', function() {
+                createAccountBtn.disabled = !this.checked;
+            });
+        }
         
         function getFriendlyErrorMessage(error) {
             // Never show Firebase technical errors to users
@@ -823,11 +989,18 @@
                 const email = document.getElementById('registerEmail').value.trim();
                 const fullName = document.getElementById('registerFullName').value.trim();
                 const password = document.getElementById('registerPassword').value;
+                const agreeTerms = document.getElementById('agreeTerms');
                 const btn = form.querySelector('.auth-submit-btn');
                 const original = btn.textContent;
                 
                 // Hide any previous error
                 if (errorMessage) errorMessage.style.display = 'none';
+                
+                // Validate terms checkbox
+                if (!agreeTerms || !agreeTerms.checked) {
+                    showError('Please agree to the Terms of Service and Privacy Policy to continue.');
+                    return;
+                }
                 
                 // Validate password length
                 if (password.length < 6) {

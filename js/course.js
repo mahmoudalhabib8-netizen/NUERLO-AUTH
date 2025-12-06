@@ -123,34 +123,40 @@ async function verifyAuthentication() {
             return;
         }
 
-        // Check current user first (synchronous)
-        const currentUser = window.firebase.auth.currentUser;
-        if (currentUser) {
-            console.log('User already authenticated:', currentUser.uid, currentUser.email);
-            resolve(currentUser);
+        let unsubscribe = null;
+        let timeoutId = null;
+
+        const finish = (user) => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            resolve(user);
+        };
+
+        // Check current user first (synchronous, picks up existing session)
+        const immediateUser = window.firebase.auth.currentUser;
+        if (immediateUser) {
+            console.log('User already authenticated:', immediateUser.uid, immediateUser.email);
+            finish(immediateUser);
             return;
         }
 
-        // If no current user, wait for auth state change
-        const unsubscribe = window.firebase.auth.onAuthStateChanged((user) => {
-            unsubscribe(); // Unsubscribe after first check
+        // If no current user yet, listen for auth state changes
+        unsubscribe = window.firebase.auth.onAuthStateChanged((user) => {
             if (user) {
                 console.log('User authenticated via onAuthStateChanged:', user.uid, user.email);
-                resolve(user);
-            } else {
-                console.error('No user authenticated');
-                resolve(null);
+                finish(user);
             }
         });
         
-        // Timeout after 3 seconds
-        setTimeout(() => {
-            unsubscribe();
-            if (!currentUser) {
-                console.error('Authentication check timeout');
-                resolve(null);
-            }
-        }, 3000);
+        // Timeout after 6 seconds to allow slower auth state propagation
+        timeoutId = setTimeout(() => {
+            console.error('Authentication check timeout');
+            finish(null);
+        }, 6000);
     });
 }
 
@@ -309,6 +315,56 @@ async function fetchUserProgress(userId, courseId) {
     } catch (error) {
         console.error('Error fetching user progress:', error);
         return 0;
+    }
+}
+
+/**
+ * Update user progress for a course
+ * Updates both progress[courseId] (simple structure) and courseProgress[courseId].progress (detailed structure)
+ */
+async function updateUserProgress(userId, courseId, progressValue) {
+    try {
+        if (!window.firebase || !window.firebase.db) {
+            console.error('Firebase not initialized');
+            return false;
+        }
+
+        const { doc, getDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const userDocRef = doc(window.firebase.db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            console.error('User document does not exist');
+            return false;
+        }
+
+        const userData = userDoc.data();
+        const updateData = {};
+        
+        // Update simple progress structure: progress[courseId] = value
+        const progress = userData.progress || {};
+        progress[courseId] = progressValue;
+        updateData.progress = progress;
+        
+        // Update detailed courseProgress structure: courseProgress[courseId].progress = value
+        const courseProgress = userData.courseProgress || {};
+        if (!courseProgress[courseId]) {
+            courseProgress[courseId] = {};
+        }
+        courseProgress[courseId].progress = progressValue;
+        courseProgress[courseId].lastAccessed = new Date();
+        if (!courseProgress[courseId].startedAt) {
+            courseProgress[courseId].startedAt = new Date();
+        }
+        updateData.courseProgress = courseProgress;
+
+        await updateDoc(userDocRef, updateData);
+
+        console.log('Updated user progress for course:', courseId, 'to', progressValue + '%');
+        return true;
+    } catch (error) {
+        console.error('Error updating user progress:', error);
+        return false;
     }
 }
 
@@ -949,7 +1005,7 @@ async function initializeCourseView() {
     try {
         // CRITICAL: Set document title immediately (before any async operations)
         // This ensures the browser tab shows the course name right away
-        const courseId = extractCourseIdFromUrl();
+        courseId = extractCourseIdFromUrl();
         if (courseId) {
             // Set a default title immediately - will be updated with actual course name later
             document.title = `Course - Nuerlo`;
@@ -1105,23 +1161,36 @@ async function initializeCourseView() {
                 const userDoc = await getDoc(userRef);
                 
                 if (userDoc.exists()) {
-                    // Add course to enrolledCourses
-                    await updateDoc(userRef, {
-                        enrolledCourses: arrayUnion(courseId)
-                    });
-                    console.log('Auto-enrolled user in course:', courseId);
+                    const userData = userDoc.data();
+                    const existingEnrolledCourses = userData.enrolledCourses || [];
+                    const subscription = userData.subscription || null;
                     
-                    // Also update course document
-                    const courseRef = doc(window.firebase.db, 'courses', courseId);
-                    const courseDoc = await getDoc(courseRef);
-                    if (courseDoc.exists()) {
-                        await updateDoc(courseRef, {
-                            enrolled: arrayUnion(user.uid),
-                            students: (courseDoc.data().students || 0) + 1
+                    // Check if user is on free plan and has reached the 3-course limit
+                    const isOnFreePlan = !subscription || !subscription.status || 
+                                       (subscription.status !== 'active' && subscription.status !== 'trialing');
+                    
+                    if (isOnFreePlan && existingEnrolledCourses.length >= 3) {
+                        console.warn('User on free plan has reached 3-course limit, cannot auto-enroll');
+                        // Don't auto-enroll, let the user see the enrollment limit message
+                    } else {
+                        // Add course to enrolledCourses
+                        await updateDoc(userRef, {
+                            enrolledCourses: arrayUnion(courseId)
                         });
+                        console.log('Auto-enrolled user in course:', courseId);
+                        
+                        // Also update course document
+                        const courseRef = doc(window.firebase.db, 'courses', courseId);
+                        const courseDoc = await getDoc(courseRef);
+                        if (courseDoc.exists()) {
+                            await updateDoc(courseRef, {
+                                enrolled: arrayUnion(user.uid),
+                                students: (courseDoc.data().students || 0) + 1
+                            });
+                        }
+                        
+                        isEnrolled = true;
                     }
-                    
-                    isEnrolled = true;
                 } else {
                     // Create user document with enrollment
                     await setDoc(userRef, {
@@ -1168,7 +1237,14 @@ async function initializeCourseView() {
         console.log('Document title updated to:', document.title);
 
         // Fetch user progress
-        const userProgress = await fetchUserProgress(user.uid, courseId);
+        let userProgress = await fetchUserProgress(user.uid, courseId);
+        
+        // If progress is 0, set it to 1% to mark the course as started
+        if (userProgress === 0 || userProgress === null || userProgress === undefined) {
+            console.log('Course not started yet, setting initial progress to 1%');
+            await updateUserProgress(user.uid, courseId, 1);
+            userProgress = 1;
+        }
         
         // Calculate progress stats
         const lessons = courseData.lessons || courseData.modules || [];
@@ -1213,10 +1289,11 @@ async function initializeCourseView() {
         console.log('Course view initialized successfully:', courseData);
         
         // Log course access activity
-        if (window.logUserActivity) {
-            await window.logUserActivity('course_access', { courseId: courseId });
-            console.log('Course access logged');
-        }
+        // DISABLED: Requires special permissions
+        // if (window.logUserActivity) {
+        //     await window.logUserActivity('course_access', { courseId: courseId });
+        //     console.log('Course access logged');
+        // }
         
         // Start study time tracking
         startStudyTimeTracking(courseId);
@@ -1255,13 +1332,14 @@ let studyTimer = null;
 // Mark a lesson as completed and log activity
 async function markLessonComplete(lessonId, courseId) {
     try {
-        if (window.logUserActivity) {
-            await window.logUserActivity('lesson_complete', {
-                courseId: courseId || window.currentCourseId,
-                lessonId: lessonId
-            });
-            console.log('Lesson completion logged:', lessonId);
-        }
+        // DISABLED: Requires special permissions
+        // if (window.logUserActivity) {
+        //     await window.logUserActivity('lesson_complete', {
+        //         courseId: courseId || window.currentCourseId,
+        //         lessonId: lessonId
+        //     });
+        //     console.log('Lesson completion logged:', lessonId);
+        // }
         
         // Update lesson UI to show completion
         const lessonElement = document.querySelector(`[data-lesson-id="${lessonId}"]`);
@@ -1287,32 +1365,34 @@ function startStudyTimeTracking(courseId) {
     }
     
     studyTimer = setInterval(async () => {
-        if (window.logUserActivity && studyStartTime) {
-            const minutesStudied = Math.floor((Date.now() - studyStartTime) / 60000);
-            if (minutesStudied > 0) {
-                await window.logUserActivity('study_time', { 
-                    courseId: courseId, 
-                    minutes: 5 // Log 5 minutes at a time
-                });
-                console.log('⏱ Logged 5 minutes of study time');
-            }
-        }
+        // DISABLED: Requires special permissions
+        // if (window.logUserActivity && studyStartTime) {
+        //     const minutesStudied = Math.floor((Date.now() - studyStartTime) / 60000);
+        //     if (minutesStudied > 0) {
+        //         await window.logUserActivity('study_time', { 
+        //             courseId: courseId, 
+        //             minutes: 5 // Log 5 minutes at a time
+        //         });
+        //         console.log('⏱ Logged 5 minutes of study time');
+        //     }
+        // }
     }, 5 * 60 * 1000); // Every 5 minutes
     
     // Also log when page is closed/navigated away
-    window.addEventListener('beforeunload', () => {
-        if (window.logUserActivity && studyStartTime) {
-            const minutesStudied = Math.floor((Date.now() - studyStartTime) / 60000);
-            if (minutesStudied > 0) {
-                // Use synchronous approach for beforeunload
-                navigator.sendBeacon('/log-activity', JSON.stringify({
-                    type: 'study_time',
-                    courseId: courseId,
-                    minutes: minutesStudied % 5 // Log remaining minutes not already logged
-                }));
-            }
-        }
-    });
+    // DISABLED: Requires special permissions
+    // window.addEventListener('beforeunload', () => {
+    //     if (window.logUserActivity && studyStartTime) {
+    //         const minutesStudied = Math.floor((Date.now() - studyStartTime) / 60000);
+    //         if (minutesStudied > 0) {
+    //             // Use synchronous approach for beforeunload
+    //             navigator.sendBeacon('/log-activity', JSON.stringify({
+    //                 type: 'study_time',
+    //                 courseId: courseId,
+    //                 minutes: minutesStudied % 5 // Log remaining minutes not already logged
+    //             }));
+    //         }
+    //     }
+    // });
 }
 
 // Only initialize on course pages, not dashboard

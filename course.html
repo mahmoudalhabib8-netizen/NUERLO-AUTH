@@ -36,6 +36,7 @@
     
     <!-- Mobile Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Nuerlo">
     <meta name="theme-color" content="#ffffff" id="themeColorMeta">
@@ -905,13 +906,14 @@
             width: 100%;
             display: flex;
             align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2) var(--space-4);
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
             color: var(--color-text-secondary);
             text-decoration: none;
-            font-size: var(--font-size-base);
+            font-size: var(--font-size-sm);
             font-weight: var(--font-weight-medium);
-            transition: color 0.15s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
             background: transparent;
             border: none;
             cursor: pointer;
@@ -953,6 +955,89 @@
         .dashboard-sidebar.collapsed .sidebar-logo a {
             justify-content: center;
             padding: var(--space-2);
+        }
+
+        .sidebar-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            color: var(--color-text-primary);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            letter-spacing: 0.02em;
+        }
+
+        .sidebar-back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .sidebar-back-text {
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+        }
+
+        .sidebar-back-btn:hover .sidebar-back-text {
+            color: var(--color-text-primary);
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-back-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .dashboard-sidebar.collapsed .sidebar-back-btn {
+            justify-content: center;
+        }
+
+        .course-section-block {
+            width: 100%;
+            padding: 32px 0;
+            border-top: 1px solid var(--color-border-light);
+        }
+
+        .course-section-block:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .course-minimal-section {
+            margin: 0;
+            padding: 0;
+        }
+
+        .course-minimal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .course-minimal-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            width: 100%;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .course-minimal-label {
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 11px;
+            color: var(--color-text-tertiary);
         }
     </style>
     <script>
@@ -1005,13 +1090,13 @@
         </button>
         <div class="sidebar-header">
             <div class="sidebar-logo">
-                <a href="/dashboard.html" style="text-decoration: none; color: var(--color-text-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); display: flex; align-items: center; gap: var(--space-2);">
+                <button class="sidebar-back-btn" type="button" onclick="window.location.href='/dashboard.html'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 12H5"></path>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
-                    <span>Back To Dashboard</span>
-                </a>
+                    <span class="sidebar-back-text">Dashboard</span>
+                </button>
             </div>
         </div>
         
@@ -1095,6 +1180,51 @@
                     </li>
                 </ul>
             </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Sessions</div>
+                <ul class="sidebar-nav">
+                    <li class="nav-item">
+                        <a href="#liveSessions" class="nav-link" data-section="liveSessions" data-tooltip="Live Sessions">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <span>Live Sessions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#courseAnnouncements" class="nav-link" data-section="courseAnnouncements" data-tooltip="Announcements">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 5h12l4 4v6H3z"></path>
+                                <line x1="7" y1="9" x2="7" y2="13"></line>
+                            </svg>
+                            <span>Announcements</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#officeHours" class="nav-link" data-section="officeHours" data-tooltip="Office Hours">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <polyline points="12 7 12 12 15 14"></polyline>
+                            </svg>
+                            <span>Office Hours</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#peerProjects" class="nav-link" data-section="peerProjects" data-tooltip="Peer Projects">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 6H9"></path>
+                                <path d="M4 6h1"></path>
+                                <path d="M20 12H9"></path>
+                                <path d="M4 12h1"></path>
+                                <path d="M20 18H9"></path>
+                                <path d="M4 18h1"></path>
+                            </svg>
+                            <span>Peer Projects</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
         
         <div class="sidebar-footer">
@@ -1104,7 +1234,7 @@
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                <span>Leave Program</span>
+                <span>Leave Course</span>
             </button>
         </div>
     </nav>
@@ -1239,30 +1369,127 @@
             
             <!-- Overview Section -->
             <section id="details" class="content-section active">
-                <!-- Progress -->
-                <div class="overview-progress" id="overviewProgress">
-                    <!-- Progress will be populated here -->
+                <!-- Continue Watching -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Continue Watching</h3>
+                    </div>
+                    
+                    <!-- Video Container -->
+                    <div id="continueWatchingVideo" style="width: 100%; aspect-ratio: 16/9; background: var(--color-bg-tertiary); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); overflow: hidden;">
+                        <div style="text-align: center; color: var(--color-text-tertiary);">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: var(--space-3); opacity: 0.3;">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <div style="font-size: var(--font-size-sm); opacity: 0.6;">Video will be embedded here</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Info -->
+                    <div id="continueWatchingInfo">
+                        <h4 style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); margin-bottom: var(--space-2);">Introduction to the Course</h4>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary); margin-bottom: var(--space-4);">Lesson 1 • Module 1 • 12:34</div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="program-progress">
+                            <div class="progress-label">
+                                <span>Progress</span>
+                                <span>0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Continue Learning -->
-                <div class="continue-learning" id="continueLearning">
-                    <!-- Continue Learning will be populated here -->
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Activity</h3>
+                    </div>
+                    
+                    <div id="recentActivityList">
+                        <!-- Activity Item -->
+                        <div style="padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border-light);">
+                            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                <div style="width: 8px; height: 8px; background: var(--color-brand-purple); border-radius: 50%; flex-shrink: 0;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: var(--font-size-sm); color: var(--color-text-primary); margin-bottom: var(--space-1);">Completed Lesson 1</div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">2 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Item -->
+                        <div style="padding: var(--space-4) 0; border-bottom: 1px solid var(--color-border-light);">
+                            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                <div style="width: 8px; height: 8px; background: var(--color-border-light); border-radius: 50%; flex-shrink: 0;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: var(--font-size-sm); color: var(--color-text-primary); margin-bottom: var(--space-1);">Started Module 1</div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">Yesterday</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Item -->
+                        <div style="padding: var(--space-4) 0;">
+                            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                <div style="width: 8px; height: 8px; background: var(--color-border-light); border-radius: 50%; flex-shrink: 0;"></div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: var(--font-size-sm); color: var(--color-text-primary); margin-bottom: var(--space-1);">Enrolled in course</div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary);">3 days ago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Recent Lessons -->
-                <div class="recent-lessons" id="recentLessons">
-                    <!-- Recent Lessons will be populated here -->
-                </div>
-
-                <!-- Community Section -->
-                <div class="community-section" id="communitySection">
-                    <!-- Community will be populated here -->
-                </div>
             </section>
 
             <!-- Lessons Section -->
             <section id="lessons" class="content-section">
-                <div class="lesson-list" id="lessonsList">
+                <!-- Continue Watching (in Lessons) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Continue Watching</h3>
+                    </div>
+                    
+                    <!-- Video Container -->
+                    <div id="lessonsCurrentVideo" style="width: 100%; aspect-ratio: 16/9; background: var(--color-bg-tertiary); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); overflow: hidden;">
+                        <div style="text-align: center; color: var(--color-text-tertiary);">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: var(--space-3); opacity: 0.3;">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <div style="font-size: var(--font-size-sm); opacity: 0.6;">Video will be embedded here</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Info -->
+                    <div>
+                        <h4 style="font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); margin-bottom: var(--space-2);">Introduction to the Course</h4>
+                        <div style="font-size: var(--font-size-sm); color: var(--color-text-tertiary); margin-bottom: var(--space-4);">Lesson 1 • Module 1 • 12:34</div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="program-progress">
+                            <div class="progress-label">
+                                <span>Progress</span>
+                                <span>0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Lessons -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">All Lessons</h3>
+                    </div>
+                    
+                    <div class="lesson-list" id="lessonsList">
                     <!-- Sample Lesson Box 1 (Template - Will be replaced by course.js) -->
                     <div class="lesson-box">
                         <div class="lesson-box-header">
@@ -1480,6 +1707,7 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
             </section>
 
@@ -1661,6 +1889,64 @@
                 </div>
             </section>
 
+            <!-- Live Sessions Section -->
+            <section id="liveSessions" class="content-section">
+                <div class="course-minimal-section course-section-block">
+                    <div class="course-minimal-list" id="liveSessionsList">
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Next Session</span>
+                            <span id="liveSessionsNext">TBD</span>
+                        </div>
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Mentor</span>
+                            <span id="liveSessionsMentor">Assigning...</span>
+                        </div>
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Format</span>
+                            <span id="liveSessionsFormat">Workshop</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Announcements Section -->
+            <section id="courseAnnouncements" class="content-section">
+                <div class="course-minimal-section course-section-block">
+                    <div class="course-minimal-list" id="courseAnnouncementsList">
+                        <div>Loading latest course updates…</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Office Hours Section -->
+            <section id="officeHours" class="content-section">
+                <div class="course-minimal-section course-section-block">
+                    <div class="course-minimal-list">
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Mentor</span>
+                            <span id="officeHoursMentor">Scheduling</span>
+                        </div>
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Window</span>
+                            <span id="officeHoursWindow">Wed / Fri</span>
+                        </div>
+                        <div class="course-minimal-row">
+                            <span class="course-minimal-label">Booking</span>
+                            <span id="officeHoursBooking">Links added automatically</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Peer Projects Section -->
+            <section id="peerProjects" class="content-section">
+                <div class="course-minimal-section course-section-block">
+                    <div class="course-minimal-list" id="peerProjectsList">
+                        <div>Coordinating active projects…</div>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </main>
 
@@ -1702,76 +1988,8 @@
     <script type="module" src="/js/marketplace.js"></script>
     <script src="/js/course.js"></script>
     
-    <script>
-        // Initialize theme immediately to prevent flash
-        (function() {
-            let themeMode = 'dark'; // Default to dark mode
-            
-            try {
-                // Check for TEMPORARY theme preference (from header toggle) - expires after 24 hours
-                const tempTheme = localStorage.getItem('temporaryTheme');
-                const tempThemeTimestamp = localStorage.getItem('temporaryThemeTimestamp');
-                
-                if (tempTheme && tempThemeTimestamp) {
-                    const timestamp = parseInt(tempThemeTimestamp);
-                    const now = Date.now();
-                    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-                    
-                    // If temporary theme is still valid (less than 24 hours old)
-                    if (now - timestamp < twentyFourHours) {
-                        themeMode = tempTheme;
-                        console.log('Using temporary theme preference:', tempTheme);
-                    } else {
-                        // Temporary preference expired, remove it and use permanent setting
-                        localStorage.removeItem('temporaryTheme');
-                        localStorage.removeItem('temporaryThemeTimestamp');
-                        console.log('Temporary theme preference expired, using permanent setting');
-                        
-                        // Fall through to check permanent settings below
-                        const storedSettings = localStorage.getItem('dashboardSettings');
-                        if (storedSettings) {
-                            const settings = JSON.parse(storedSettings);
-                            if (settings.alwaysLightMode) {
-                                themeMode = 'light';
-                            } else if (settings.themeMode) {
-                                themeMode = settings.themeMode;
-                            }
-                        }
-                    }
-                } else {
-                    // No temporary preference, check PERMANENT settings
-                    const storedSettings = localStorage.getItem('dashboardSettings');
-                    if (storedSettings) {
-                        const settings = JSON.parse(storedSettings);
-                        if (settings.alwaysLightMode) {
-                            themeMode = 'light';
-                        } else if (settings.themeMode) {
-                            themeMode = settings.themeMode;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading theme preferences:', e);
-            }
-            
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            
-            // Remove both classes first to ensure clean state
-            body.classList.remove('light-mode', 'dark-mode');
-            
-            if (themeMode === 'light') {
-                body.classList.add('light-mode');
-                body.setAttribute('data-theme', 'light');
-                if (themeMeta) themeMeta.content = '#ffffff';
-            } else {
-                // Default to dark mode
-                body.classList.add('dark-mode');
-                body.setAttribute('data-theme', 'dark');
-                if (themeMeta) themeMeta.content = '#0a0a0a';
-            }
-        })();
-    </script>
+    <!-- Theme & Sidebar Handler - shared with dashboard -->
+    <script src="/js/theme-sidebar.js"></script>
     
     <script>
         // Override dashboard.js updateHeaderTitle to prevent "Welcome" from showing
@@ -1864,20 +2082,41 @@
             return null;
         }
 
+        // URL mapping: short URL names -> internal section IDs
+        const sectionUrlMap = {
+            'livesessions': 'liveSessions',
+            'announcements': 'courseAnnouncements',
+            'hours': 'officeHours',
+            'peerprojects': 'peerProjects'
+        };
+        
+        // Reverse mapping: internal section IDs -> short URL names
+        const sectionIdToUrlMap = {
+            'liveSessions': 'livesessions',
+            'courseAnnouncements': 'announcements',
+            'officeHours': 'hours',
+            'peerProjects': 'peerprojects'
+        };
+
         // Helper function to get section from URL
         // Structure: /{courseId}/{section} - includes courseId in URL
         function getSectionFromUrl() {
             const pathname = window.location.pathname;
-            const courseSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+            const courseSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes', 'liveSessions', 'courseAnnouncements', 'officeHours', 'peerProjects'];
             
             // Check for /<courseId>/<section> pattern (current format)
             const courseSectionMatch = pathname.match(/^\/([^\/]+)\/([^\/]+)$/);
             if (courseSectionMatch && courseSectionMatch[1] && courseSectionMatch[2]) {
                 const potentialCourseId = courseSectionMatch[1];
-                const potentialSection = courseSectionMatch[2];
+                let potentialSection = courseSectionMatch[2];
                 const dashboardSections = ['programs', 'credentials', 'marketplace', 
                                           'tasks', 'community', 'profile', 'settings', 'subscriptions', 'help',
                                           'dashboard', 'login', 'register', 'course'];
+                
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[potentialSection]) {
+                    potentialSection = sectionUrlMap[potentialSection];
+                }
                 
                 // If the section is a course section and the first part is not a dashboard section, it's a course
                 if (courseSections.includes(potentialSection) && !dashboardSections.includes(potentialCourseId)) {
@@ -1888,7 +2127,11 @@
             // Fallback: Check for clean route format: /lessons, /overview, etc. (will be redirected by CourseRouter)
             const directSectionMatch = pathname.match(/^\/([^\/]+)$/);
             if (directSectionMatch && directSectionMatch[1]) {
-                const section = directSectionMatch[1];
+                let section = directSectionMatch[1];
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[section]) {
+                    section = sectionUrlMap[section];
+                }
                 if (courseSections.includes(section)) {
                     return section;
                 }
@@ -1903,7 +2146,11 @@
             // Check for /acct_xxx/<courseId>/<section> pattern (legacy with account prefix)
             const accountCourseSectionMatch = pathname.match(/\/acct_[^\/]+\/([^\/]+)\/([^\/]+)$/);
             if (accountCourseSectionMatch && accountCourseSectionMatch[1] && accountCourseSectionMatch[2]) {
-                const potentialSection = accountCourseSectionMatch[2];
+                let potentialSection = accountCourseSectionMatch[2];
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[potentialSection]) {
+                    potentialSection = sectionUrlMap[potentialSection];
+                }
                 if (courseSections.includes(potentialSection)) {
                     return potentialSection;
                 }
@@ -1912,19 +2159,34 @@
             // Legacy support: /acct_xxx/<courseId>/course/<section> pattern
             const accountCourseOldSectionMatch = pathname.match(/\/acct_[^\/]+\/[^\/]+\/course\/([^\/]+)/);
             if (accountCourseOldSectionMatch && accountCourseOldSectionMatch[1]) {
-                return accountCourseOldSectionMatch[1];
+                let section = accountCourseOldSectionMatch[1];
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[section]) {
+                    section = sectionUrlMap[section];
+                }
+                return section;
             }
             
             // Legacy support: /<courseId>/course/<section> pattern (old structure)
             const courseOldSectionMatch = pathname.match(/\/([^\/]+)\/course\/([^\/]+)/);
             if (courseOldSectionMatch && courseOldSectionMatch[2]) {
-                return courseOldSectionMatch[2];
+                let section = courseOldSectionMatch[2];
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[section]) {
+                    section = sectionUrlMap[section];
+                }
+                return section;
             }
             
             // Legacy support: /course/<courseId>/<section> (old format)
             const legacySectionMatch = pathname.match(/\/course\/[^\/]+\/([^\/]+)/);
             if (legacySectionMatch && legacySectionMatch[1]) {
-                return legacySectionMatch[1];
+                let section = legacySectionMatch[1];
+                // Map short URL name to internal section ID if needed
+                if (sectionUrlMap[section]) {
+                    section = sectionUrlMap[section];
+                }
+                return section;
             }
             
             // Legacy support: /course/<courseId> (old format overview)
@@ -1945,8 +2207,11 @@
                 return null;
             }
             
+            // Use short URL name if mapping exists, otherwise use section name as-is
+            const urlSectionName = sectionIdToUrlMap[sectionName] || sectionName;
+            
             // Course URLs include courseId: /{courseId}/{section}
-            return `/${courseId}/${sectionName}`;
+            return `/${courseId}/${urlSectionName}`;
         }
 
         // Navigation functionality
@@ -1978,7 +2243,11 @@
                 'discussions': 'General Chat',
                 'analytics': 'Progress',
                 'assignments': 'Assignments',
-                'notes': 'Notes'
+                'notes': 'Notes',
+                'liveSessions': 'Live Sessions',
+                'courseAnnouncements': 'Announcements',
+                'officeHours': 'Office Hours',
+                'peerProjects': 'Peer Projects'
             };
             
             const titleText = document.getElementById('titleText');
@@ -2010,7 +2279,7 @@
             const sectionFromUrl = getSectionFromUrl();
             if (sectionFromUrl) {
                 // Validate section exists
-                const validSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes'];
+                const validSections = ['details', 'lessons', 'resources', 'discussions', 'analytics', 'assignments', 'notes', 'liveSessions', 'courseAnnouncements', 'officeHours', 'peerProjects'];
                 if (validSections.includes(sectionFromUrl)) {
                     // Small delay to ensure DOM is ready
                     setTimeout(() => {
@@ -2040,107 +2309,8 @@
             }
         }
 
-        // Sidebar toggle for mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
-
-        // Sidebar collapse/expand toggle
-        function toggleSidebarCollapse() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const isCollapsed = sidebar.classList.toggle('collapsed');
-            
-            // Update button title
-            sidebarToggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
-            
-            // Save state to localStorage
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-            
-            try {
-                const storedSettings = localStorage.getItem('dashboardSettings');
-                const settings = storedSettings ? JSON.parse(storedSettings) : {};
-                settings.compactSidebar = isCollapsed;
-                localStorage.setItem('dashboardSettings', JSON.stringify(settings));
-            } catch (error) {
-                console.error('Error saving sidebar state:', error);
-            }
-        }
-
-        // Theme toggle functionality
-        function toggleTheme() {
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            const isDark = body.classList.contains('dark-mode') || (!body.classList.contains('light-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            
-            let newThemeMode;
-            if (isDark) {
-                newThemeMode = 'light';
-            } else {
-                newThemeMode = 'dark';
-            }
-            
-            applyThemeMode(newThemeMode);
-            
-            localStorage.setItem('temporaryTheme', newThemeMode);
-            localStorage.setItem('temporaryThemeTimestamp', Date.now().toString());
-        }
-        
-        function applyThemeMode(themeMode) {
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // Remove both classes first to ensure clean state
-                    body.classList.remove('light-mode', 'dark-mode');
-                    
-                    if (themeMode === 'light') {
-                        body.classList.add('light-mode');
-                        body.setAttribute('data-theme', 'light');
-                        if (themeMeta) themeMeta.content = '#ffffff';
-                        // Light mode: show sun, hide moon
-                        if (sunIcon) {
-                            sunIcon.style.opacity = '1';
-                            sunIcon.style.transform = 'rotate(0deg)';
-                        }
-                        if (moonIcon) {
-                            moonIcon.style.opacity = '0';
-                            moonIcon.style.transform = 'rotate(90deg)';
-                        }
-                    } else if (themeMode === 'dark') {
-                        body.classList.add('dark-mode');
-                        body.setAttribute('data-theme', 'dark');
-                        if (themeMeta) themeMeta.content = '#0a0a0a';
-                        // Dark mode: show moon, hide sun
-                        if (sunIcon) {
-                            sunIcon.style.opacity = '0';
-                            sunIcon.style.transform = 'rotate(-90deg)';
-                        }
-                        if (moonIcon) {
-                            moonIcon.style.opacity = '1';
-                            moonIcon.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                    
-                    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { themeMode } }));
-                });
-            });
-        }
-        
-        window.toggleTheme = toggleTheme;
-        window.applyThemeMode = applyThemeMode;
-
-        // Update icon colors based on current theme
-        function updateThemeIconColors() {
-            // CSS handles the colors via !important rules, so we don't need to set stroke here
-            // The CSS in dashboard-styles.css will handle both color and visibility
-        }
+        // Sidebar and theme functions are now in /js/theme-sidebar.js
+        // Course-specific navigateToSection is kept here since it differs from dashboard
 
         // Course Search Data - Only course-related content
         const courseSearchData = [
@@ -2151,7 +2321,11 @@
             { title: 'General Chat', keywords: ['discussions', 'chat', 'community', 'forum', 'messages', 'talk', 'general chat'], section: 'discussions', type: 'section' },
             { title: 'Progress', keywords: ['progress', 'completion', 'stats', 'achievements', 'tracking'], section: 'analytics', type: 'section' },
             { title: 'Assignments', keywords: ['assignments', 'homework', 'projects', 'tasks', 'submissions'], section: 'assignments', type: 'section' },
-            { title: 'Notes', keywords: ['notes', 'note', 'highlights', 'annotations', 'personal notes'], section: 'notes', type: 'section' }
+            { title: 'Notes', keywords: ['notes', 'note', 'highlights', 'annotations', 'personal notes'], section: 'notes', type: 'section' },
+            { title: 'Live Sessions', keywords: ['live sessions', 'sessions', 'live', 'workshop', 'meeting'], section: 'liveSessions', type: 'section' },
+            { title: 'Announcements', keywords: ['announcements', 'announcement', 'updates', 'news', 'notices'], section: 'courseAnnouncements', type: 'section' },
+            { title: 'Office Hours', keywords: ['office hours', 'hours', 'office', 'mentor', 'help', 'support'], section: 'officeHours', type: 'section' },
+            { title: 'Peer Projects', keywords: ['peer projects', 'projects', 'peer', 'collaboration', 'group'], section: 'peerProjects', type: 'section' }
         ];
 
         // Function to search course content
@@ -2486,37 +2660,6 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Ensure body has correct theme class for CSS to work
-            const body = document.body;
-            if (!body.classList.contains('dark-mode') && !body.classList.contains('light-mode')) {
-                // If no theme class, check system preference
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (prefersDark) {
-                    body.classList.add('dark-mode');
-                } else {
-                    body.classList.add('light-mode');
-                }
-            }
-            
-            // Force correct icon visibility based on theme
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            if (sunIcon && moonIcon) {
-                if (body.classList.contains('dark-mode')) {
-                    // Dark mode: show moon, hide sun
-                    sunIcon.style.opacity = '0';
-                    sunIcon.style.transform = 'rotate(-90deg)';
-                    moonIcon.style.opacity = '1';
-                    moonIcon.style.transform = 'rotate(0deg)';
-                } else {
-                    // Light mode: show sun, hide moon
-                    sunIcon.style.opacity = '1';
-                    sunIcon.style.transform = 'rotate(0deg)';
-                    moonIcon.style.opacity = '0';
-                    moonIcon.style.transform = 'rotate(90deg)';
-                }
-            }
-            
             // Update icon colors after DOM is ready
             updateThemeIconColors();
             
@@ -2573,46 +2716,8 @@
                 });
             }
             
-            // Theme toggle button
-            const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    toggleTheme();
-                    // Update icon colors after toggle
-                    setTimeout(updateThemeIconColors, 10);
-                });
-            }
-
-            // Initialize sidebar collapse state
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            
-            let shouldCollapse = false;
-            try {
-                const legacyState = localStorage.getItem('sidebarCollapsed');
-                const storedSettings = localStorage.getItem('dashboardSettings');
-                
-                if (storedSettings) {
-                    const settings = JSON.parse(storedSettings);
-                    if (settings.compactSidebar !== undefined) {
-                        shouldCollapse = settings.compactSidebar;
-                    } else if (legacyState === 'true') {
-                        shouldCollapse = true;
-                    }
-                } else if (legacyState === 'true') {
-                    shouldCollapse = true;
-                }
-            } catch (error) {
-                console.error('Error loading sidebar state:', error);
-            }
-            
-            if (shouldCollapse && sidebar) {
-                sidebar.classList.add('collapsed');
-            }
-            
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebarCollapse);
-            }
+            // Theme toggle and sidebar collapse are handled by /js/theme-sidebar.js
+            // No need to duplicate initialization here
 
             // Navigation click handlers
             const navLinks = document.querySelectorAll('.nav-link');
