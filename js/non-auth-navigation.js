@@ -371,12 +371,11 @@ function switchAuthTab(tab) {
 }
 
 // Firebase Auth Integration
+// Import popup functions immediately, but only import redirect functions when needed (mobile)
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   GoogleAuthProvider,
   GithubAuthProvider,
   signOut,
@@ -384,6 +383,17 @@ import {
   updateProfile
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// Lazy load redirect functions only when needed (mobile devices)
+let signInWithRedirect, getRedirectResult;
+async function loadRedirectFunctions() {
+    if (!signInWithRedirect) {
+        const redirectModule = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        signInWithRedirect = redirectModule.signInWithRedirect;
+        getRedirectResult = redirectModule.getRedirectResult;
+    }
+    return { signInWithRedirect, getRedirectResult };
+}
 
 // Initialize providers - create fresh instances to avoid state issues
 function getGoogleProvider() {
@@ -468,7 +478,8 @@ async function signInWithGoogle() {
         const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // Use redirect on mobile - set flag so we know to check for redirect result
+            // Use redirect on mobile - load redirect functions only when needed
+            const { signInWithRedirect } = await loadRedirectFunctions();
             sessionStorage.setItem('pendingRedirect', 'true');
             await signInWithRedirect(window.firebase.auth, getGoogleProvider());
             return { success: true, redirect: true }; // Will redirect, so return early
@@ -553,7 +564,8 @@ async function signInWithGitHub() {
         const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-            // Use redirect on mobile
+            // Use redirect on mobile - load redirect functions only when needed
+            const { signInWithRedirect } = await loadRedirectFunctions();
             sessionStorage.setItem('pendingRedirect', 'true');
             await signInWithRedirect(window.firebase.auth, getGithubProvider());
             return { success: true, redirect: true }; // Will redirect, so return early
@@ -580,9 +592,10 @@ async function signInWithGitHub() {
             return { success: true, user };
         }
     } catch (error) {
-        // If popup fails, try redirect as fallback
+        // If popup fails, try redirect as fallback (only on mobile)
         if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.message.includes('Cross-Origin')) {
             try {
+                const { signInWithRedirect } = await loadRedirectFunctions();
                 sessionStorage.setItem('pendingRedirect', 'true');
                 await signInWithRedirect(window.firebase.auth, getGithubProvider());
                 return { success: true, redirect: true };
@@ -634,6 +647,8 @@ async function handleRedirectResult() {
 
 async function checkRedirectResult() {
     try {
+        // Only load redirect functions when we actually need them
+        const { getRedirectResult } = await loadRedirectFunctions();
         const result = await getRedirectResult(window.firebase.auth);
         if (result && result.user) {
             sessionStorage.removeItem('pendingRedirect');
@@ -889,7 +904,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Desktop: use popup directly - this prevents any redirect initialization
                 const provider = getGoogleProvider();
-                const popupResult = await signInWithPopup(window.firebase.auth, provider);
+                
+                // Set a timeout to detect if popup hangs
+                const popupPromise = signInWithPopup(window.firebase.auth, provider);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Authentication timeout')), 60000)
+                );
+                
+                const popupResult = await Promise.race([popupPromise, timeoutPromise]);
                 
                 if (!popupResult || !popupResult.user) {
                     throw new Error('No user returned from authentication');

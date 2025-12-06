@@ -75,6 +75,17 @@
                 }
             };
             
+            // Suppress network errors for Firebase init.json (harmless 404)
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = args[0];
+                if (typeof url === 'string' && (url.includes('init.json') || url.includes('firebaseapp.com/__/firebase'))) {
+                    // Return a rejected promise that we'll catch silently
+                    return Promise.reject(new Error('Suppressed Firebase init.json request'));
+                }
+                return originalFetch.apply(this, args);
+            };
+            
             window.addEventListener('error', function(event) {
                 const message = event.message || '';
                 const filename = event.filename || '';
@@ -85,11 +96,19 @@
                 if (target && (target.src || target.href)) {
                     const url = target.src || target.href || '';
                     if (url.includes('init.json') || 
+                        url.includes('firebaseapp.com/__/firebase') ||
                         (url.includes('identitytoolkit') && url.includes('400'))) {
                         event.preventDefault();
                         event.stopPropagation();
                         return false;
                     }
+                }
+                
+                // Also filter errors from fetch
+                if (message.includes('init.json') || message.includes('firebaseapp.com/__/firebase')) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
                 }
                 
                 if (shouldFilter(message, stack) || shouldFilter(filename, stack)) {
