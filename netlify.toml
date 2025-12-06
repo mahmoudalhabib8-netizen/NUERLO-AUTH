@@ -1,238 +1,627 @@
 [build]
-  publish = "."
-  functions = "netlify/functions"
+publish = "."
+functions = "netlify/functions"
 
-# IMPORTANT: Order matters! More specific rules first
-# Static files (JS, CSS, images) are automatically served by Netlify if they exist
+  [build.environment]
 
-[[redirects]]
-  from = "/acct_*/*/course/*"
-  to = "/course.html"
-  status = 200
+  [build.processing]
 
-[[redirects]]
-  from = "/*/course/*"
-  to = "/course.html"
-  status = 200
+    [build.processing.css]
 
-[[redirects]]
-  from = "/course/*"
-  to = "/course.html"
-  status = 200
+    [build.processing.html]
 
-[[redirects]]
-  from = "/acct_*/programs/*"
-  to = "/dashboard.html"
-  status = 200
+    [build.processing.images]
 
-[[redirects]]
-  from = "/acct_*/progress/*"
-  to = "/dashboard.html"
-  status = 200
+    [build.processing.js]
 
-[[redirects]]
-  from = "/acct_*/profile/*"
-  to = "/dashboard.html"
-  status = 200
+  [build.services]
 
-[[redirects]]
-  from = "/acct_*/payment/*"
-  to = "/dashboard.html"
-  status = 200
+[functions]
 
-[[redirects]]
-  from = "/acct_*/marketplace"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/programs"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/progress"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/credentials"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/tasks"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/community"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/profile"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/settings"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/subscriptions"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/payment"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/help"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/dashboard/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/programs/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/progress/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/profile/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/payment/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/marketplace"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/programs"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/progress"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/credentials"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/tasks"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/community"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/profile"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/settings"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/subscriptions"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/payment"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/help"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/overview/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/overview"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/overview/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/acct_*/overview"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/dashboard/*"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/dashboard"
-  to = "/dashboard.html"
-  status = 200
-
-[[redirects]]
-  from = "/verify-email"
-  to = "/verify-email.html"
-  status = 200
-
-[[redirects]]
-  from = "/__/auth/action"
-  to = "/__/auth/action.html"
-  status = 200
-
-[[redirects]]
-  from = "/index.html"
-  to = "/dashboard.html"
-  status = 200
-
-# Ensure static files are served correctly
-[[headers]]
-  for = "/js/*"
-  [headers.values]
-    Content-Type = "application/javascript"
+  [functions."*"]
 
 [[headers]]
-  for = "/*.js"
+for = "/js/*"
+
   [headers.values]
-    Content-Type = "application/javascript"
+  Content-Type = "application/javascript"
 
 [[headers]]
-  for = "/*.css"
-  [headers.values]
-    Content-Type = "text/css"
+for = "/*.js"
 
+  [headers.values]
+  Content-Type = "application/javascript"
+
+[[headers]]
+for = "/*.css"
+
+  [headers.values]
+  Content-Type = "text/css"
+
+[[redirects]]
+from = "/acct_*/*/lessons"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/resources"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/discussions"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/assignments"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/notes"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/details"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/analytics"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/overview"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/lessons"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/resources"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/discussions"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/assignments"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/notes"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/details"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/analytics"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/dashboard.html"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/forgot-password"
+to = "/forgot-password.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/change-password"
+to = "/change-password.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/*/course/*"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/*/course/*"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/course/*"
+to = "/course.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/marketplace"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/programs"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/progress"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/credentials"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/tasks"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/community"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/profile"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/settings"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/subscriptions"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/payment"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/help"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/acct_*/dashboard/*"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/marketplace"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/programs"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/progress"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/credentials"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/tasks"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/community"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/profile"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/settings"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/subscriptions"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/payment"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/help"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/dashboard/*"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/dashboard"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/verify-email"
+to = "/verify-email.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/__/auth/action"
+to = "/__/auth/action.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
+
+[[redirects]]
+from = "/index.html"
+to = "/dashboard.html"
+status = 200
+force = false
+
+  [redirects.query]
+
+  [redirects.conditions]
+
+  [redirects.headers]
