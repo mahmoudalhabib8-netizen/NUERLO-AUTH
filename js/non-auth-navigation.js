@@ -870,62 +870,95 @@ document.addEventListener('DOMContentLoaded', function() {
             googleBtn.disabled = true;
             
             try {
-                const result = await signInWithGoogle();
+                // On desktop, use popup directly to avoid any redirect initialization
+                const isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 
-                // If redirect was used, don't reset button (page will redirect)
-                if (result.redirect) {
-                    return; // Page will redirect, don't do anything else
-                }
-                
-                // Reset button state - restore original HTML
-                googleBtn.innerHTML = originalHTML;
-                googleBtn.disabled = false;
-                googleBtn.removeAttribute('data-auth-in-progress');
-                
-                if (result.success && result.user) {
-                    const user = result.user;
-                    
-                    // Get Firebase ID token and set cross-domain cookie
-                    try {
-                        const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-                        const token = await getIdToken(user);
-                        
-                        // Import and set the auth cookie
-                        const { setAuthCookie } = await import('./cookie-auth.js');
-                        setAuthCookie(token);
-                    } catch (cookieError) {
-                        console.error('Error setting auth cookie:', cookieError);
+                if (isMobile) {
+                    // Mobile: use redirect flow
+                    const result = await signInWithGoogle();
+                    if (result.redirect) {
+                        return; // Page will redirect
                     }
-                    
-                    // Set flag to indicate this is a fresh login
-                    sessionStorage.setItem('freshLogin', 'true');
-                    
-                    closeAuthModal();
-                    
-                    // Wait a moment for auth state to fully update
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                    
-                    // Double-check user is still authenticated
-                    const currentUser = window.firebase?.auth?.currentUser || user;
-                    const redirectUrl = getDashboardUrl(currentUser);
-                    
-                    // Redirect immediately (no notification delay on standalone login page)
-                    window.location.href = redirectUrl;
-                } else if (result.cancelled) {
-                    // User cancelled - don't show error, button already reset
-                } else {
-                    showAuthError(result.error || 'Authentication failed. Please try again.');
+                    // If redirect didn't happen, fall through to error handling
+                    googleBtn.innerHTML = originalHTML;
+                    googleBtn.disabled = false;
+                    googleBtn.removeAttribute('data-auth-in-progress');
+                    showAuthError('Redirect failed. Please try again.');
+                    return;
                 }
+                
+                // Desktop: use popup directly - this prevents any redirect initialization
+                const provider = getGoogleProvider();
+                const popupResult = await signInWithPopup(window.firebase.auth, provider);
+                
+                if (!popupResult || !popupResult.user) {
+                    throw new Error('No user returned from authentication');
+                }
+                
+                const user = popupResult.user;
+                
+                // Create user document if it doesn't exist
+                try {
+                    if (window.firebase && window.firebase.db) {
+                        const userDoc = await getDoc(doc(window.firebase.db, 'users', user.uid));
+                        if (!userDoc.exists()) {
+                            await setDoc(doc(window.firebase.db, 'users', user.uid), {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName,
+                                photoURL: user.photoURL,
+                                createdAt: new Date(),
+                                enrolledCourses: [],
+                                progress: {},
+                                role: 'user'
+                            });
+                        }
+                    }
+                } catch (dbError) {
+                    console.warn('Failed to create/update user document:', dbError);
+                }
+                
+                // Get Firebase ID token and set cross-domain cookie
+                try {
+                    const { getIdToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                    const token = await getIdToken(user);
+                    const { setAuthCookie } = await import('./cookie-auth.js');
+                    setAuthCookie(token);
+                } catch (cookieError) {
+                    console.error('Error setting auth cookie:', cookieError);
+                }
+                
+                // Set flag and redirect
+                sessionStorage.setItem('freshLogin', 'true');
+                closeAuthModal();
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                const currentUser = window.firebase?.auth?.currentUser || user;
+                const redirectUrl = getDashboardUrl(currentUser);
+                window.location.href = redirectUrl;
+                
             } catch (err) {
-                // Reset button on any error - restore original HTML
+                // Reset button on any error
                 googleBtn.innerHTML = originalHTML;
                 googleBtn.disabled = false;
                 googleBtn.removeAttribute('data-auth-in-progress');
                 
-                // Only show error if it's not a cancellation
-                if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-                    showAuthError(err.message || 'An error occurred during sign-in. Please try again.');
+                // Handle specific error cases
+                if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+                    // User cancelled - don't show error
+                    return;
                 }
+                
+                // Show user-friendly error
+                let errorMsg = 'Authentication failed. Please try again.';
+                if (err.code === 'auth/popup-blocked') {
+                    errorMsg = 'Popup was blocked. Please allow popups for this site and try again.';
+                } else if (err.message) {
+                    errorMsg = err.message;
+                }
+                
+                showAuthError(errorMsg);
             }
         });
     }
