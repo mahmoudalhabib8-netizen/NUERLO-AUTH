@@ -132,7 +132,7 @@ async function createCheckoutSession(priceId, userId, userEmail) {
 
         // Call your backend to create checkout session
         // Try /api/ first (with rewrite), fallback to /.netlify/functions/
-        const functionUrl = '/api/create-checkout-session';
+        let functionUrl = '/api/create-checkout-session';
         console.log('Calling function:', functionUrl);
         console.log('Current origin:', window.location.origin);
         
@@ -158,13 +158,46 @@ async function createCheckoutSession(priceId, userId, userEmail) {
             clearTimeout(timeoutId);
         } catch (fetchError) {
             clearTimeout(timeoutId);
-            if (fetchError.name === 'AbortError') {
-                throw new Error('Request timed out. Please check your Netlify Functions are deployed and accessible.');
+            // If /api/ fails, try /.netlify/functions/ directly
+            if (functionUrl.startsWith('/api/')) {
+                console.log('Trying fallback path: /.netlify/functions/');
+                functionUrl = functionUrl.replace('/api/', '/.netlify/functions/');
+                try {
+                    const controller2 = new AbortController();
+                    const timeoutId2 = setTimeout(() => controller2.abort(), 15000);
+                    response = await fetch(functionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            priceId: priceId,
+                            userId: userId,
+                            userEmail: userEmail,
+                            successUrl: `${window.location.origin}/payment?payment=success`,
+                            cancelUrl: `${window.location.origin}/payment?payment=cancelled`
+                        }),
+                        signal: controller2.signal
+                    });
+                    clearTimeout(timeoutId2);
+                } catch (fallbackError) {
+                    if (fallbackError.name === 'AbortError') {
+                        throw new Error('Request timed out. Please check your Netlify Functions are deployed and accessible.');
+                    }
+                    if (fallbackError.message.includes('Failed to fetch') || fallbackError.message.includes('NetworkError')) {
+                        throw new Error('Network error: Unable to connect to server. Please check your internet connection and ensure Netlify Functions are deployed.');
+                    }
+                    throw fallbackError;
+                }
+            } else {
+                if (fetchError.name === 'AbortError') {
+                    throw new Error('Request timed out. Please check your Netlify Functions are deployed and accessible.');
+                }
+                if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                    throw new Error('Network error: Unable to connect to server. Please check your internet connection and ensure Netlify Functions are deployed.');
+                }
+                throw fetchError;
             }
-            if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
-                throw new Error('Network error: Unable to connect to server. Please check your internet connection and ensure Netlify Functions are deployed.');
-            }
-            throw fetchError;
         }
 
         if (!response.ok) {
@@ -362,9 +395,11 @@ function formatSubscriptionStatus(subscription) {
  */
 async function createCustomerPortalSession(userId) {
     try {
+        // Try /api/ first (with rewrite), fallback to /.netlify/functions/
+        let portalUrl = '/api/create-portal-session';
         let response;
         try {
-            response = await fetch('/api/create-portal-session', {
+            response = await fetch(portalUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -375,16 +410,57 @@ async function createCustomerPortalSession(userId) {
                 })
             });
         } catch (fetchError) {
-            // Handle network errors (e.g., when running locally without Netlify functions)
-            if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
-                throw new Error('Unable to connect to subscription portal. Please ensure you are deployed to Netlify or that Netlify Functions are running locally.');
+            // Try fallback path
+            if (portalUrl.startsWith('/api/')) {
+                portalUrl = '/.netlify/functions/create-portal-session';
+                try {
+                    response = await fetch(portalUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            returnUrl: `${window.location.origin}/payment?payment=updated`
+                        })
+                    });
+                } catch (fallbackError) {
+                    // Handle network errors
+                    if (fallbackError.message.includes('Failed to fetch') || fallbackError.message.includes('NetworkError')) {
+                        throw new Error('Unable to connect to subscription portal. Please ensure you are deployed to Netlify or that Netlify Functions are running locally.');
+                    }
+                    throw fallbackError;
+                }
+            } else {
+                if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                    throw new Error('Unable to connect to subscription portal. Please ensure you are deployed to Netlify or that Netlify Functions are running locally.');
+                }
+                throw fetchError;
             }
-            throw fetchError;
         }
 
         if (!response.ok) {
-            // Handle 405 Method Not Allowed or other HTTP errors
-            if (response.status === 405 || response.status === 404) {
+            // If /api/ failed with 404, try /.netlify/functions/ directly
+            if (response.status === 404 && portalUrl.startsWith('/api/')) {
+                portalUrl = '/.netlify/functions/create-portal-session';
+                try {
+                    response = await fetch(portalUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId: userId,
+                            returnUrl: `${window.location.origin}/payment?payment=updated`
+                        })
+                    });
+                    if (!response.ok && response.status === 404) {
+                        throw new Error('Function not found');
+                    }
+                } catch (fallbackError) {
+                    throw new Error('Subscription portal is only available when deployed to Netlify.');
+                }
+            } else if (response.status === 405 || response.status === 404) {
                 throw new Error('Subscription portal is only available when deployed to Netlify.');
             }
             const errorData = await response.json().catch(() => ({}));
@@ -849,10 +925,11 @@ async function updateBillingHistoryDisplay(subscriptionInfo) {
             return;
         }
 
-        // Fetch invoices from Netlify function
+        // Fetch invoices from Netlify function - try /api/ first, fallback to /.netlify/functions/
+        let invoiceUrl = '/api/get-invoices';
         let response;
         try {
-            response = await fetch('/api/get-invoices', {
+            response = await fetch(invoiceUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -860,19 +937,65 @@ async function updateBillingHistoryDisplay(subscriptionInfo) {
                 body: JSON.stringify({ userId: user.uid })
             });
         } catch (fetchError) {
-            // Handle network errors (e.g., when running locally without Netlify functions)
-            billingHistoryContent.innerHTML = `
-                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
-                    <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
-                </div>
-            `;
-            return;
+            // Try fallback path
+            if (invoiceUrl.startsWith('/api/')) {
+                invoiceUrl = '/.netlify/functions/get-invoices';
+                try {
+                    response = await fetch(invoiceUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userId: user.uid })
+                    });
+                } catch (fallbackError) {
+                    // Handle network errors (e.g., when running locally without Netlify functions)
+                    billingHistoryContent.innerHTML = `
+                        <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                            <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                            <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                        </div>
+                    `;
+                    return;
+                }
+            } else {
+                // Handle network errors
+                billingHistoryContent.innerHTML = `
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                        <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                        <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                    </div>
+                `;
+                return;
+            }
         }
 
         if (!response.ok) {
-            // Handle 405 Method Not Allowed or other HTTP errors
-            if (response.status === 405 || response.status === 404) {
+            // If /api/ failed with 404, try /.netlify/functions/ directly
+            if (response.status === 404 && invoiceUrl.startsWith('/api/')) {
+                invoiceUrl = '/.netlify/functions/get-invoices';
+                try {
+                    response = await fetch(invoiceUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userId: user.uid })
+                    });
+                    if (!response.ok && response.status === 404) {
+                        throw new Error('Function not found');
+                    }
+                } catch (fallbackError) {
+                    // Handle 405 Method Not Allowed or other HTTP errors
+                    billingHistoryContent.innerHTML = `
+                        <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                            <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                            <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                        </div>
+                    `;
+                    return;
+                }
+            } else if (response.status === 405 || response.status === 404) {
                 billingHistoryContent.innerHTML = `
                     <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
                         <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
