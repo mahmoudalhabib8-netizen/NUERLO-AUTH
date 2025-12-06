@@ -120,6 +120,14 @@ async function createCheckoutSession(priceId, userId, userEmail) {
             loadingMessage.textContent = 'Creating checkout session...';
         }
 
+        const isLocalPreview = window.location.protocol === 'file:' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === 'localhost';
+        
+        if (isLocalPreview) {
+            throw new Error('Checkout is only available on the deployed site.');
+        }
+
         console.log('Creating checkout session for:', { priceId, userId, userEmail });
 
         // Call your backend to create checkout session
@@ -354,20 +362,33 @@ function formatSubscriptionStatus(subscription) {
  */
 async function createCustomerPortalSession(userId) {
     try {
-        const response = await fetch('/.netlify/functions/create-portal-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                userId: userId,
-                returnUrl: `${window.location.origin}/payment?payment=updated`
-            })
-        });
+        let response;
+        try {
+            response = await fetch('/.netlify/functions/create-portal-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    returnUrl: `${window.location.origin}/payment?payment=updated`
+                })
+            });
+        } catch (fetchError) {
+            // Handle network errors (e.g., when running locally without Netlify functions)
+            if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('NetworkError')) {
+                throw new Error('Unable to connect to subscription portal. Please ensure you are deployed to Netlify or that Netlify Functions are running locally.');
+            }
+            throw fetchError;
+        }
 
         if (!response.ok) {
+            // Handle 405 Method Not Allowed or other HTTP errors
+            if (response.status === 405 || response.status === 404) {
+                throw new Error('Subscription portal is only available when deployed to Netlify.');
+            }
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to create portal session');
+            throw new Error(errorData.error || `Failed to create portal session: ${response.status} ${response.statusText}`);
         }
 
         const { url } = await response.json();
@@ -732,6 +753,7 @@ function updatePlansDisplay(subscriptionInfo) {
                 link.innerHTML = originalText;
             }
             link.style.pointerEvents = 'auto';
+            link.style.animation = '';
             delete link._redirecting;
             delete link.dataset.originalText;
         }
@@ -751,11 +773,17 @@ function updatePlansDisplay(subscriptionInfo) {
             linkElement.dataset.originalText = originalText;
             linkElement.style.pointerEvents = 'none';
             
+<<<<<<< Updated upstream
             // Set pulsing "Redirecting" text
             const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
             linkElement.innerHTML = `<span class="redirecting-pulse">Redirecting</span>${arrowSvg}`;
             
-            // No interval needed - CSS animation handles the pulse
+            // Change text to "Redirecting" and add smooth pulse animation
+            const arrowSvg = linkElement.querySelector('svg') ? linkElement.querySelector('svg').outerHTML : '';
+            linkElement.innerHTML = `Redirecting${arrowSvg}`;
+            linkElement.style.animation = 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite';
+            
+            // Store a flag for cleanup (no interval needed)
             linkElement._redirecting = true;
             
             const user = window.currentUser || (window.firebase && window.firebase.auth && window.firebase.auth.currentUser);
@@ -767,6 +795,7 @@ function updatePlansDisplay(subscriptionInfo) {
                     // If error, restore original text
                     linkElement.innerHTML = originalText;
                     linkElement.style.pointerEvents = 'auto';
+                    linkElement.style.animation = '';
                     delete linkElement._redirecting;
                     console.error('Checkout session creation failed:', error);
                 }
@@ -774,6 +803,7 @@ function updatePlansDisplay(subscriptionInfo) {
                 // No user, restore
                 linkElement.innerHTML = originalText;
                 linkElement.style.pointerEvents = 'auto';
+                linkElement.style.animation = '';
                 delete linkElement._redirecting;
             }
         });
@@ -810,17 +840,53 @@ async function updateBillingHistoryDisplay(subscriptionInfo) {
             return;
         }
 
+        const isLocalPreview = window.location.protocol === 'file:' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === 'localhost';
+        
+        if (isLocalPreview) {
+            billingHistoryContent.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                    <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                </div>
+            `;
+            return;
+        }
+
         // Fetch invoices from Netlify function
-        const response = await fetch('/.netlify/functions/get-invoices', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ userId: user.uid })
-        });
+        let response;
+        try {
+            response = await fetch('/.netlify/functions/get-invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: user.uid })
+            });
+        } catch (fetchError) {
+            // Handle network errors (e.g., when running locally without Netlify functions)
+            billingHistoryContent.innerHTML = `
+                <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                    <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                    <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                </div>
+            `;
+            return;
+        }
 
         if (!response.ok) {
-            throw new Error('Failed to fetch invoices');
+            // Handle 405 Method Not Allowed or other HTTP errors
+            if (response.status === 405 || response.status === 404) {
+                billingHistoryContent.innerHTML = `
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                        <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Billing history unavailable</p>
+                        <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Billing history is only available when deployed to Netlify</p>
+                    </div>
+                `;
+                return;
+            }
+            throw new Error(`Failed to fetch invoices: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -829,12 +895,6 @@ async function updateBillingHistoryDisplay(subscriptionInfo) {
         if (invoices.length === 0) {
             billingHistoryContent.innerHTML = `
                 <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.2;">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
                     <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No billing history</p>
                     <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Your invoices and receipts will appear here</p>
                 </div>

@@ -22,7 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Dashboard Styles Only -->
-    <link rel="stylesheet" href="/dashboard-styles.css">
+    <link rel="stylesheet" href="/dashboard-styles.css?v=2.0">
     
     <!-- Cropper.js for image cropping -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
@@ -32,6 +32,32 @@
         /* Prevent content flash - hide body content until auth completes */
         body:not(.auth-ready) > #authProtectedContent {
             display: none !important;
+        }
+        
+        /* Critical CSS: Force recommended grid styling */
+        #recommendedGrid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 24px !important;
+            width: 100% !important;
+            min-height: 400px !important;
+        }
+        
+        #recommendedGrid .marketplace-course-card {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+            min-height: 400px !important;
+        }
+        
+        @media (max-width: 768px) {
+            #recommendedGrid {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
     <script>
@@ -415,13 +441,13 @@
                             </div>
                         </div>
                         <div id="noCourses" style="text-align: center; padding: 3rem 1rem; display: none;">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.2;">
-                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">Start learning</h3>
+                            <a href="#marketplace" class="marketplace-explore-link" onclick="navigateToSection('marketplace'); return false;">
+                                <span>Explore courses in the marketplace</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
                                 </svg>
-                            <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">Start learning</p>
-                            <p style="color: var(--color-text-tertiary); margin-bottom: 1.5rem; font-size: var(--font-size-sm);">Explore courses in the marketplace</p>
-                            <button class="btn btn-primary" onclick="navigateToSection('marketplace')">Browse Marketplace</button>
+                            </a>
                             </div>
                         </div>
                     </div>
@@ -431,10 +457,13 @@
                     <div class="card-header">
                         <h3 class="card-title">Recommended for You</h3>
                         <a href="#marketplace" class="card-action" onclick="navigateToSection('marketplace'); return false;">See more</a>
-                            </div>
-                    <div class="programs-grid" id="recommendedGrid">
-                        <!-- Recommended courses will be loaded here -->
+                    </div>
+                    <div id="recommendedGrid">
+                        <!-- Loading State -->
+                        <div id="recommendedLoading" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
+                            <div style="display: inline-block; width: 24px; height: 24px; border: 2px solid var(--color-border-light); border-top-color: var(--color-brand-purple); border-radius: 50%; animation: spin 0.6s linear infinite;"></div>
                         </div>
+                    </div>
                 </div>
             </section>
 
@@ -470,13 +499,13 @@
 
                                 <!-- Empty State -->
                                 <div id="noProgramsMessage" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; display: none;">
-                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1.5rem; opacity: 0.2;">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                    </svg>
                                     <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No programs enrolled</h3>
-                                    <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Discover courses tailored to your interests</p>
-                                    <button class="btn btn-primary" onclick="navigateToSection('marketplace')">Browse Marketplace</button>
+                                    <a href="#marketplace" class="marketplace-explore-link" onclick="navigateToSection('marketplace'); return false;">
+                                        <span>Explore courses in the marketplace</span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -496,10 +525,6 @@
 
                                 <!-- Empty State -->
                                 <div id="noProgramsMessageNotStarted" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; display: none;">
-                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1.5rem; opacity: 0.2;">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                    </svg>
                                     <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No programs not started</h3>
                                     <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">You've started all your enrolled programs</p>
                                 </div>
@@ -521,10 +546,6 @@
 
                                 <!-- Empty State -->
                                 <div id="noProgramsMessageInProgress" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; display: none;">
-                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1.5rem; opacity: 0.2;">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                    </svg>
                                     <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No programs in progress</h3>
                                     <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Start a program to see it here</p>
                                 </div>
@@ -546,10 +567,6 @@
 
                                 <!-- Empty State -->
                                 <div id="noProgramsMessageCompleted" style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; display: none;">
-                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1.5rem; opacity: 0.2;">
-                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                    </svg>
                                     <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No completed programs</h3>
                                     <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Complete a program to see it here</p>
                                 </div>
@@ -703,10 +720,16 @@
                                     target.style.display = 'block';
                                     target.classList.add('active');
                                     
+                                    // Refresh progress data first to ensure latest info
+                                    if (typeof loadProgressData === 'function') {
+                                        console.log('[PROGRAMS TAB] Switching to', sectionId, '- refreshing data');
+                                        loadProgressData();
+                                    }
+                                    
                                     // Trigger filter update when switching tabs
                                     const filterType = target.querySelector('.programs-grid')?.getAttribute('data-filter') || 'all';
                                     if (window.updateProgramsFilter) {
-                                        window.updateProgramsFilter(filterType);
+                                        setTimeout(() => window.updateProgramsFilter(filterType), 100);
                                     }
                                 }
                                 
@@ -794,9 +817,9 @@
                     </div>
                     
                     <!-- No Courses Message -->
-                    <div id="noCoursesMessage" style="display: none; text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                        <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No courses enrolled</p>
-                        <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Enroll in courses from the Marketplace to track your progress</p>
+                    <div id="noCoursesMessage" style="display: none; text-align: center; padding: 3rem 1rem;">
+                        <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No courses enrolled</h3>
+                        <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Enroll in courses from the Marketplace to track your progress</p>
                     </div>
                     
                     <!-- Progress Chart -->
@@ -858,9 +881,9 @@
                 <div id="activitySection" class="profile-subsection" style="display: none;">
                     <div class="profile-info-container">
                         <div class="profile-info-content" id="activityContent">
-                            <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                                <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No recent activity</p>
-                                <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Your learning activity will appear here</p>
+                            <div style="text-align: center; padding: 3rem 1rem;">
+                                <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No recent activity</h3>
+                                <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Your learning activity will appear here</p>
                             </div>
                         </div>
                     </div>
@@ -1034,13 +1057,9 @@
                         <h3 class="card-title">Saved Resources</h3>
                     </div>
                     <div class="programs-grid" id="resourcesGrid">
-                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.2;">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                        </svg>
-                            <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No saved resources</p>
-                            <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Save courses, articles, and materials for quick access</p>
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem;">
+                            <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No saved resources</h3>
+                            <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Save courses, articles, and materials for quick access</p>
                         </div>
                     </div>
                     </div>
@@ -1048,7 +1067,8 @@
 
             <!-- Marketplace Section -->
             <section id="marketplace" class="content-section">
-                <!-- Search -->
+                <!-- Search and Filters Container -->
+                <div class="marketplace-controls-wrapper">
                     <div class="search-container">
                         <div class="marketplace-search-wrapper" id="marketplaceSearchWrapper">
                         <svg class="marketplace-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1073,7 +1093,58 @@
                             <line x1="17" y1="16" x2="23" y2="16"></line>
                                 </svg>
                             </button>
+                    </div>
+                    
+                    <!-- Filter Dropdown (appears under search) -->
+                    <div class="marketplace-filter-dropdown" id="marketplaceFilterDropdown" style="display: none;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <span class="filter-label">Category</span>
+                                <div class="filter-options" id="categoryFilterOptions">
+                                    <button class="filter-chip active" data-filter-type="category" data-value="all">All</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="favorited">Favorited</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="ai-writing">AI Writing</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="ai-design">AI Design</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="ai-coding">AI Coding</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="ai-data">AI Data Analysis</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="ai-marketing">AI Marketing</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="automation">Automation</button>
+                                    <button class="filter-chip" data-filter-type="category" data-value="productivity">Productivity</button>
+                                    <span class="filter-underline"></span>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <span class="filter-label">Skill Level</span>
+                                <div class="filter-options" id="difficultyFilterOptions">
+                                    <button class="filter-chip active" data-filter-type="difficulty" data-value="all">All Levels</button>
+                                    <button class="filter-chip" data-filter-type="difficulty" data-value="absolute-beginner">Absolute Beginner</button>
+                                    <button class="filter-chip" data-filter-type="difficulty" data-value="beginner">Beginner</button>
+                                    <button class="filter-chip" data-filter-type="difficulty" data-value="intermediate">Intermediate</button>
+                                    <button class="filter-chip" data-filter-type="difficulty" data-value="advanced">Advanced</button>
+                                    <button class="filter-chip" data-filter-type="difficulty" data-value="expert">Expert</button>
+                                    <span class="filter-underline"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <span class="filter-label">Duration</span>
+                                <div class="filter-options" id="durationFilterOptions">
+                                    <button class="filter-chip active" data-filter-type="duration" data-value="all">Any Length</button>
+                                    <button class="filter-chip" data-filter-type="duration" data-value="short">Under 4 weeks</button>
+                                    <button class="filter-chip" data-filter-type="duration" data-value="medium">4-8 weeks</button>
+                                    <button class="filter-chip" data-filter-type="duration" data-value="long">8-12 weeks</button>
+                                    <button class="filter-chip" data-filter-type="duration" data-value="extended">12+ weeks</button>
+                                    <span class="filter-underline"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                                 
                 <!-- Marketplace Grid -->
                 <div class="programs-grid" id="marketplaceGrid">
@@ -1088,12 +1159,8 @@
             <section id="tasks" class="content-section">
                 <div class="card">
                     <div style="text-align: center; padding: 3rem 1rem;">
-                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1.5rem; opacity: 0.2;">
-                            <path d="M9 11l3 3 8-8"></path>
-                            <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"></path>
-                        </svg>
                         <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No tasks</h3>
-                        <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Assignments and deadlines will appear here</p>
+                        <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Assignments and deadlines will appear here</p>
                     </div>
                 </div>
             </section>
@@ -1105,16 +1172,9 @@
                         <a href="#" class="card-action" onclick="createNewNote(); return false;">New Note</a>
                     </div>
                     <div id="notesList" style="display: flex; flex-direction: column; gap: var(--space-3);">
-                        <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.2;">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                            <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No notes yet</p>
-                            <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Create notes to track your learning and ideas</p>
+                        <div style="text-align: center; padding: 3rem 1rem;">
+                            <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold);">No notes yet</h3>
+                            <p style="color: var(--color-text-tertiary); margin-bottom: 2rem; font-size: var(--font-size-sm);">Create notes to track your learning and ideas</p>
                         </div>
                         </div>
                     </div>
@@ -1503,7 +1563,7 @@
                                 </div>
                             </div>
 
-                            <div class="help-question-wrapper" style="display: none;">
+                            <div class="help-question-wrapper">
                                 <a href="#" class="help-question" data-question="payment-billing">
                                     <div class="help-question-content">
                                         <h3 class="help-question-text">How do I update my payment method?</h3>
@@ -1524,7 +1584,7 @@
                                 </div>
                             </div>
 
-                            <div class="help-question-wrapper" style="display: none;">
+                            <div class="help-question-wrapper">
                                 <a href="#" class="help-question" data-question="cancel-subscription">
                                     <div class="help-question-content">
                                         <h3 class="help-question-text">How do I cancel my subscription?</h3>
@@ -1960,40 +2020,13 @@
 
                     <div class="help-contact">
                         <div class="help-contact-content">
-                            <h3 class="help-contact-title">Still need help?</h3>
-                            <p class="help-contact-description">Can't find what you're looking for? Our support team is here to help.</p>
+                            <h3 class="help-contact-title">Need more help?</h3>
+                            <p class="help-contact-description">Reach the team or jump back into your own resources anytime.</p>
                             
-                            <!-- Support Options with Progress Indicator -->
-                            <div class="help-support-options-wrapper">
-                                <div class="help-support-options-container">
-                                    <div class="help-support-options">
-                                        <a href="#" class="help-support-option active" data-action="contact">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                                <polyline points="22,6 12,13 2,6"></polyline>
-                                            </svg>
-                                            <span>Contact Support</span>
-                                        </a>
-                                        <a href="#" class="help-support-option" data-action="notes">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                <polyline points="14 2 14 8 20 8"></polyline>
-                                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                            </svg>
-                                            <span>My Notes</span>
-                                        </a>
-                                        <a href="#" class="help-support-option" data-action="tutorials">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                                            </svg>
-                                            <span>Video Tutorials</span>
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="help-support-options-line"></div>
-                                <div class="help-support-options-indicator" id="helpSupportOptionsIndicator"></div>
+                            <div class="help-contact-links">
+                                <a href="#" data-action="contact">Contact support</a>
+                                <a href="#" data-action="notes">My notes</a>
+                                <a href="#" data-action="tutorials">Video tutorials</a>
                             </div>
                         </div>
                     </div>
@@ -2018,7 +2051,7 @@
                                 <h2 class="profile-name" id="profileDisplayName"></h2>
                                 <div class="profile-meta">
                                     <div class="profile-email" id="profileEmail"></div>
-                                    <div class="profile-member-since" id="profileMemberSince"></div>
+                                    <div class="profile-member-since" id="profileStatus">Status: Free</div>
                                 </div>
                             </div>
                 </div>
@@ -2049,8 +2082,8 @@
                                         <div class="profile-field-value" id="profileNameDisplay">
                                             <span id="profileNameText"></span>
                                             <div class="profile-field-inputs" style="display: none;">
-                                                <input type="text" class="profile-field-input" id="firstName" placeholder="First name">
-                                                <input type="text" class="profile-field-input" id="lastName" placeholder="Last name">
+                                                <input type="text" class="profile-field-input" id="firstName" placeholder="First name" autocomplete="given-name" aria-label="First name">
+                                                <input type="text" class="profile-field-input" id="lastName" placeholder="Last name" autocomplete="family-name" aria-label="Last name">
                                             </div>
                                         </div>
                                     </div>
@@ -2059,15 +2092,74 @@
                                         <div class="profile-field-label">Email</div>
                                         <div class="profile-field-value" id="profileEmailDisplay">
                                             <span id="profileEmailText"></span>
-                                            <input type="email" class="profile-field-input" id="email" placeholder="your@email.com" readonly style="display: none;">
+                                            <input type="email" class="profile-field-input" id="email" placeholder="your@email.com" readonly style="display: none;" autocomplete="email" aria-label="Email address">
                                         </div>
                                     </div>
                                     
                                     <div class="profile-field">
                                         <div class="profile-field-label">Password</div>
                                         <div class="profile-field-value" id="profilePasswordDisplay">
-                                            <span id="profilePasswordText">••••••••</span>
+                                            <!-- Show password dots when user HAS password -->
+                                            <span id="profilePasswordText" style="display: none;">••••••••</span>
                                             <button class="profile-change-password-btn" id="changePasswordBtn" style="display: none;">Change Password</button>
+                                            
+                                            <!-- Set Password for users without password -->
+                                            <div id="setPasswordContainer" style="display: none;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <button class="profile-set-password-btn" id="setPasswordBtnPersonal">
+                                                        Set Password
+                                                    </button>
+                                                    <span class="password-alert-badge" id="passwordAlertBadge">!</span>
+                                                </div>
+                                                
+                                                <!-- Password Setup Form -->
+                                                <form
+                                                    id="setPasswordFormPersonal"
+                                                    class="set-password-form-minimal"
+                                                    style="display: none;"
+                                                    autocomplete="off"
+                                                    novalidate
+                                                    onsubmit="event.preventDefault();"
+                                                >
+                                                    <input
+                                                        type="text"
+                                                        id="setPasswordUsernameField"
+                                                        name="username"
+                                                        autocomplete="username"
+                                                        aria-hidden="true"
+                                                        aria-label="Account email address"
+                                                        tabindex="-1"
+                                                        data-username-field
+                                                        style="position: absolute; left: -9999px; opacity: 0; pointer-events: none; height: 1px; width: 1px;"
+                                                    >
+                                                    <div class="password-form-field">
+                                                        <label for="newPasswordInputPersonal">New Password</label>
+                                                        <input
+                                                            type="password"
+                                                            id="newPasswordInputPersonal"
+                                                            placeholder="Enter a secure password"
+                                                            class="profile-field-input"
+                                                            autocomplete="new-password"
+                                                        >
+                                                    </div>
+                                                    <div class="password-form-field">
+                                                        <label for="confirmPasswordInputPersonal">Confirm Password</label>
+                                                        <input
+                                                            type="password"
+                                                            id="confirmPasswordInputPersonal"
+                                                            placeholder="Confirm your password"
+                                                            class="profile-field-input"
+                                                            autocomplete="new-password"
+                                                        >
+                                                    </div>
+                                                    <div style="display: flex; gap: 16px; margin-top: 12px;">
+                                                        <button type="button" class="profile-save-password-btn" id="savePasswordBtnPersonal">Save</button>
+                                                        <button type="button" class="profile-cancel-password-btn" id="cancelPasswordBtnPersonal">Cancel</button>
+                                                    </div>
+                                                    <div id="passwordErrorPersonal" class="password-message-minimal error" style="display: none;"></div>
+                                                    <div id="passwordSuccessPersonal" class="password-message-minimal success" style="display: none;"></div>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                     
@@ -2196,35 +2288,6 @@
                                                 </button>
                                             </div>
                                             <div id="googleAccountEmail" style="display: none; margin-top: var(--space-2); color: var(--color-text-secondary); font-size: 13px;"></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Set Password for Google Users -->
-                                    <div class="profile-field" id="setPasswordField" style="display: none;">
-                                        <div class="profile-field-label">Password</div>
-                                        <div class="profile-field-value">
-                                            <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
-                                                <span style="color: var(--color-text-tertiary); font-size: 13px;">Set a password to also login with email/password</span>
-                                                <button class="btn btn-primary" id="setPasswordBtn" style="padding: var(--space-2) var(--space-4); font-size: 13px;">
-                                                    Set Password
-                                                </button>
-                                            </div>
-                                            <div id="setPasswordForm" style="display: none; margin-top: var(--space-4); padding: var(--space-4); background: var(--color-bg-elevated); border-radius: var(--border-radius-md); border: 1px solid var(--color-border-light);">
-                                                <div style="margin-bottom: var(--space-3);">
-                                                    <label style="display: block; margin-bottom: var(--space-2); font-size: 13px; font-weight: 500; color: var(--color-text-primary);">New Password</label>
-                                                    <input type="password" id="newPasswordInput" placeholder="Enter a secure password" style="width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-light); border-radius: var(--border-radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font-size: 14px;">
-                                                </div>
-                                                <div style="margin-bottom: var(--space-3);">
-                                                    <label style="display: block; margin-bottom: var(--space-2); font-size: 13px; font-weight: 500; color: var(--color-text-primary);">Confirm Password</label>
-                                                    <input type="password" id="confirmPasswordInput" placeholder="Confirm your password" style="width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-light); border-radius: var(--border-radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font-size: 14px;">
-                                                </div>
-                                                <div style="display: flex; gap: var(--space-2);">
-                                                    <button class="btn btn-primary" id="savePasswordBtn" style="padding: var(--space-2) var(--space-4); font-size: 13px;">Save Password</button>
-                                                    <button class="btn btn-text-cancel" id="cancelPasswordBtn" style="padding: var(--space-2) var(--space-4); font-size: 13px;">Cancel</button>
-                                                </div>
-                                                <div id="passwordError" style="display: none; margin-top: var(--space-2); padding: var(--space-2); background: rgba(239, 68, 68, 0.1); border-radius: var(--border-radius-sm); color: #ef4444; font-size: 12px;"></div>
-                                                <div id="passwordSuccess" style="display: none; margin-top: var(--space-2); padding: var(--space-2); background: rgba(34, 197, 94, 0.1); border-radius: var(--border-radius-sm); color: #22c55e; font-size: 12px;"></div>
-                                            </div>
                                         </div>
                                     </div>
                                     
@@ -3005,212 +3068,235 @@
 
             <!-- Settings Section -->
             <section id="settings" class="content-section">
-                <!-- Notifications Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Notifications</h3>
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Notifications</h3>
+                    <div class="profile-info-container">
+                        <div class="profile-info-content">
+                            <div class="profile-field">
+                                <div class="profile-field-label">Email Notifications</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Receive email updates about your courses</span>
                                 </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Email Notifications</div>
-                                <div class="settings-item-description">Receive email updates about your courses and account</div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="emailNotifications" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Push Notifications</div>
-                                <div class="settings-item-description">Get browser notifications for important updates</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Push Notifications</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Get browser notifications for updates</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="pushNotifications" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Course Updates</div>
-                                <div class="settings-item-description">Notifications when new content is added to your courses</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Course Updates</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">New content added to your courses</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="courseUpdates" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Assignment Reminders</div>
-                                <div class="settings-item-description">Remind me about upcoming assignments and deadlines</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Assignment Reminders</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Upcoming assignments and deadlines</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="assignmentReminders" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Study Reminders</div>
-                                <div class="settings-item-description">Daily reminders to keep your learning streak going</div>
+                            
+                            <div class="profile-field" style="border-bottom: none;">
+                                <div class="profile-field-label">Study Reminders</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Daily reminders to keep learning</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="studyReminders" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="studyReminders" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Appearance Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Appearance</h3>
-                            </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Always on Light Mode</div>
-                                <div class="settings-item-description">Keep the interface in light mode regardless of system preference</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Animations</div>
-                                <div class="settings-item-description">Enable smooth transitions and animations</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="animations" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Compact Sidebar</div>
-                                <div class="settings-item-description">Use a narrower sidebar to save space</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Auto-play Videos</div>
-                                <div class="settings-item-description">Automatically play course videos when opened</div>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Privacy Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Privacy</h3>
+                <!-- Appearance -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Appearance</h3>
+                    <div class="profile-info-container">
+                        <div class="profile-info-content">
+                            <div class="profile-field">
+                                <div class="profile-field-label">Always on Light Mode</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Override system preference</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="alwaysLightMode" onchange="saveThemeToggle()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Profile Visibility</div>
-                                <div class="settings-item-description">Allow others to view your profile</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Animations</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Enable smooth transitions</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="animations" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Activity Status</div>
-                                <div class="settings-item-description">Show when you're online and active</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Compact Sidebar</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Use a narrower sidebar</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="compactSidebar" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="activityStatus" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Data Analytics</div>
-                                <div class="settings-item-description">Help improve our service by sharing anonymous usage data</div>
+                            
+                            <div class="profile-field" style="border-bottom: none;">
+                                <div class="profile-field-label">Auto-play Videos</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Automatically play course videos</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="autoPlayVideos" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Learning Section -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Learning</h3>
+                <!-- Privacy -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Privacy</h3>
+                    <div class="profile-info-container">
+                        <div class="profile-info-content">
+                            <div class="profile-field">
+                                <div class="profile-field-label">Profile Visibility</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Allow others to view your profile</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="profileVisibility" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                    <div class="settings-item">
-                        <div class="settings-item-content">
-                            <div class="settings-item-label">
-                                <div class="settings-item-title">Progress Tracking</div>
-                                <div class="settings-item-description">Track and display your learning progress</div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Activity Status</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Show when you're online</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="activityStatus" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="progressTracking" onchange="saveSettings()">
-                                <span class="toggle-slider"></span>
-                            </label>
+                            
+                            <div class="profile-field" style="border-bottom: none;">
+                                <div class="profile-field-label">Data Analytics</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Share anonymous usage data</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="dataAnalytics" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Language</label>
-                        <select class="form-select" id="language" onchange="saveLanguagePreference(this.value)">
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="ja">Japanese</option>
-                            <option value="zh">Chinese</option>
-                        </select>
+                </div>
+
+                <!-- Learning & Regional -->
+                <div class="settings-section">
+                    <h3 class="settings-section-title">Learning & Regional</h3>
+                    <div class="profile-info-container">
+                        <div class="profile-info-content">
+                            <div class="profile-field">
+                                <div class="profile-field-label">Progress Tracking</div>
+                                <div class="profile-field-value">
+                                    <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Track your learning progress</span>
+                                </div>
+                                <div class="profile-field-toggle">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="progressTracking" onchange="saveSettings()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-field">
+                                <div class="profile-field-label">Language</div>
+                                <div class="profile-field-value">
+                                    <select class="profile-field-input" id="language" style="max-width: 250px; display: block;" onchange="saveLanguagePreference(this.value)">
+                                        <option value="en">English</option>
+                                        <option value="es">Spanish</option>
+                                        <option value="fr">French</option>
+                                        <option value="de">German</option>
+                                        <option value="ja">Japanese</option>
+                                        <option value="zh">Chinese</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="profile-field" style="border-bottom: none;">
+                                <div class="profile-field-label">Timezone</div>
+                                <div class="profile-field-value">
+                                    <select class="profile-field-input" id="timezone" style="max-width: 250px; display: block;" onchange="saveTimezonePreference(this.value)">
+                                        <option value="UTC">UTC (Coordinated Universal Time)</option>
+                                        <option value="America/New_York">Eastern Time (ET)</option>
+                                        <option value="America/Chicago">Central Time (CT)</option>
+                                        <option value="America/Denver">Mountain Time (MT)</option>
+                                        <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                        <option value="Europe/London">London (GMT)</option>
+                                        <option value="Europe/Paris">Paris (CET)</option>
+                                        <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                        <option value="Asia/Dubai">Dubai (GST)</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    <div class="form-group">
-                        <label class="form-label">Timezone</label>
-                        <select class="form-select" id="timezone" onchange="saveTimezonePreference(this.value)">
-                            <option value="UTC">UTC (Coordinated Universal Time)</option>
-                            <option value="America/New_York">Eastern Time (ET)</option>
-                            <option value="America/Chicago">Central Time (CT)</option>
-                            <option value="America/Denver">Mountain Time (MT)</option>
-                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                            <option value="Europe/London">London (GMT)</option>
-                            <option value="Europe/Paris">Paris (CET)</option>
-                            <option value="Asia/Tokyo">Tokyo (JST)</option>
-                            <option value="Asia/Dubai">Dubai (GST)</option>
-                        </select>
                     </div>
                 </div>
             </section>
@@ -3247,25 +3333,43 @@
             <div class="logout-modal-header">
                 <h3 class="logout-modal-title">Change Password</h3>
             </div>
-            <div class="logout-modal-body" style="padding: 0 0 var(--space-6) 0;">
+            <form
+                id="changePasswordForm"
+                class="logout-modal-body"
+                style="padding: 0 0 var(--space-6) 0;"
+                autocomplete="off"
+                novalidate
+                onsubmit="event.preventDefault();"
+            >
+                <input
+                    type="text"
+                    id="changePasswordUsernameField"
+                    name="username"
+                    autocomplete="username"
+                    aria-hidden="true"
+                    aria-label="Account email address"
+                    tabindex="-1"
+                    data-username-field
+                    style="position: absolute; left: -9999px; opacity: 0; pointer-events: none; height: 1px; width: 1px;"
+                >
                 <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-                    <div>
+                    <div class="password-form-field">
                         <label for="currentPassword" style="display: block; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--space-2);">Current Password</label>
-                        <input type="password" id="currentPassword" class="profile-field-input" placeholder="Enter current password" style="width: 100%; display: block;">
+                        <input type="password" id="currentPassword" class="profile-field-input" placeholder="Enter current password" style="width: 100%; display: block;" autocomplete="current-password">
                     </div>
-                    <div>
+                    <div class="password-form-field">
                         <label for="newPassword" style="display: block; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--space-2);">New Password</label>
-                        <input type="password" id="newPassword" class="profile-field-input" placeholder="Enter new password" style="width: 100%; display: block;">
+                        <input type="password" id="newPassword" class="profile-field-input" placeholder="Enter new password" style="width: 100%; display: block;" autocomplete="new-password">
                     </div>
-                    <div>
+                    <div class="password-form-field">
                         <label for="confirmPassword" style="display: block; font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: var(--space-2);">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" class="profile-field-input" placeholder="Confirm new password" style="width: 100%; display: block;">
+                        <input type="password" id="confirmPassword" class="profile-field-input" placeholder="Confirm new password" style="width: 100%; display: block;" autocomplete="new-password">
                     </div>
                 </div>
-            </div>
+            </form>
             <div class="logout-modal-actions">
-                <button class="logout-btn-cancel" id="changePasswordCancelBtn">Cancel</button>
-                <button class="logout-btn-confirm" id="changePasswordConfirmBtn">Change Password</button>
+                <button type="button" class="logout-btn-cancel" id="changePasswordCancelBtn">Cancel</button>
+                <button type="button" class="logout-btn-confirm" id="changePasswordConfirmBtn">Change Password</button>
             </div>
         </div>
     </div>
@@ -3408,127 +3512,8 @@
         })();
     </script>
     
-    <!-- Marketplace Search Autocomplete -->
-    <script>
-        (function() {
-            const marketplaceInput = document.getElementById('marketplaceSearch');
-            const marketplaceDropdown = document.getElementById('marketplaceSearchDropdown');
-            const marketplaceSuggestions = document.getElementById('marketplaceSearchSuggestions');
-            
-            if (!marketplaceInput || !marketplaceDropdown || !marketplaceSuggestions) return;
-            
-            let currentFocus = -1;
-            
-            marketplaceInput.addEventListener('input', function(e) {
-                const query = e.target.value.toLowerCase().trim();
-                
-                if (!query) {
-                    marketplaceDropdown.style.display = 'none';
-                    marketplaceSuggestions.innerHTML = '';
-                    return;
-                }
-                
-                // Get courses from window.marketplace if available
-                const courses = window.marketplace?.courses || [];
-                const matches = [];
-                
-                courses.forEach(course => {
-                    const title = (course.title || '').toLowerCase();
-                    const category = (course.category || '').toLowerCase();
-                    
-                    if (title.includes(query) || category.includes(query)) {
-                        matches.push({
-                            title: course.title,
-                            category: course.category,
-                            id: course.id
-                        });
-                    }
-                });
-                
-                if (matches.length > 0) {
-                    showMarketplaceSuggestions(matches.slice(0, 6), query);
-                } else {
-                    marketplaceDropdown.style.display = 'none';
-                    marketplaceSuggestions.innerHTML = '';
-                }
-            });
-            
-            function showMarketplaceSuggestions(matches, query) {
-                const html = matches.map((match, index) => {
-                    const highlightedTitle = highlightText(match.title, query);
-                    return `
-                        <div class="suggestion-item" data-index="${index}" data-course-id="${match.id}">
-                            <span class="suggestion-text">${highlightedTitle}</span>
-                        </div>
-                    `;
-                }).join('');
-                
-                marketplaceSuggestions.innerHTML = html;
-                marketplaceDropdown.style.display = 'block';
-                
-                // Add click handlers
-                marketplaceSuggestions.querySelectorAll('.suggestion-item').forEach(item => {
-                    item.addEventListener('click', function() {
-                        const courseId = this.dataset.courseId;
-                        marketplaceInput.value = this.querySelector('.suggestion-text').textContent;
-                        marketplaceDropdown.style.display = 'none';
-                        // Trigger search/filter
-                        if (window.marketplace && window.marketplace.handleSearch) {
-                            window.marketplace.handleSearch(marketplaceInput.value);
-                        }
-                    });
-                });
-            }
-            
-            function highlightText(text, query) {
-                const regex = new RegExp(`(${query})`, 'gi');
-                return text.replace(regex, '<strong>$1</strong>');
-            }
-            
-            // Close dropdown on click outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#marketplaceSearchWrapper')) {
-                    marketplaceDropdown.style.display = 'none';
-                }
-            });
-            
-            // Keyboard navigation
-            marketplaceInput.addEventListener('keydown', function(e) {
-                const items = marketplaceSuggestions.querySelectorAll('.suggestion-item');
-                
-                if (!items.length) return;
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    currentFocus++;
-                    if (currentFocus >= items.length) currentFocus = 0;
-                    setActive(items);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    currentFocus--;
-                    if (currentFocus < 0) currentFocus = items.length - 1;
-                    setActive(items);
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (currentFocus > -1 && items[currentFocus]) {
-                        items[currentFocus].click();
-                    }
-                } else if (e.key === 'Escape') {
-                    marketplaceDropdown.style.display = 'none';
-                }
-            });
-            
-            function setActive(items) {
-                items.forEach((item, index) => {
-                    if (index === currentFocus) {
-                        item.classList.add('active');
-                    } else {
-                        item.classList.remove('active');
-                    }
-                });
-            }
-        })();
-    </script>
+    <!-- Marketplace Search Autocomplete moved to js/marketplace-search.js -->
+    <script src="/js/marketplace-search.js"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -3564,713 +3549,18 @@
     <script src="/js/stripe-subscriptions.js"></script>
     
     <!-- Progress Tracking -->
-    <script>
-        let enrolledCoursesData = [];
-        let currentSelectedCourse = null;
-        
-        async function loadProgressData() {
-            try {
-                const auth = window.firebase.auth;
-                const db = window.firebase.db;
-                const { doc, getDoc } = window.firestoreFunctions;
-                const user = auth.currentUser;
-                
-                if (!user) {
-                    console.log('No user authenticated');
-                    return;
-                }
-                
-                // Get user document to find enrolled courses
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-                
-                let totalCourses = 0;
-                let completedCourses = 0;
-                let totalTime = 0;
-                let lastActiveDate = null;
-                
-                enrolledCoursesData = [];
-                const activityHTML = [];
-                
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    console.log('User data:', userData);
-                    const enrolledCourseIds = userData.enrolledCourses || [];
-                    
-                    console.log('Enrolled course IDs:', enrolledCourseIds);
-                    console.log('Number of enrolled courses:', enrolledCourseIds.length);
-                    
-                    if (enrolledCourseIds.length === 0) {
-                        console.log('No enrolled courses found in user data');
-                    }
-                    
-                    // Fetch each enrolled course from the courses collection
-                    for (const courseId of enrolledCourseIds) {
-                        console.log('Fetching course:', courseId);
-                        try {
-                            const courseRef = doc(db, 'courses', courseId);
-                            const courseDoc = await getDoc(courseRef);
-                            
-                            if (courseDoc.exists()) {
-                                const courseData = courseDoc.data();
-                                courseData.id = courseDoc.id;
-                                console.log('Course found:', courseData.title || courseData.name);
-                                
-                                // Get user's progress for this course from user data
-                                const userProgress = userData.courseProgress?.[courseId] || {};
-                                
-                                // Use real Firebase data for this specific course
-                                courseData.progress = userProgress.progress || 0;
-                                courseData.timeSpent = userProgress.timeSpent || 0;
-                                courseData.modulesCompleted = userProgress.modulesCompleted || 0;
-                                courseData.sectionsCompleted = userProgress.sectionsCompleted || 0;
-                                courseData.lastAccessed = userProgress.lastAccessed || null;
-                                courseData.completed = userProgress.completed || false;
-                                courseData.progressHistory = userProgress.progressHistory || null;
-                                courseData.startedAt = userProgress.startedAt || null;
-                                
-                                console.log(`Course "${courseData.title}":`, {
-                                    progress: courseData.progress,
-                                    timeSpent: courseData.timeSpent,
-                                    modulesCompleted: courseData.modulesCompleted,
-                                    lastAccessed: courseData.lastAccessed
-                                });
-                                
-                                enrolledCoursesData.push(courseData);
-                                totalCourses++;
-                            } else {
-                                console.log('Course document not found for ID:', courseId);
-                                
-                                if (courseData.completed) {
-                                    completedCourses++;
-                                }
-                                
-                                if (courseData.timeSpent) {
-                                    totalTime += courseData.timeSpent || 0;
-                                }
-                                
-                                if (courseData.lastAccessed) {
-                                    const accessDate = courseData.lastAccessed.toDate ? courseData.lastAccessed.toDate() : new Date(courseData.lastAccessed);
-                                    if (!lastActiveDate || accessDate > lastActiveDate) {
-                                        lastActiveDate = accessDate;
-                                    }
-                                }
-                                
-                                // Build activity entry
-                                const courseName = courseData.title || courseData.courseName || 'Untitled Course';
-                                if (courseData.lastAccessed) {
-                                    const accessDate = courseData.lastAccessed.toDate ? courseData.lastAccessed.toDate() : new Date(courseData.lastAccessed);
-                                    const dateStr = formatDate(accessDate);
-                                    activityHTML.push(`
-                                        <div class="profile-field">
-                                            <div class="profile-field-label">${courseName}</div>
-                                            <div class="profile-field-value">
-                                                <span style="color: var(--color-text-tertiary);">${dateStr}</span>
-                                            </div>
-                                        </div>
-                                    `);
-                                }
-                            }
-                        } catch (error) {
-                            console.error(`Error loading course ${courseId}:`, error);
-                        }
-                    }
-                } else {
-                    console.log('User document does not exist');
-                }
-                
-                console.log('Final enrolled courses data:', enrolledCoursesData);
-                console.log('Total courses loaded:', totalCourses);
-                
-                // Update stats
-                const enrolledEl = document.getElementById('totalCoursesEnrolled');
-                const completedEl = document.getElementById('totalCoursesCompleted');
-                
-                if (enrolledEl) enrolledEl.textContent = totalCourses;
-                if (completedEl) completedEl.textContent = completedCourses;
-                
-                // Format time
-                let timeText = '0 minutes';
-                if (totalTime > 0) {
-                    if (totalTime >= 60) {
-                        const hours = Math.floor(totalTime / 60);
-                        const mins = totalTime % 60;
-                        timeText = hours > 0 ? `${hours}h ${mins}m` : `${mins} minutes`;
-                    } else {
-                        timeText = `${totalTime} minutes`;
-                    }
-                }
-                document.getElementById('totalLearningTime').textContent = timeText;
-                
-                // Calculate streak
-                if (lastActiveDate) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    lastActiveDate.setHours(0, 0, 0, 0);
-                    const diffDays = Math.floor((today - lastActiveDate) / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays === 0) {
-                        document.getElementById('currentStreak').textContent = '1 day';
-                    } else {
-                        document.getElementById('currentStreak').textContent = '0 days';
-                    }
-                    
-                    document.getElementById('lastActive').textContent = formatDate(lastActiveDate);
-                    document.getElementById('lastActive').style.color = 'var(--color-text-secondary)';
-                } else {
-                    document.getElementById('currentStreak').textContent = '0 days';
-                }
-                
-                // Populate main course selector
-                console.log('About to populate course selector...');
-                populateMainCourseSelector();
-                
-                // Update activity section
-                const activityContent = document.getElementById('activityContent');
-                if (activityContent) {
-                    if (activityHTML.length > 0) {
-                        activityContent.innerHTML = activityHTML.join('');
-                    } else {
-                        activityContent.innerHTML = `
-                            <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-tertiary);">
-                                <p style="color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: var(--font-weight-medium);">No recent activity</p>
-                                <p style="color: var(--color-text-tertiary); font-size: var(--font-size-sm);">Your learning activity will appear here</p>
-                            </div>
-                        `;
-                    }
-                }
-                
-                console.log('Progress data loading complete');
-                
-            } catch (error) {
-                console.error('Error loading progress data:', error);
-                console.error('Error stack:', error.stack);
-            }
-        }
-        
-        function populateMainCourseSelector() {
-            const dropdownOptions = document.getElementById('dropdownOptions');
-            const noCoursesMsg = document.getElementById('noCoursesMessage');
-            if (!dropdownOptions) return;
-            
-            dropdownOptions.innerHTML = '';
-            
-            console.log('Populating dropdown with courses:', enrolledCoursesData.length);
-            
-            if (enrolledCoursesData.length === 0) {
-                // Show no courses message
-                if (noCoursesMsg) noCoursesMsg.style.display = 'block';
-                console.log('No courses to display');
-            } else {
-                // Hide no courses message
-                if (noCoursesMsg) noCoursesMsg.style.display = 'none';
-                
-                enrolledCoursesData.forEach((course, index) => {
-                    const courseName = course.title || course.courseName || course.name || 'Untitled Course';
-                    console.log('Adding course to dropdown:', courseName, course);
-                    
-                    const option = document.createElement('div');
-                    option.className = 'custom-dropdown-option';
-                    if (index === 0) option.classList.add('selected');
-                    option.textContent = courseName;
-                    option.dataset.index = index;
-                    
-                    option.addEventListener('click', () => {
-                        selectCourse(index);
-                    });
-                    
-                    dropdownOptions.appendChild(option);
-                });
-                
-                // Auto-select first course
-                selectCourse(0);
-            }
-        }
-        
-        // Setup custom dropdown toggle
-        function setupCustomDropdown() {
-            const dropdown = document.getElementById('customDropdown');
-            const selected = document.getElementById('dropdownSelected');
-            
-            if (!dropdown || !selected) return;
-            
-            selected.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('open');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                dropdown.classList.remove('open');
-            });
-        }
-        
-        function selectCourse(index) {
-            const courseName = enrolledCoursesData[index]?.title || enrolledCoursesData[index]?.courseName || 'Untitled Course';
-            
-            // Update selected text
-            const selectedText = document.getElementById('selectedCourseText');
-            if (selectedText) selectedText.textContent = courseName;
-            
-            // Update selected class
-            const options = document.querySelectorAll('.custom-dropdown-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            if (options[index]) options[index].classList.add('selected');
-            
-            // Close dropdown
-            const dropdown = document.getElementById('customDropdown');
-            if (dropdown) dropdown.classList.remove('open');
-            
-            // Update chart
-            updateProgressChartForCourse(index);
-        }
-        
-        function updateProgressChartForCourse(index) {
-            const course = enrolledCoursesData[parseInt(index)];
-            if (!course) {
-                console.log('No course found for index:', index);
-                return;
-            }
-            
-            currentSelectedCourse = course;
-            const progress = course.progress || 0;
-            
-            console.log('=== Selected Course ===');
-            console.log('Course Name:', course.title || course.courseName || course.name);
-            console.log('Course ID:', course.id);
-            console.log('Progress (from Firebase):', progress + '%');
-            console.log('Time Spent (from Firebase):', course.timeSpent, 'minutes');
-            console.log('Sections Completed (from Firebase):', course.modulesCompleted || course.sectionsCompleted);
-            console.log('Last Accessed (from Firebase):', course.lastAccessed);
-            console.log('===================');
-            
-            // Update progress text
-            const progressText = document.getElementById('courseProgressText');
-            if (progressText) {
-                progressText.textContent = `${Math.round(progress)}% complete`;
-            }
-            
-            // Generate progress history data (uses real Firebase data if available)
-            const progressHistory = generateProgressHistory(course);
-            drawLineChart(progressHistory);
-            
-            // Update course details section with Firebase data
-            updateCourseDetails(course);
-        }
-        
-        
-        function generateProgressHistory(course) {
-            const progress = course.progress || 0;
-            const history = [];
-            const today = new Date();
-            
-            // Check if course has real progress history data from Firebase
-            if (course.progressHistory && Array.isArray(course.progressHistory) && course.progressHistory.length > 0) {
-                // Use real Firebase data
-                console.log('Using real progress history from Firebase');
-                return course.progressHistory.map(entry => ({
-                    date: entry.date.toDate ? entry.date.toDate() : new Date(entry.date),
-                    progress: entry.progress || 0
-                }));
-            }
-            
-            // Otherwise, generate a simple visualization based on current progress
-            // Show progress growth over last 30 days
-            console.log('Generating progress visualization for current progress:', progress);
-            
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                
-                let dayProgress = 0;
-                if (i === 0) {
-                    // Today shows current progress
-                    dayProgress = progress;
-                } else {
-                    // Gradual curve leading to current progress
-                    const ratio = (30 - i) / 30;
-                    dayProgress = progress * ratio;
-                }
-                
-                history.push({
-                    date: date,
-                    progress: dayProgress
-                });
-            }
-            
-            return history;
-        }
-        
-        function drawLineChart(data) {
-            const canvas = document.getElementById('progressLineChart');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            
-            if (rect.width === 0 || rect.height === 0) {
-                setTimeout(() => drawLineChart(data), 100);
-                return;
-            }
-            
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            
-            const width = rect.width;
-            const height = rect.height;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            if (!data || data.length === 0) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.font = '14px system-ui';
-                ctx.textAlign = 'center';
-                ctx.fillText('Select a course to view progress', width / 2, height / 2);
-                return;
-            }
-            
-            const padding = { top: 30, right: 30, bottom: 40, left: 50 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
-            
-            // Get color
-            const purpleColor = getComputedStyle(document.documentElement).getPropertyValue('--color-brand-purple').trim() || '#8B5CF6';
-            
-            // Draw axes
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(padding.left, padding.top);
-            ctx.lineTo(padding.left, height - padding.bottom);
-            ctx.lineTo(width - padding.right, height - padding.bottom);
-            ctx.stroke();
-            
-            // Draw grid lines
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + (chartHeight / 4) * i;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-                
-                // Y-axis labels
-                const value = 100 - (i * 25);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.font = '11px system-ui';
-                ctx.textAlign = 'right';
-                ctx.fillText(`${value}%`, padding.left - 10, y + 4);
-            }
-            
-            // Draw line
-            ctx.strokeStyle = purpleColor;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            
-            data.forEach((point, index) => {
-                const x = padding.left + (chartWidth / (data.length - 1)) * index;
-                const y = padding.top + chartHeight - (point.progress / 100) * chartHeight;
-                
-                if (index === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            
-            ctx.stroke();
-            
-            // Draw dots
-            data.forEach((point, index) => {
-                const x = padding.left + (chartWidth / (data.length - 1)) * index;
-                const y = padding.top + chartHeight - (point.progress / 100) * chartHeight;
-                
-                ctx.fillStyle = purpleColor;
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            
-            // Draw X-axis labels (show every 7 days)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.font = '10px system-ui';
-            ctx.textAlign = 'center';
-            
-            for (let i = 0; i < data.length; i += 7) {
-                const point = data[i];
-                const x = padding.left + (chartWidth / (data.length - 1)) * i;
-                const dateStr = `${point.date.getMonth() + 1}/${point.date.getDate()}`;
-                ctx.fillText(dateStr, x, height - padding.bottom + 20);
-            }
-            
-            // Store for resize
-            window.chartProgressData = data;
-            window.drawLineChartGlobal = drawLineChart;
-        }
-        
-        function updateCourseDetails(course) {
-            const detailsContent = document.getElementById('courseDetailsContent');
-            if (!detailsContent) return;
-            
-            if (!course) {
-                detailsContent.innerHTML = '';
-                return;
-            }
-            
-            console.log('Displaying details for course:', course.title || course.name);
-            console.log('Firebase data:', {
-                timeSpent: course.timeSpent,
-                progress: course.progress,
-                modulesCompleted: course.modulesCompleted,
-                lastAccessed: course.lastAccessed
-            });
-            
-            // Time Spent (from Firebase)
-            const timeSpent = course.timeSpent || 0;
-            let timeText = '0 minutes';
-            if (timeSpent > 0) {
-                if (timeSpent >= 60) {
-                    const hours = Math.floor(timeSpent / 60);
-                    const mins = timeSpent % 60;
-                    timeText = hours > 0 ? `${hours}h ${mins}m` : `${mins} minutes`;
-                } else {
-                    timeText = `${timeSpent} minutes`;
-                }
-            }
-            
-            // Progress (from Firebase)
-            const progress = course.progress || 0;
-            
-            // Sections (from Firebase)
-            const modulesCompleted = course.modulesCompleted || course.sectionsCompleted || 0;
-            const totalModules = course.modules?.length || course.sections?.length || 0;
-            
-            // Last Accessed (from Firebase)
-            const lastAccessed = course.lastAccessed ? (course.lastAccessed.toDate ? course.lastAccessed.toDate() : new Date(course.lastAccessed)) : null;
-            
-            detailsContent.innerHTML = `
-                <div class="profile-field">
-                    <div class="profile-field-label">Time Spent</div>
-                    <div class="profile-field-value">
-                        <span>${timeText}</span>
-                    </div>
-                </div>
-                
-                <div class="profile-field">
-                    <div class="profile-field-label">Completion</div>
-                    <div class="profile-field-value">
-                        <span>${Math.round(progress)}%</span>
-                    </div>
-                </div>
-                
-                <div class="profile-field">
-                    <div class="profile-field-label">Sections Completed</div>
-                    <div class="profile-field-value">
-                        <span>${modulesCompleted} ${totalModules > 0 ? `/ ${totalModules}` : ''}</span>
-                    </div>
-                </div>
-                
-                <div class="profile-field" style="border-bottom: none;">
-                    <div class="profile-field-label">Last Accessed</div>
-                    <div class="profile-field-value">
-                        <span>${lastAccessed ? formatDate(lastAccessed) : 'Not accessed yet'}</span>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function formatDate(date) {
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
-            
-            const options = { month: 'short', day: 'numeric' };
-            if (date.getFullYear() !== now.getFullYear()) {
-                options.year = 'numeric';
-            }
-            return date.toLocaleDateString('en-US', options);
-        }
-        
-        // Handle resize
-        window.addEventListener('resize', () => {
-            if (window.chartProgressData && window.drawLineChartGlobal) {
-                drawLineChart(window.chartProgressData);
-            }
-        });
-        
-        // Observe when progress section becomes visible
-        const progressChartObserver = new MutationObserver(() => {
-            const chartSection = document.getElementById('chartSection');
-            if (chartSection && chartSection.classList.contains('active')) {
-                if (window.chartProgressData && window.drawLineChartGlobal) {
-                    setTimeout(() => {
-                        drawLineChart(window.chartProgressData);
-                    }, 100);
-                }
-            }
-        });
-        
-        setTimeout(() => {
-            const progressSection = document.getElementById('progress');
-            if (progressSection) {
-                progressChartObserver.observe(progressSection, { attributes: true, attributeFilter: ['class'], subtree: true });
-            }
-        }, 500);
-        
-        // Initialize progress data when user is authenticated
-        function initProgressTracking() {
-            // Setup custom dropdown
-            setupCustomDropdown();
-            
-            if (window.firebase && window.firebase.auth) {
-                window.firebase.auth.onAuthStateChanged(user => {
-                    if (user) {
-                        console.log('User authenticated, loading progress data for:', user.uid);
-                        setTimeout(loadProgressData, 1000);
-                    } else {
-                        console.log('No user authenticated');
-                    }
-                });
-            } else {
-                console.log('Firebase not ready, retrying...');
-                setTimeout(initProgressTracking, 500);
-            }
-        }
-        
-        // Start initialization
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initProgressTracking);
-        } else {
-            initProgressTracking();
-        }
-    </script>
+    <script src="/js/progress-tracking.js"></script>
     
     <script src="/js/dashboard.js"></script>
     <script src="/js/setup-guide.js"></script>
+    <script src="/js/search-command.js"></script>
     
-    <!-- Fix social logo paths for production -->
-    <script>
-        // Fix image paths after they're rendered (for obfuscated code with relative paths)
-        function fixSocialLogoPaths() {
-            const socialLogos = document.querySelectorAll('.social-logo-img');
-            socialLogos.forEach(img => {
-                let src = img.getAttribute('src') || img.src;
-                if (src && src.includes('assets/images/')) {
-                    // If path is relative (doesn't start with / or http), make it absolute
-                    if (!src.startsWith('/') && !src.startsWith('http')) {
-                        img.src = '/' + src.replace(/^\.\//, '');
-                    } else if (src.startsWith('assets/images/')) {
-                        // Fix paths that should be absolute
-                        img.src = '/assets/images/' + src.replace(/^assets\/images\//, '');
-                    }
-                }
-            });
-        }
-        
-        // Run on load and after delays to catch dynamically loaded content
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', fixSocialLogoPaths);
-        } else {
-            fixSocialLogoPaths();
-        }
-        setTimeout(fixSocialLogoPaths, 500);
-        setTimeout(fixSocialLogoPaths, 1000);
-        setTimeout(fixSocialLogoPaths, 2000);
-        
-        // Observe for new social logos being added dynamically
-        const observer = new MutationObserver(() => {
-            fixSocialLogoPaths();
-        });
-        
-        // Start observing once the container exists
-        function startObserving() {
-            const socialContainer = document.getElementById('profileSocialLogos');
-            if (socialContainer) {
-                observer.observe(socialContainer, { childList: true, subtree: true });
-            } else {
-                setTimeout(startObserving, 500);
-            }
-        }
-        startObserving();
-    </script>
+    <!-- Social Logo Path Fixer moved to js/social-links.js -->
     
-    <script>
-        // Initialize theme immediately to prevent flash
-        (function() {
-            let themeMode = 'dark'; // Default to dark mode
-            
-            try {
-                // Check for TEMPORARY theme preference (from header toggle) - expires after 24 hours
-                const tempTheme = localStorage.getItem('temporaryTheme');
-                const tempThemeTimestamp = localStorage.getItem('temporaryThemeTimestamp');
-                
-                if (tempTheme && tempThemeTimestamp) {
-                    const timestamp = parseInt(tempThemeTimestamp);
-                    const now = Date.now();
-                    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-                    
-                    // If temporary theme is still valid (less than 24 hours old)
-                    if (now - timestamp < twentyFourHours) {
-                        themeMode = tempTheme;
-                        console.log('Using temporary theme preference:', tempTheme);
-                    } else {
-                        // Temporary preference expired, remove it and use permanent setting
-                        localStorage.removeItem('temporaryTheme');
-                        localStorage.removeItem('temporaryThemeTimestamp');
-                        console.log('Temporary theme preference expired, using permanent setting');
-                        
-                        // Fall through to check permanent settings below
-                        const storedSettings = localStorage.getItem('dashboardSettings');
-                        if (storedSettings) {
-                            const settings = JSON.parse(storedSettings);
-                            if (settings.alwaysLightMode) {
-                                themeMode = 'light';
-                            } else if (settings.themeMode) {
-                                themeMode = settings.themeMode;
-                            }
-                        }
-                    }
-                } else {
-                    // No temporary preference, check PERMANENT settings
-                    const storedSettings = localStorage.getItem('dashboardSettings');
-                    if (storedSettings) {
-                        const settings = JSON.parse(storedSettings);
-                        if (settings.alwaysLightMode) {
-                            themeMode = 'light';
-                        } else if (settings.themeMode) {
-                            themeMode = settings.themeMode;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading theme preferences:', e);
-            }
-            
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            
-            if (themeMode === 'light') {
-                body.classList.add('light-mode');
-                body.setAttribute('data-theme', 'light');
-                if (themeMeta) themeMeta.content = '#ffffff';
-            } else {
-                // Default to dark mode
-                body.classList.add('dark-mode');
-                body.setAttribute('data-theme', 'dark');
-                if (themeMeta) themeMeta.content = '#0a0a0a';
-            }
-        })();
-    </script>
+    <!-- Theme & Sidebar Handler moved to js/theme-sidebar.js -->
+    <script src="/js/theme-sidebar.js"></script>
     
+<<<<<<< Updated upstream
     <script>
         // Helper function to refresh user name in header
         async function refreshUserNameInHeader() {
@@ -4885,237 +4175,13 @@
             
             return { section, subsection };
         }
+    </script>
+    
+    <!-- Dashboard Navigation Handler moved to js/dashboard-navigation.js -->
+    <script src="/js/dashboard-navigation.js"></script>
 
-        // Sidebar toggle for mobile
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
-
-        // Sidebar collapse/expand toggle
-        function toggleSidebarCollapse() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const isCollapsed = sidebar.classList.toggle('collapsed');
-            
-            // Update button title
-            sidebarToggle.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
-            
-            // Save state to localStorage in both formats for compatibility
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-            
-            // Also save to unified dashboardSettings
-            try {
-                const storedSettings = localStorage.getItem('dashboardSettings');
-                const settings = storedSettings ? JSON.parse(storedSettings) : {};
-                settings.compactSidebar = isCollapsed;
-                localStorage.setItem('dashboardSettings', JSON.stringify(settings));
-            } catch (error) {
-                console.error('Error saving sidebar state:', error);
-            }
-            
-            // Also update the main element if it exists
-            const main = document.querySelector('.dashboard-main');
-            if (main) {
-                if (isCollapsed) {
-                    main.classList.add('sidebar-collapsed');
-                } else {
-                    main.classList.remove('sidebar-collapsed');
-                }
-            }
-        }
-
-        // Theme toggle functionality
-        function toggleTheme() {
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            const isDark = body.classList.contains('dark-mode') || (!body.classList.contains('light-mode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            
-            let newThemeMode;
-            if (isDark) {
-                // Switch to light mode
-                newThemeMode = 'light';
-            } else {
-                // Switch to dark mode
-                newThemeMode = 'dark';
-            }
-            
-            // Apply theme and save as TEMPORARY preference (24 hours)
-            applyThemeMode(newThemeMode);
-            
-            // Save temporary theme with timestamp
-            localStorage.setItem('temporaryTheme', newThemeMode);
-            localStorage.setItem('temporaryThemeTimestamp', Date.now().toString());
-            console.log('Temporary theme saved:', newThemeMode, 'Expires in 24 hours');
-        }
-        
-        // Helper function to apply theme (also used by saveThemePreference)
-        function applyThemeMode(themeMode) {
-            const body = document.body;
-            const themeMeta = document.getElementById('themeColorMeta');
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            
-            // Add transitioning class to enable smooth transitions
-            body.classList.add('theme-transitioning');
-            
-            // Apply all changes simultaneously
-            if (themeMode === 'light') {
-                body.classList.remove('dark-mode');
-                body.classList.add('light-mode');
-                body.setAttribute('data-theme', 'light');
-                if (themeMeta) themeMeta.content = '#ffffff';
-                if (sunIcon) sunIcon.setAttribute('stroke', '#171717');
-                if (moonIcon) moonIcon.setAttribute('stroke', '#171717');
-            } else if (themeMode === 'dark') {
-                body.classList.remove('light-mode');
-                body.classList.add('dark-mode');
-                body.setAttribute('data-theme', 'dark');
-                if (themeMeta) themeMeta.content = '#0a0a0a';
-                if (sunIcon) sunIcon.setAttribute('stroke', '#fafafa');
-                if (moonIcon) moonIcon.setAttribute('stroke', '#fafafa');
-            }
-            
-            // Remove transitioning class after transition completes
-            setTimeout(() => {
-                body.classList.remove('theme-transitioning');
-            }, 250);
-            
-            // Dispatch custom event so other pages can update theme in same tab
-            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { themeMode } }));
-        }
-        
-        // Expose functions globally
-        window.toggleTheme = toggleTheme;
-        window.applyThemeMode = applyThemeMode;
-        window.navigateToSection = navigateToSection;
-        window.navigateToSubsection = navigateToSubsection;
-        window.updateUrlForSubsection = updateUrlForSubsection;
-        window.parseSectionFromUrl = parseSectionFromUrl;
-
-        // Update icon colors based on current theme
-        function updateThemeIconColors() {
-            const sunIcon = document.querySelector('.theme-icon-sun');
-            const moonIcon = document.querySelector('.theme-icon-moon');
-            const body = document.body;
-            
-            if (body.classList.contains('dark-mode')) {
-                if (sunIcon) sunIcon.setAttribute('stroke', '#fafafa');
-                if (moonIcon) moonIcon.setAttribute('stroke', '#fafafa');
-                        } else {
-                if (sunIcon) sunIcon.setAttribute('stroke', '#171717');
-                if (moonIcon) moonIcon.setAttribute('stroke', '#171717');
-            }
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Update icon colors after DOM is ready
-            updateThemeIconColors();
-            
-            // Theme toggle button
-            const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    toggleTheme();
-                    // Update icon colors after toggle
-                    setTimeout(updateThemeIconColors, 10);
-                });
-            }
-
-            // Initialize sidebar collapse state from localStorage
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            
-            // Check both legacy sidebarCollapsed and new compactSidebar setting
-            let shouldCollapse = false;
-            try {
-                const legacyState = localStorage.getItem('sidebarCollapsed');
-                const storedSettings = localStorage.getItem('dashboardSettings');
-                
-                if (storedSettings) {
-                    const settings = JSON.parse(storedSettings);
-                    if (settings.compactSidebar !== undefined) {
-                        shouldCollapse = settings.compactSidebar;
-                    } else if (legacyState === 'true') {
-                        shouldCollapse = true;
-                    }
-                } else if (legacyState === 'true') {
-                    shouldCollapse = true;
-                }
-            } catch (error) {
-                console.error('Error loading sidebar state:', error);
-            }
-            
-            if (shouldCollapse && sidebar) {
-                sidebar.classList.add('collapsed');
-                const main = document.querySelector('.dashboard-main');
-                if (main) {
-                    main.classList.add('sidebar-collapsed');
-                }
-                if (sidebarToggle) {
-                    sidebarToggle.title = 'Expand sidebar';
-                }
-            }
-            
-            // Add click handler for collapse button
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', toggleSidebarCollapse);
-            }
-
-            // Navigation click handlers
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const section = this.getAttribute('data-section');
-                    if (section) {
-                        navigateToSection(section);
-                    }
-                });
-            });
-
-            // Filter categories - click handlers (purple line handled by CSS ::after)
-            const filterCategories = document.querySelectorAll('.filter-category');
-            filterCategories.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    filterCategories.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-            
-            // Parse URL and navigate to section/subsection on page load
-            // Wait for Firebase, routing.js, and all navigation systems to be ready
-            setTimeout(() => {
-                const urlInfo = parseSectionFromUrl();
-                console.log('[Dashboard Init] Parsed URL on load:', urlInfo);
-                
-                if (urlInfo.section && urlInfo.section !== 'overview') {
-                    // Navigate to the section first
-                    console.log('[Dashboard Init] Navigating to section:', urlInfo.section, 'subsection:', urlInfo.subsection);
-                    navigateToSection(urlInfo.section, urlInfo.subsection);
-                    
-                    // If there's a subsection, ensure it gets activated after section is loaded
-                    if (urlInfo.subsection) {
-                        // Add extra delay to ensure section navigation is complete
-                        setTimeout(() => {
-                            console.log('[Dashboard Init] Ensuring subsection is active:', urlInfo.subsection);
-                            navigateToSubsection(urlInfo.section, urlInfo.subsection);
-                        }, 500);
-                    }
-                } else if (urlInfo.subsection) {
-                    // If we have a subsection but section is overview, treat first segment as section
-                    navigateToSection(urlInfo.subsection, null);
-                }
-            }, 500);
-
-            // Loading screen is handled by dashboard.js during authentication
-        });
-
-        // Logout handler - uses the one from dashboard.js
-        // This function is defined in dashboard.js and will be called
+    <!-- Marketplace Filter Dropdown moved to js/marketplace-filters.js -->
+    <script src="/js/marketplace-filters.js"></script>
 
         // Resume course functionality
         function resumeCourse() {
@@ -5954,721 +5020,17 @@
         })();
     </script>
     
-    <script>
-        // Profile Navigation Handler
-        document.addEventListener('DOMContentLoaded', function() {
-            const profileNavItems = document.querySelectorAll('.profile-nav-item');
-            const profileSubsections = document.querySelectorAll('.profile-subsection');
-            
-            profileNavItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetSection = this.getAttribute('data-section');
-                    
-                    // Remove active class from all nav items
-                    profileNavItems.forEach(nav => nav.classList.remove('active'));
-                    
-                    // Add active class to clicked item
-                    this.classList.add('active');
-                    
-                    // Hide all subsections
-                    profileSubsections.forEach(section => {
-                        section.style.display = 'none';
-                        section.classList.remove('active');
-                    });
-                    
-                    // Show target subsection
-                    const target = document.getElementById(targetSection);
-                    if (target) {
-                        target.style.display = 'block';
-                        target.classList.add('active');
-                    }
-                });
-            });
-            
-            // Profile Panel Collapse/Expand Toggle
-            const profilePanelToggle = document.getElementById('profilePanelToggle');
-            const profileRightPanel = document.getElementById('profileRightPanel');
-            const profileSection = document.getElementById('profile');
-            
-            if (profilePanelToggle) {
-                profilePanelToggle.addEventListener('click', function() {
-                    const isCollapsed = profileRightPanel.classList.toggle('collapsed');
-                    
-                    // Update button title
-                    profilePanelToggle.title = isCollapsed ? 'Expand panel' : 'Collapse panel';
-                    
-                    // Update profile section margin based on collapse state
-                    updateProfileSectionMargin(isCollapsed);
-                    
-                    // Save state to localStorage
-                    try {
-                        localStorage.setItem('profilePanelCollapsed', isCollapsed);
-                    } catch (error) {
-                        console.error('Error saving profile panel state:', error);
-                    }
-                });
-            }
-            
-            // Function to update profile section margin
-            function updateProfileSectionMargin(isCollapsed) {
-                if (profileSection) {
-                    const sidebarWidth = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-width');
-                    const collapsedWidth = '64px';
-                    profileSection.style.marginRight = isCollapsed ? collapsedWidth : sidebarWidth;
-                }
-            }
-            
-            // Initialize profile panel collapse state from localStorage
-            try {
-                const panelCollapsed = localStorage.getItem('profilePanelCollapsed');
-                if (panelCollapsed === 'true' && profileRightPanel && profileSection) {
-                    profileRightPanel.classList.add('collapsed');
-                    updateProfileSectionMargin(true);
-                    if (profilePanelToggle) {
-                        profilePanelToggle.title = 'Expand panel';
-                    }
-                } else if (profileSection) {
-                    // Set initial margin when not collapsed
-                    updateProfileSectionMargin(false);
-                }
-            } catch (error) {
-                console.error('Error loading profile panel state:', error);
-            }
-        });
-    </script>
+    <!-- User Info Loading moved to js/user-info.js (includes Firebase initialization check) -->
+    <script src="/js/user-info.js"></script>
     
-    <script type="module">
-        // Load and display social links in profile section
-        import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        
-                // Helper function to detect social platform from URL and return icon info
-        function getSocialIconFromUrl(url) {
-            if (!url || !url.trim()) return null;
-            
-            const urlLower = url.toLowerCase();
-            
-            // Twitter/X
-            if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) {
-                return {
-                    icon: '/assets/images/twitter.png',
-                    alt: 'Twitter',
-                    platform: 'twitter'
-                };
-            }
-            
-            // LinkedIn
-            if (urlLower.includes('linkedin.com')) {
-                return {
-                    icon: '/assets/images/linkedin.png',
-                    alt: 'LinkedIn',
-                    platform: 'linkedin'
-                };
-            }
-            
-            // GitHub
-            if (urlLower.includes('github.com')) {
-                return {
-                    icon: null,
-                    alt: 'GitHub',
-                    platform: 'github',
-                    text: 'GitHub'
-                };
-            }
-            
-            // Instagram
-            if (urlLower.includes('instagram.com')) {
-                return {
-                    icon: '/assets/images/instagram.png',
-                    alt: 'Instagram',
-                    platform: 'instagram'
-                };
-            }
-            
-            // Facebook
-            if (urlLower.includes('facebook.com')) {
-                return {
-                    icon: '/assets/images/facebook.png',
-                    alt: 'Facebook',
-                    platform: 'facebook'
-                };
-            }
-            
-            // YouTube
-            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
-                return {
-                    icon: '/assets/images/youtube.png',
-                    alt: 'YouTube',
-                    platform: 'youtube'
-                };
-            }
-            
-            // Pinterest
-            if (urlLower.includes('pinterest.com')) {
-                return {
-                    icon: '/assets/images/pinterest.png',
-                    alt: 'Pinterest',
-                    platform: 'pinterest'
-                };
-            }
-            
-            // Telegram
-            if (urlLower.includes('telegram.org') || urlLower.includes('t.me')) {
-                return {
-                    icon: '/assets/images/telegram.png',
-                    alt: 'Telegram',
-                    platform: 'telegram'
-                };
-            }
-            
-            // TikTok
-            if (urlLower.includes('tiktok.com')) {
-                return {
-                    icon: '/assets/images/tik-tok.png',
-                    alt: 'TikTok',
-                    platform: 'tiktok'
-                };
-            }
-            
-            // WhatsApp
-            if (urlLower.includes('whatsapp.com') || urlLower.includes('wa.me')) {
-                return {
-                    icon: '/assets/images/whatsapp.png',
-                    alt: 'WhatsApp',
-                    platform: 'whatsapp'
-                };
-            }
-            
-            // Default: show as generic link
-            return {
-                icon: null,
-                alt: 'Social Link',
-                platform: 'other',
-                text: 'Link'
-            };
-        }
-
-        // Helper function to create a social link element
-        function createSocialLinkElement(url, iconInfo) {
-            const link = document.createElement('a');
-            link.href = url.trim();
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.className = 'social-logo-link';
-            
-            if (iconInfo.icon) {
-                link.innerHTML = `<img src="${iconInfo.icon}" alt="${iconInfo.alt}" class="social-logo-img" style="width: 32px; height: 32px; object-fit: contain;">`;
-            } else {
-                link.style.textDecoration = 'none';
-                link.style.color = 'var(--color-text-primary, #ffffff)';
-                link.textContent = iconInfo.text || iconInfo.alt || 'Link';
-            }
-            
-            return link;
-        }
-
-        async function loadSocialLinks() {
-            try {
-                if (!window.firebase || !window.firebase.auth || !window.firebase.db) {
-                    console.log('Firebase not ready yet, will retry');
-                    setTimeout(loadSocialLinks, 500);
-                    return;
-                }
-
-                const auth = window.firebase.auth;
-                const db = window.firebase.db;
-                const user = auth.currentUser;
-
-                if (!user) {
-                    console.log('No user logged in');
-                    return;
-                }
-                
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    const social = userData.social || {};
-                    
-                    const profileSocialText = document.getElementById('profileSocialText');
-                    const profileSocialLogos = document.getElementById('profileSocialLogos');
-
-                    if (!profileSocialText || !profileSocialLogos) {
-                        return;
-                    }
-
-                    // Collect all social links (standard + dynamic)
-                    const allSocialLinks = [];
-                    
-                    // Standard social links
-                    if (social.twitter && social.twitter.trim()) {
-                        allSocialLinks.push({ url: social.twitter.trim(), type: 'twitter' });
-                    }
-                    if (social.linkedIn && social.linkedIn.trim()) {
-                        allSocialLinks.push({ url: social.linkedIn.trim(), type: 'linkedin' });
-                    }
-                    if (social.github && social.github.trim()) {
-                        allSocialLinks.push({ url: social.github.trim(), type: 'github' });
-                    }
-                    
-                    // Dynamic social links (keys starting with 'dynamic_')
-                    // Sort them numerically to maintain order
-                    const dynamicKeys = Object.keys(social)
-                        .filter(key => key.startsWith('dynamic_'))
-                        .sort((a, b) => {
-                            const numA = parseInt(a.replace('dynamic_', ''));
-                            const numB = parseInt(b.replace('dynamic_', ''));
-                            return numA - numB;
-                        });
-                    
-                    dynamicKeys.forEach(key => {
-                        const url = social[key];
-                        if (url && url.trim()) {
-                            allSocialLinks.push({ url: url.trim(), type: 'dynamic' });
-                        }
-                    });
-
-                    // Check if any social links exist
-                    if (allSocialLinks.length > 0) {
-                        // Hide "Not provided" text
-                        profileSocialText.style.display = 'none';
-                        
-                        // Show logos container
-                        profileSocialLogos.style.display = 'flex';
-                        profileSocialLogos.innerHTML = '';
-
-                        // Add logos for each social link
-                        allSocialLinks.forEach(linkData => {
-                            const iconInfo = getSocialIconFromUrl(linkData.url);
-                            if (iconInfo) {
-                                const linkElement = createSocialLinkElement(linkData.url, iconInfo);
-                                profileSocialLogos.appendChild(linkElement);
-                            }
-                        });
-                    } else {
-                        // No social links, show "Not provided"
-                        profileSocialText.style.display = 'inline';
-                        profileSocialLogos.style.display = 'none';
-                        profileSocialLogos.innerHTML = '';
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading social links:', error);
-            }
-        }
-
-        // Load social links when profile section is shown
-        function observeProfileSection() {
-            const profileSection = document.getElementById('profile');
-            if (!profileSection) {
-                setTimeout(observeProfileSection, 500);
-                return;
-            }
-
-            // Use MutationObserver to detect when profile section becomes active
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const isActive = profileSection.classList.contains('active');
-                        if (isActive && typeof loadSocialLinks === 'function') {
-                            // Call immediately when profile section becomes active
-                            loadSocialLinks();
-                        }
-                    }
-                });
-            });
-
-            observer.observe(profileSection, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
-
-            // Also check immediately if profile section is already active
-            if (profileSection.classList.contains('active') && typeof loadSocialLinks === 'function') {
-                loadSocialLinks();
-            }
-        }
-
-        // Initialize when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(observeProfileSection, 500);
-            });
-        } else {
-            setTimeout(observeProfileSection, 500);
-        }
-    </script>
+    <!-- Profile Navigation Handler moved to js/profile-navigation.js -->
+    <script src="/js/profile-navigation.js"></script>
     
-    <script>
-        // Dynamic social links functionality
-        (function() {
-            const MAX_SOCIAL_LINKS = 5;
-            let dynamicSocialLinkCount = 0;
-            
-            function getTotalSocialLinkCount() {
-                // Count the 3 fixed social links + dynamic ones
-                const fixedInputs = document.querySelectorAll('.profile-social-inputs input[data-social-type]');
-                const dynamicInputs = document.querySelectorAll('#dynamicSocialLinks .profile-field-input');
-                return fixedInputs.length + dynamicInputs.length;
-            }
-            
-            function updateAddSocialButton() {
-                const addSocialBtn = document.getElementById('addSocialBtn');
-                if (!addSocialBtn) return;
-                
-                const totalCount = getTotalSocialLinkCount();
-                if (totalCount >= MAX_SOCIAL_LINKS) {
-                    addSocialBtn.disabled = true;
-                    addSocialBtn.style.opacity = '0.4';
-                    addSocialBtn.style.cursor = 'not-allowed';
-                } else {
-                    addSocialBtn.disabled = false;
-                    addSocialBtn.style.opacity = '1';
-                    addSocialBtn.style.cursor = 'pointer';
-                }
-            }
-            
-            function addDynamicSocialLink() {
-                const totalCount = getTotalSocialLinkCount();
-                if (totalCount >= MAX_SOCIAL_LINKS) {
-                    return;
-                }
-                
-                const dynamicContainer = document.getElementById('dynamicSocialLinks');
-                if (!dynamicContainer) return;
-                
-                dynamicSocialLinkCount++;
-                const linkId = `dynamicSocialLink_${dynamicSocialLinkCount}`;
-                
-                const linkRow = document.createElement('div');
-                linkRow.className = 'dynamic-social-link-row';
-                linkRow.id = linkId;
-                
-                const input = document.createElement('input');
-                input.type = 'url';
-                input.className = 'profile-field-input';
-                input.placeholder = 'Social media profile URL';
-                input.style.display = 'block';
-                input.setAttribute('data-social-dynamic', 'true');
-                
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'remove-social-btn';
-                removeBtn.textContent = 'Remove';
-                removeBtn.onclick = function() {
-                    linkRow.remove();
-                    updateAddSocialButton();
-                };
-                
-                linkRow.appendChild(input);
-                linkRow.appendChild(removeBtn);
-                dynamicContainer.appendChild(linkRow);
-                
-                updateAddSocialButton();
-            }
-            
-            function showAddSocialButton() {
-                const addSocialBtn = document.getElementById('addSocialBtn');
-                const profileSocialInputs = document.querySelector('.profile-social-inputs');
-                if (addSocialBtn && profileSocialInputs && profileSocialInputs.style.display !== 'none') {
-                    addSocialBtn.style.display = 'block';
-                    updateAddSocialButton();
-                }
-            }
-            
-            function hideAddSocialButton() {
-                const addSocialBtn = document.getElementById('addSocialBtn');
-                if (addSocialBtn) {
-                    addSocialBtn.style.display = 'none';
-                }
-            }
-            
-            // Initialize when DOM is ready
-            function initDynamicSocialLinks() {
-                const addSocialBtn = document.getElementById('addSocialBtn');
-                if (!addSocialBtn) {
-                    setTimeout(initDynamicSocialLinks, 500);
-                    return;
-                }
-                
-                // Add click handler
-                addSocialBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    addDynamicSocialLink();
-                });
-                
-                // Observe when edit mode is activated
-                const profileSocialInputs = document.querySelector('.profile-social-inputs');
-                if (profileSocialInputs) {
-                    const observer = new MutationObserver(function(mutations) {
-                        mutations.forEach(function(mutation) {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                                const isVisible = profileSocialInputs.style.display !== 'none';
-                                if (isVisible) {
-                                    showAddSocialButton();
-                                } else {
-                                    hideAddSocialButton();
-                                }
-                            }
-                        });
-                    });
-                    
-                    observer.observe(profileSocialInputs, {
-                        attributes: true,
-                        attributeFilter: ['style']
-                    });
-                    
-                    // Check initial state
-                    if (profileSocialInputs.style.display !== 'none') {
-                        showAddSocialButton();
-                    }
-                }
-            }
-            
-            // Also listen for edit button clicks (if dashboard.js handles edit mode)
-            const profileEditBtn = document.getElementById('profileEditBtn');
-            if (profileEditBtn) {
-                profileEditBtn.addEventListener('click', function() {
-                    setTimeout(showAddSocialButton, 100);
-                });
-            }
-            
-            // Function to get all social links (for saving)
-            window.getAllSocialLinks = function() {
-                const social = {
-                    twitter: (document.getElementById('socialTwitter')?.value || '').trim(),
-                    linkedIn: (document.getElementById('socialLinkedIn')?.value || '').trim(),
-                    github: (document.getElementById('socialGitHub')?.value || '').trim()
-                };
-                
-                // Get dynamic social links - preserve order and only save non-empty values
-                const dynamicInputs = document.querySelectorAll('#dynamicSocialLinks .profile-field-input');
-                let dynamicIndex = 0;
-                dynamicInputs.forEach((input) => {
-                    const value = input.value.trim();
-                    if (value) {
-                        // Store as dynamic_0, dynamic_1, etc. in order
-                        social[`dynamic_${dynamicIndex}`] = value;
-                        dynamicIndex++;
-                    }
-                });
-                
-                return social;
-            };
-            
-            // Function to load dynamic social links (called when profile data is loaded)
-            window.loadDynamicSocialLinks = function(socialData) {
-                if (!socialData || typeof socialData !== 'object') return;
-                
-                const dynamicContainer = document.getElementById('dynamicSocialLinks');
-                if (!dynamicContainer) return;
-                
-                // Clear existing dynamic links
-                dynamicContainer.innerHTML = '';
-                dynamicSocialLinkCount = 0;
-                
-                // Find dynamic social links (keys that start with 'dynamic_')
-                // Sort them numerically to maintain order
-                const dynamicKeys = Object.keys(socialData)
-                    .filter(key => key.startsWith('dynamic_'))
-                    .sort((a, b) => {
-                        const numA = parseInt(a.replace('dynamic_', ''));
-                        const numB = parseInt(b.replace('dynamic_', ''));
-                        return numA - numB;
-                    });
-                
-                dynamicKeys.forEach((key) => {
-                    const value = socialData[key];
-                    if (value && value.trim()) {
-                        dynamicSocialLinkCount++;
-                        const linkId = `dynamicSocialLink_${dynamicSocialLinkCount}`;
-                        
-                        const linkRow = document.createElement('div');
-                        linkRow.className = 'dynamic-social-link-row';
-                        linkRow.id = linkId;
-                        
-                        const input = document.createElement('input');
-                        input.type = 'url';
-                        input.className = 'profile-field-input';
-                        input.placeholder = 'Social media profile URL';
-                        input.style.display = 'block';
-                        input.value = value.trim();
-                        input.setAttribute('data-social-dynamic', 'true');
-                        
-                        const removeBtn = document.createElement('button');
-                        removeBtn.type = 'button';
-                        removeBtn.className = 'remove-social-btn';
-                        removeBtn.textContent = 'Remove';
-                        removeBtn.onclick = function() {
-                            linkRow.remove();
-                            updateAddSocialButton();
-                        };
-                        
-                        linkRow.appendChild(input);
-                        linkRow.appendChild(removeBtn);
-                        dynamicContainer.appendChild(linkRow);
-                    }
-                });
-                
-                updateAddSocialButton();
-            };
-            
-            // Hook into save button to collect all social links and save to Firebase
-            const profileSaveBtn = document.getElementById('profileSaveBtn');
-            if (profileSaveBtn) {
-                profileSaveBtn.addEventListener('click', async function(e) {
-                    // Wait a bit to let other save handlers run first, then save social links
-                    setTimeout(async () => {
-                        // Get all social links including dynamic ones
-                        const allSocialLinks = window.getAllSocialLinks ? window.getAllSocialLinks() : {};
-                        
-                        console.log('Saving social links:', allSocialLinks);
-                        
-                        // Save to Firebase
-                        try {
-                            if (window.firebase && window.firebase.auth && window.firebase.db) {
-                                const user = window.firebase.auth.currentUser;
-                                if (user) {
-                                    const userRef = doc(window.firebase.db, 'users', user.uid);
-                                    
-                                    // Update social links in Firebase (merge with existing data)
-                                    await updateDoc(userRef, {
-                                        social: allSocialLinks
-                                    });
-                                    
-                                    console.log('Social links saved successfully:', allSocialLinks);
-                                    
-                                    // Reload social links after save
-                                    setTimeout(() => {
-                                        if (typeof loadSocialLinks === 'function') {
-                                            loadSocialLinks();
-                                        }
-                                    }, 500);
-                                } else {
-                                    console.error('No user logged in');
-                                }
-                            } else {
-                                console.error('Firebase not initialized');
-                            }
-                        } catch (error) {
-                            console.error('Error saving social links:', error);
-                        }
-                    }, 100);
-                    
-                    setTimeout(updateAddSocialButton, 100);
-                });
-            }
-            
-            // Initialize
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initDynamicSocialLinks);
-            } else {
-                initDynamicSocialLinks();
-            }
-        })();
-    </script>
+    <!-- Social Links Handler moved to js/social-links.js -->
+    <script type="module" src="/js/social-links.js"></script>
     
-    <script>
-        // Sync preferences section toggles with settings section toggles
-        (function() {
-            // Mapping between preferences IDs and settings IDs
-            const toggleMapping = {
-                'emailNotificationsToggle': 'emailNotifications',
-                'pushNotificationsPref': 'pushNotifications',
-                'courseUpdatesPref': 'courseUpdates',
-                'assignmentRemindersPref': 'assignmentReminders',
-                'studyRemindersPref': 'studyReminders',
-                'animationsPref': 'animations',
-                'compactSidebarPref': 'compactSidebar',
-                'autoPlayVideosPref': 'autoPlayVideos',
-                'progressTrackingPref': 'progressTracking',
-                'languagePref': 'language',
-                'timezonePref': 'timezone'
-            };
-            
-            // Sync function
-            function syncToggles(sourceId, targetId) {
-                const source = document.getElementById(sourceId);
-                const target = document.getElementById(targetId);
-                if (source && target) {
-                    if (source.type === 'checkbox') {
-                        target.checked = source.checked;
-                    } else if (source.tagName === 'SELECT') {
-                        target.value = source.value;
-                    }
-                }
-            }
-            
-            // Set up bidirectional syncing
-            function setupSync() {
-                Object.keys(toggleMapping).forEach(prefId => {
-                    const settingsId = toggleMapping[prefId];
-                    const prefElement = document.getElementById(prefId);
-                    const settingsElement = document.getElementById(settingsId);
-                    
-                    if (prefElement && settingsElement) {
-                        // Sync from preferences to settings
-                        prefElement.addEventListener('change', function() {
-                            syncToggles(prefId, settingsId);
-                        });
-                        
-                        // Sync from settings to preferences
-                        settingsElement.addEventListener('change', function() {
-                            syncToggles(settingsId, prefId);
-                        });
-                    }
-                });
-            }
-            
-            // Load settings and sync on page load
-            function loadAndSyncSettings() {
-                try {
-                    const settings = JSON.parse(localStorage.getItem('dashboardSettings') || '{}');
-                    
-                    // Sync checkbox states
-                    Object.keys(toggleMapping).forEach(prefId => {
-                        const settingsId = toggleMapping[prefId];
-                        const prefElement = document.getElementById(prefId);
-                        const settingsElement = document.getElementById(settingsId);
-                        
-                        if (prefElement && settingsElement) {
-                            const settingKey = settingsId.replace(/([A-Z])/g, '_$1').toLowerCase();
-                            const value = settings[settingsId] || settings[settingKey];
-                            
-                            if (prefElement.type === 'checkbox') {
-                                const checked = value !== undefined ? value : (settingsElement.checked || false);
-                                prefElement.checked = checked;
-                                settingsElement.checked = checked;
-                            } else if (prefElement.tagName === 'SELECT') {
-                                const val = value || settingsElement.value || prefElement.value;
-                                prefElement.value = val;
-                                settingsElement.value = val;
-                            }
-                        }
-                    });
-                } catch (error) {
-                    console.error('Error loading settings:', error);
-                }
-            }
-            
-            // Initialize
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(function() {
-                        setupSync();
-                        loadAndSyncSettings();
-                    }, 500);
-                });
-            } else {
-                setTimeout(function() {
-                    setupSync();
-                    loadAndSyncSettings();
-                }, 500);
-            }
-        })();
-    </script>
+    <!-- Settings Sync moved to js/settings-sync.js -->
+    <script src="/js/settings-sync.js"></script>
     
     </div>
     <!-- End Auth Protected Content -->
