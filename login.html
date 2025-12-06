@@ -1038,7 +1038,14 @@
             }, 800);
         } else {
             // Normal flow: check auth immediately for users visiting login page
+            // BUT: Skip if we just completed a login (to avoid redirect loops)
             onAuthStateChanged(authInstance, async (user) => {
+                // Skip auth check if we just completed a login
+                if (sessionStorage.getItem('skipAuthCheck') === 'true') {
+                    sessionStorage.removeItem('skipAuthCheck');
+                    return; // Let the manual redirect handle it
+                }
+                
                 if (user) {
                     // Check if email is verified before redirecting
                     try {

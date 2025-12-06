@@ -971,12 +971,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Set flag and redirect
                 sessionStorage.setItem('freshLogin', 'true');
+                sessionStorage.setItem('skipAuthCheck', 'true'); // Prevent auth state listener from interfering
                 closeAuthModal();
                 
-                await new Promise(resolve => setTimeout(resolve, 300));
-                
-                const currentUser = window.firebase?.auth?.currentUser || user;
-                const redirectUrl = getDashboardUrl(currentUser);
+                // Redirect immediately - don't wait
+                const redirectUrl = getDashboardUrl(user);
                 window.location.href = redirectUrl;
                 
             } catch (err) {
